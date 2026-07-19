@@ -1,0 +1,117 @@
+import 'package:flutter/material.dart';
+import '../../../core/theme/app_colors.dart';
+import '../models/vehicle.dart';
+
+class VehicleCard extends StatelessWidget {
+  final Vehicle vehicle;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+
+  const VehicleCard({
+    super.key,
+    required this.vehicle,
+    this.isSelected = false,
+    required this.onTap,
+    this.onEdit,
+    this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final typeColor = AppColors.forVehicleType(vehicle.type);
+
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        side: isSelected
+            ? const BorderSide(color: AppColors.primary, width: 2)
+            : BorderSide.none,
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: typeColor.withValues(alpha: 0.15),
+                child: Icon(_typeIcon(vehicle.type), color: typeColor),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      vehicle.name,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    if (vehicle.brand != null || vehicle.model != null)
+                      Text(
+                        [
+                          vehicle.brand,
+                          vehicle.model,
+                        ].whereType<String>().join(' '),
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    if (vehicle.plate != null)
+                      Text(
+                        vehicle.plate!,
+                        style: Theme.of(context).textTheme.labelMedium,
+                      ),
+                  ],
+                ),
+              ),
+              if (vehicle.isDefault) const Chip(label: Text('Default')),
+              if (onEdit != null || onDelete != null) ...[
+                const SizedBox(width: 8),
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'edit') onEdit?.call();
+                    if (value == 'delete') onDelete?.call();
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, size: 20),
+                          SizedBox(width: 8),
+                          Text('Editar'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, size: 20, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Eliminar', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _typeIcon(String type) {
+    return switch (type) {
+      'car' => Icons.directions_car,
+      'motorcycle' => Icons.motorcycle,
+      'bike' => Icons.pedal_bike,
+      'truck' => Icons.local_shipping,
+      _ => Icons.help_outline,
+    };
+  }
+}

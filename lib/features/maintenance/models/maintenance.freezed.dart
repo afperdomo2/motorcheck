@@ -1,0 +1,378 @@
+// coverage:ignore-file
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'maintenance.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+T _$identity<T>(T value) => value;
+
+final _privateConstructorUsedError = UnsupportedError(
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
+
+Maintenance _$MaintenanceFromJson(Map<String, dynamic> json) {
+  return _Maintenance.fromJson(json);
+}
+
+/// @nodoc
+mixin _$Maintenance {
+  int? get id => throw _privateConstructorUsedError;
+  int get vehicleId => throw _privateConstructorUsedError;
+  String get title => throw _privateConstructorUsedError;
+  DateTime get date => throw _privateConstructorUsedError;
+  int? get mileage => throw _privateConstructorUsedError;
+  double get totalLaborCost => throw _privateConstructorUsedError;
+  double get totalPartsCost => throw _privateConstructorUsedError;
+  String? get notes => throw _privateConstructorUsedError;
+  DateTime get createdAt => throw _privateConstructorUsedError;
+  DateTime get updatedAt => throw _privateConstructorUsedError;
+
+  /// Serializes this Maintenance to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of Maintenance
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $MaintenanceCopyWith<Maintenance> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $MaintenanceCopyWith<$Res> {
+  factory $MaintenanceCopyWith(
+    Maintenance value,
+    $Res Function(Maintenance) then,
+  ) = _$MaintenanceCopyWithImpl<$Res, Maintenance>;
+  @useResult
+  $Res call({
+    int? id,
+    int vehicleId,
+    String title,
+    DateTime date,
+    int? mileage,
+    double totalLaborCost,
+    double totalPartsCost,
+    String? notes,
+    DateTime createdAt,
+    DateTime updatedAt,
+  });
+}
+
+/// @nodoc
+class _$MaintenanceCopyWithImpl<$Res, $Val extends Maintenance>
+    implements $MaintenanceCopyWith<$Res> {
+  _$MaintenanceCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of Maintenance
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = freezed,
+    Object? vehicleId = null,
+    Object? title = null,
+    Object? date = null,
+    Object? mileage = freezed,
+    Object? totalLaborCost = null,
+    Object? totalPartsCost = null,
+    Object? notes = freezed,
+    Object? createdAt = null,
+    Object? updatedAt = null,
+  }) {
+    return _then(
+      _value.copyWith(
+            id: freezed == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            vehicleId: null == vehicleId
+                ? _value.vehicleId
+                : vehicleId // ignore: cast_nullable_to_non_nullable
+                      as int,
+            title: null == title
+                ? _value.title
+                : title // ignore: cast_nullable_to_non_nullable
+                      as String,
+            date: null == date
+                ? _value.date
+                : date // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+            mileage: freezed == mileage
+                ? _value.mileage
+                : mileage // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            totalLaborCost: null == totalLaborCost
+                ? _value.totalLaborCost
+                : totalLaborCost // ignore: cast_nullable_to_non_nullable
+                      as double,
+            totalPartsCost: null == totalPartsCost
+                ? _value.totalPartsCost
+                : totalPartsCost // ignore: cast_nullable_to_non_nullable
+                      as double,
+            notes: freezed == notes
+                ? _value.notes
+                : notes // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            createdAt: null == createdAt
+                ? _value.createdAt
+                : createdAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+            updatedAt: null == updatedAt
+                ? _value.updatedAt
+                : updatedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$MaintenanceImplCopyWith<$Res>
+    implements $MaintenanceCopyWith<$Res> {
+  factory _$$MaintenanceImplCopyWith(
+    _$MaintenanceImpl value,
+    $Res Function(_$MaintenanceImpl) then,
+  ) = __$$MaintenanceImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({
+    int? id,
+    int vehicleId,
+    String title,
+    DateTime date,
+    int? mileage,
+    double totalLaborCost,
+    double totalPartsCost,
+    String? notes,
+    DateTime createdAt,
+    DateTime updatedAt,
+  });
+}
+
+/// @nodoc
+class __$$MaintenanceImplCopyWithImpl<$Res>
+    extends _$MaintenanceCopyWithImpl<$Res, _$MaintenanceImpl>
+    implements _$$MaintenanceImplCopyWith<$Res> {
+  __$$MaintenanceImplCopyWithImpl(
+    _$MaintenanceImpl _value,
+    $Res Function(_$MaintenanceImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of Maintenance
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = freezed,
+    Object? vehicleId = null,
+    Object? title = null,
+    Object? date = null,
+    Object? mileage = freezed,
+    Object? totalLaborCost = null,
+    Object? totalPartsCost = null,
+    Object? notes = freezed,
+    Object? createdAt = null,
+    Object? updatedAt = null,
+  }) {
+    return _then(
+      _$MaintenanceImpl(
+        id: freezed == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        vehicleId: null == vehicleId
+            ? _value.vehicleId
+            : vehicleId // ignore: cast_nullable_to_non_nullable
+                  as int,
+        title: null == title
+            ? _value.title
+            : title // ignore: cast_nullable_to_non_nullable
+                  as String,
+        date: null == date
+            ? _value.date
+            : date // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+        mileage: freezed == mileage
+            ? _value.mileage
+            : mileage // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        totalLaborCost: null == totalLaborCost
+            ? _value.totalLaborCost
+            : totalLaborCost // ignore: cast_nullable_to_non_nullable
+                  as double,
+        totalPartsCost: null == totalPartsCost
+            ? _value.totalPartsCost
+            : totalPartsCost // ignore: cast_nullable_to_non_nullable
+                  as double,
+        notes: freezed == notes
+            ? _value.notes
+            : notes // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        createdAt: null == createdAt
+            ? _value.createdAt
+            : createdAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+        updatedAt: null == updatedAt
+            ? _value.updatedAt
+            : updatedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$MaintenanceImpl implements _Maintenance {
+  const _$MaintenanceImpl({
+    this.id,
+    required this.vehicleId,
+    required this.title,
+    required this.date,
+    this.mileage,
+    this.totalLaborCost = 0,
+    this.totalPartsCost = 0,
+    this.notes,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory _$MaintenanceImpl.fromJson(Map<String, dynamic> json) =>
+      _$$MaintenanceImplFromJson(json);
+
+  @override
+  final int? id;
+  @override
+  final int vehicleId;
+  @override
+  final String title;
+  @override
+  final DateTime date;
+  @override
+  final int? mileage;
+  @override
+  @JsonKey()
+  final double totalLaborCost;
+  @override
+  @JsonKey()
+  final double totalPartsCost;
+  @override
+  final String? notes;
+  @override
+  final DateTime createdAt;
+  @override
+  final DateTime updatedAt;
+
+  @override
+  String toString() {
+    return 'Maintenance(id: $id, vehicleId: $vehicleId, title: $title, date: $date, mileage: $mileage, totalLaborCost: $totalLaborCost, totalPartsCost: $totalPartsCost, notes: $notes, createdAt: $createdAt, updatedAt: $updatedAt)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$MaintenanceImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.vehicleId, vehicleId) ||
+                other.vehicleId == vehicleId) &&
+            (identical(other.title, title) || other.title == title) &&
+            (identical(other.date, date) || other.date == date) &&
+            (identical(other.mileage, mileage) || other.mileage == mileage) &&
+            (identical(other.totalLaborCost, totalLaborCost) ||
+                other.totalLaborCost == totalLaborCost) &&
+            (identical(other.totalPartsCost, totalPartsCost) ||
+                other.totalPartsCost == totalPartsCost) &&
+            (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt) &&
+            (identical(other.updatedAt, updatedAt) ||
+                other.updatedAt == updatedAt));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    id,
+    vehicleId,
+    title,
+    date,
+    mileage,
+    totalLaborCost,
+    totalPartsCost,
+    notes,
+    createdAt,
+    updatedAt,
+  );
+
+  /// Create a copy of Maintenance
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$MaintenanceImplCopyWith<_$MaintenanceImpl> get copyWith =>
+      __$$MaintenanceImplCopyWithImpl<_$MaintenanceImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$MaintenanceImplToJson(this);
+  }
+}
+
+abstract class _Maintenance implements Maintenance {
+  const factory _Maintenance({
+    final int? id,
+    required final int vehicleId,
+    required final String title,
+    required final DateTime date,
+    final int? mileage,
+    final double totalLaborCost,
+    final double totalPartsCost,
+    final String? notes,
+    required final DateTime createdAt,
+    required final DateTime updatedAt,
+  }) = _$MaintenanceImpl;
+
+  factory _Maintenance.fromJson(Map<String, dynamic> json) =
+      _$MaintenanceImpl.fromJson;
+
+  @override
+  int? get id;
+  @override
+  int get vehicleId;
+  @override
+  String get title;
+  @override
+  DateTime get date;
+  @override
+  int? get mileage;
+  @override
+  double get totalLaborCost;
+  @override
+  double get totalPartsCost;
+  @override
+  String? get notes;
+  @override
+  DateTime get createdAt;
+  @override
+  DateTime get updatedAt;
+
+  /// Create a copy of Maintenance
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$MaintenanceImplCopyWith<_$MaintenanceImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
