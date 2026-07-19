@@ -89,8 +89,10 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
   ) {
     final workshopsAsync = ref.watch(workshopsProvider);
     final workshops = workshopsAsync.valueOrNull ?? [];
-    final maintenanceIds = maintenances.map((m) => m.id!).toList();
-    final itemsAsync = ref.watch(workshopItemsProvider(maintenanceIds));
+    final maintenanceIds = maintenances.map((m) => m.id!).toList()..sort();
+    final itemsAsync = ref.watch(
+      workshopItemsProvider(maintenanceIds.join(',')),
+    );
     final itemsByMaintenance = itemsAsync.valueOrNull ?? {};
 
     return RefreshIndicator(

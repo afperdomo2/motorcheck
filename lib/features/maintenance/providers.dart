@@ -92,11 +92,12 @@ final workshopsProvider = FutureProvider<List<Workshop>>((ref) async {
 });
 
 final workshopItemsProvider =
-    FutureProvider.family<Map<int, List<MaintenanceItem>>, List<int>>((
+    FutureProvider.family<Map<int, List<MaintenanceItem>>, String>((
       ref,
-      maintenanceIds,
+      idsKey,
     ) async {
-      if (maintenanceIds.isEmpty) return {};
+      if (idsKey.isEmpty) return {};
+      final maintenanceIds = idsKey.split(',').map(int.parse).toList();
       final repository = ref.watch(maintenanceRepositoryProvider);
       final items = await repository.getItemsByMaintenanceIds(maintenanceIds);
       final result = <int, List<MaintenanceItem>>{};

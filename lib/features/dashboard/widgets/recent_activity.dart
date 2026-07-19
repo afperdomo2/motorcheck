@@ -27,8 +27,8 @@ class RecentActivity extends ConsumerWidget {
       );
     }
 
-    final ids = summary.recentMaintenances.map((m) => m.id!).toList();
-    final itemsAsync = ref.watch(workshopItemsProvider(ids));
+    final ids = summary.recentMaintenances.map((m) => m.id!).toList()..sort();
+    final itemsAsync = ref.watch(workshopItemsProvider(ids.join(',')));
     final itemsByMaintenance = itemsAsync.valueOrNull ?? {};
 
     return Card(

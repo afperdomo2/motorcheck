@@ -77,10 +77,10 @@ class MaintenanceSearchDelegate extends SearchDelegate<Maintenance?> {
           );
         }
 
-        final maintenanceIds = filtered.map((m) => m.id!).toList();
+        final maintenanceIds = filtered.map((m) => m.id!).toList()..sort();
         final itemsProviderRef = ref;
         final itemsAsync = itemsProviderRef.watch(
-          workshopItemsProvider(maintenanceIds),
+          workshopItemsProvider(maintenanceIds.join(',')),
         );
         final itemsByMaintenance = itemsAsync.valueOrNull ?? {};
 
