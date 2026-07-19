@@ -19,7 +19,7 @@ class VehiclesScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Mis Vehículos')),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/vehicles/add'),
+        onPressed: () => context.push('/vehicles/add'),
         icon: const Icon(Icons.add),
         label: const Text('Agregar'),
       ),
@@ -36,7 +36,7 @@ class VehiclesScreen extends ConsumerWidget {
               icon: Icons.directions_car,
               title: 'No hay vehículos',
               subtitle: 'Agrega tu primer vehículo para comenzar',
-              onAction: () => context.go('/vehicles/add'),
+              onAction: () => context.push('/vehicles/add'),
               actionLabel: 'Agregar vehículo',
             );
           }
@@ -55,7 +55,7 @@ class VehiclesScreen extends ConsumerWidget {
                     ref.read(selectedVehicleIdProvider.notifier).state =
                         vehicle.id;
                   },
-                  onEdit: () => context.go('/vehicles/${vehicle.id}/edit'),
+                  onEdit: () => context.push('/vehicles/${vehicle.id}/edit'),
                   onDelete: () async {
                     final confirmed = await showConfirmDialog(
                       context,

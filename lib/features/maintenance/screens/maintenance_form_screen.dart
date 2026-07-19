@@ -148,7 +148,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
 
     if (mounted) {
       setState(() => _isLoading = false);
-      context.go('/maintenance');
+      context.pop();
     }
   }
 

@@ -113,7 +113,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
 
     if (mounted) {
       setState(() => _isLoading = false);
-      context.go('/vehicles');
+      context.pop();
     }
   }
 

@@ -21,7 +21,7 @@ class MaintenanceListScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Mantenimientos')),
       floatingActionButton: vehicleId != null
           ? FloatingActionButton.extended(
-              onPressed: () => context.go('/maintenance/add'),
+              onPressed: () => context.push('/maintenance/add'),
               icon: const Icon(Icons.add),
               label: const Text('Agregar'),
             )
@@ -46,7 +46,7 @@ class MaintenanceListScreen extends ConsumerWidget {
                     icon: Icons.build,
                     title: 'Sin mantenimientos',
                     subtitle: 'Registra el primer mantenimiento',
-                    onAction: () => context.go('/maintenance/add'),
+                    onAction: () => context.push('/maintenance/add'),
                     actionLabel: 'Registrar mantenimiento',
                   );
                 }
@@ -64,9 +64,9 @@ class MaintenanceListScreen extends ConsumerWidget {
                       child: MaintenanceCard(
                         maintenance: maintenance,
                         onTap: () =>
-                            context.go('/maintenance/${maintenance.id}/edit'),
+                            context.push('/maintenance/${maintenance.id}/edit'),
                         onEdit: () =>
-                            context.go('/maintenance/${maintenance.id}/edit'),
+                            context.push('/maintenance/${maintenance.id}/edit'),
                         onDelete: () async {
                           final confirmed = await showConfirmDialog(
                             context,
