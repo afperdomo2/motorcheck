@@ -149,6 +149,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                 controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: 'Nombre (opcional)',
+                  prefixIcon: Icon(Icons.badge_outlined),
                 ),
               ),
               const SizedBox(height: 16),
@@ -170,14 +171,20 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _brandController,
-                      decoration: const InputDecoration(labelText: 'Marca'),
+                      decoration: const InputDecoration(
+                        labelText: 'Marca',
+                        prefixIcon: Icon(Icons.factory_outlined),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: TextFormField(
                       controller: _modelController,
-                      decoration: const InputDecoration(labelText: 'Modelo'),
+                      decoration: const InputDecoration(
+                        labelText: 'Modelo',
+                        prefixIcon: Icon(Icons.info_outline),
+                      ),
                     ),
                   ),
                 ],
@@ -188,7 +195,10 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _yearController,
-                      decoration: const InputDecoration(labelText: 'Año'),
+                      decoration: const InputDecoration(
+                        labelText: 'Año',
+                        prefixIcon: Icon(Icons.calendar_month_outlined),
+                      ),
                       keyboardType: TextInputType.number,
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) return null;
@@ -206,7 +216,10 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _plateController,
-                      decoration: const InputDecoration(labelText: 'Placa'),
+                      decoration: const InputDecoration(
+                        labelText: 'Placa',
+                        prefixIcon: Icon(Icons.pin_outlined),
+                      ),
                     ),
                   ),
                 ],
@@ -214,7 +227,10 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _colorController,
-                decoration: const InputDecoration(labelText: 'Color'),
+                decoration: const InputDecoration(
+                  labelText: 'Color',
+                  prefixIcon: Icon(Icons.palette_outlined),
+                ),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -222,6 +238,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Kilometraje actual',
                   hintText: 'Ej: 15000',
+                  prefixIcon: Icon(Icons.speed),
                 ),
                 keyboardType: TextInputType.number,
               ),
