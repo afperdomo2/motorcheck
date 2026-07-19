@@ -1,22 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/dashboard/screens/dashboard_screen.dart';
 import '../features/vehicles/screens/vehicles_screen.dart';
 import '../features/vehicles/screens/vehicle_form_screen.dart';
-import '../features/vehicles/providers.dart';
 import '../features/maintenance/screens/maintenance_list_screen.dart';
 import '../features/maintenance/screens/maintenance_form_screen.dart';
 import '../features/maintenance/screens/maintenance_detail_screen.dart';
-import '../shared/widgets/vehicle_selector_sheet.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
   routes: [
     StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) => AppShell(
-        navigationShell: navigationShell,
-      ),
+      builder: (context, state, navigationShell) =>
+          AppShell(navigationShell: navigationShell),
       branches: [
         StatefulShellBranch(
           routes: [
@@ -35,8 +31,9 @@ final appRouter = GoRouter(
                 GoRoute(
                   path: 'add',
                   builder: (context, state) {
-                    final vehicleId =
-                        int.tryParse(state.uri.queryParameters['vehicleId'] ?? '');
+                    final vehicleId = int.tryParse(
+                      state.uri.queryParameters['vehicleId'] ?? '',
+                    );
                     return MaintenanceFormScreen(vehicleId: vehicleId);
                   },
                 ),
@@ -50,9 +47,7 @@ final appRouter = GoRouter(
                 GoRoute(
                   path: ':id/edit',
                   builder: (context, state) {
-                    final id = int.tryParse(
-                      state.pathParameters['id'] ?? '',
-                    );
+                    final id = int.tryParse(state.pathParameters['id'] ?? '');
                     return MaintenanceFormScreen(maintenanceId: id);
                   },
                 ),
@@ -73,9 +68,7 @@ final appRouter = GoRouter(
                 GoRoute(
                   path: ':id/edit',
                   builder: (context, state) {
-                    final id = int.tryParse(
-                      state.pathParameters['id'] ?? '',
-                    );
+                    final id = int.tryParse(state.pathParameters['id'] ?? '');
                     return VehicleFormScreen(vehicleId: id);
                   },
                 ),
@@ -88,20 +81,15 @@ final appRouter = GoRouter(
   ],
 );
 
-class AppShell extends ConsumerWidget {
+class AppShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   const AppShell({super.key, required this.navigationShell});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Scaffold(
       body: navigationShell,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _addMaintenance(context, ref),
-        icon: const Icon(Icons.add),
-        label: const Text('Mantenimiento'),
-      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: (index) {
@@ -129,22 +117,5 @@ class AppShell extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  Future<void> _addMaintenance(BuildContext context, WidgetRef ref) async {
-    final vehicles = ref.read(vehiclesProvider).valueOrNull ?? [];
-    if (vehicles.isEmpty) return;
-
-    if (vehicles.length == 1) {
-      if (context.mounted) {
-        context.push('/maintenance/add?vehicleId=${vehicles.first.id}');
-      }
-      return;
-    }
-
-    final selected = await VehicleSelectorSheet.show(context);
-    if (selected != null && context.mounted) {
-      context.push('/maintenance/add?vehicleId=${selected.id}');
-    }
   }
 }

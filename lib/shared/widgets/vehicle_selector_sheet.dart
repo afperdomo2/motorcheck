@@ -47,10 +47,8 @@ class VehicleSelectorSheet extends ConsumerWidget {
             ),
             Expanded(
               child: vehiclesAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
-                error: (err, _) =>
-                    Center(child: Text('Error: $err')),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, _) => Center(child: Text('Error: $err')),
                 data: (vehicles) {
                   return ListView.builder(
                     controller: scrollController,
@@ -61,8 +59,9 @@ class VehicleSelectorSheet extends ConsumerWidget {
                       return Card(
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: _typeColor(vehicle.type)
-                                .withValues(alpha: 0.15),
+                            backgroundColor: _typeColor(
+                              vehicle.type,
+                            ).withValues(alpha: 0.15),
                             child: Icon(
                               _typeIcon(vehicle.type),
                               color: _typeColor(vehicle.type),
@@ -73,20 +72,25 @@ class VehicleSelectorSheet extends ConsumerWidget {
                               Flexible(child: Text(vehicle.name)),
                               if (vehicle.isDefault) ...[
                                 const SizedBox(width: 4),
-                                Icon(Icons.star,
-                                    size: 16, color: Colors.amber[600]),
+                                Icon(
+                                  Icons.star,
+                                  size: 16,
+                                  color: Colors.amber[600],
+                                ),
                               ],
                             ],
                           ),
-                          subtitle: [
-                            vehicle.brand,
-                            vehicle.model,
-                          ].whereType<String>().join(' ').isEmpty
+                          subtitle:
+                              [
+                                vehicle.brand,
+                                vehicle.model,
+                              ].whereType<String>().join(' ').isEmpty
                               ? null
                               : Text(
-                                  [vehicle.brand, vehicle.model]
-                                      .whereType<String>()
-                                      .join(' '),
+                                  [
+                                    vehicle.brand,
+                                    vehicle.model,
+                                  ].whereType<String>().join(' '),
                                 ),
                           trailing: vehicle.plate != null
                               ? Text(vehicle.plate!)

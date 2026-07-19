@@ -8,16 +8,14 @@ import '../providers.dart';
 class MaintenanceSearchDelegate extends SearchDelegate<Maintenance?> {
   final WidgetRef ref;
 
-  MaintenanceSearchDelegate(this.ref) : super(searchFieldLabel: 'Buscar mantenimiento...');
+  MaintenanceSearchDelegate(this.ref)
+    : super(searchFieldLabel: 'Buscar mantenimiento...');
 
   @override
   List<Widget>? buildActions(BuildContext context) {
     return [
       if (query.isNotEmpty)
-        IconButton(
-          icon: const Icon(Icons.clear),
-          onPressed: () => query = '',
-        ),
+        IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ''),
     ];
   }
 
@@ -46,8 +44,8 @@ class MaintenanceSearchDelegate extends SearchDelegate<Maintenance?> {
         final filtered = q.isEmpty
             ? maintenances
             : maintenances
-                .where((m) => m.title.toLowerCase().contains(q))
-                .toList();
+                  .where((m) => m.title.toLowerCase().contains(q))
+                  .toList();
 
         if (filtered.isEmpty) {
           return Center(

@@ -15,12 +15,8 @@ class MaintenanceDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final maintenanceAsync = ref.watch(
-      maintenanceByIdProvider(maintenanceId),
-    );
-    final itemsAsync = ref.watch(
-      maintenanceItemsProvider(maintenanceId),
-    );
+    final maintenanceAsync = ref.watch(maintenanceByIdProvider(maintenanceId));
+    final itemsAsync = ref.watch(maintenanceItemsProvider(maintenanceId));
 
     return Scaffold(
       appBar: AppBar(
@@ -28,9 +24,8 @@ class MaintenanceDetailScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
-            onPressed: () => context.pushReplacement(
-              '/maintenance/$maintenanceId/edit',
-            ),
+            onPressed: () =>
+                context.pushReplacement('/maintenance/$maintenanceId/edit'),
             tooltip: 'Editar',
           ),
         ],
@@ -39,8 +34,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
         loading: () => const LoadingIndicator(),
         error: (err, _) => ErrorState(
           message: err.toString(),
-          onRetry: () =>
-              ref.invalidate(maintenanceByIdProvider(maintenanceId)),
+          onRetry: () => ref.invalidate(maintenanceByIdProvider(maintenanceId)),
         ),
         data: (maintenance) {
           if (maintenance == null) {
@@ -66,9 +60,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
-                    ...items.map(
-                      (item) => _ItemTile(item: item),
-                    ),
+                    ...items.map((item) => _ItemTile(item: item)),
                   ],
                   const SizedBox(height: 24),
                   SizedBox(
@@ -98,8 +90,7 @@ class _DetailCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total =
-        maintenance.totalLaborCost + maintenance.totalPartsCost;
+    final total = maintenance.totalLaborCost + maintenance.totalPartsCost;
 
     return Card(
       child: Padding(
@@ -153,8 +144,7 @@ class _DetailCard extends StatelessWidget {
                 ),
               ),
             ],
-            if (maintenance.notes != null &&
-                maintenance.notes!.isNotEmpty) ...[
+            if (maintenance.notes != null && maintenance.notes!.isNotEmpty) ...[
               const Divider(height: 24),
               Text(
                 maintenance.notes!,
@@ -205,9 +195,7 @@ class _ItemTile extends StatelessWidget {
       child: ListTile(
         title: Text(item.name),
         subtitle: itemTotal > 0
-            ? Text(
-                'Total: ${formatCurrency(itemTotal)}',
-              )
+            ? Text('Total: ${formatCurrency(itemTotal)}')
             : null,
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,

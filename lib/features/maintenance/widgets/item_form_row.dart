@@ -98,9 +98,7 @@ class ItemFormRow extends StatelessWidget {
                     initialValue: item.partsCost > 0
                         ? item.partsCost.toStringAsFixed(0)
                         : '',
-                    decoration: const InputDecoration(
-                      labelText: 'Repuestos',
-                    ),
+                    decoration: const InputDecoration(labelText: 'Repuestos'),
                     keyboardType: TextInputType.number,
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) return null;

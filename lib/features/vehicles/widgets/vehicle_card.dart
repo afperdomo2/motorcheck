@@ -73,7 +73,9 @@ class VehicleCard extends StatelessWidget {
                   message: 'Favorito',
                   child: Icon(Icons.star, color: Colors.amber[600], size: 22),
                 ),
-              if (onEdit != null || onDelete != null || onSetDefault != null) ...[
+              if (onEdit != null ||
+                  onDelete != null ||
+                  onSetDefault != null) ...[
                 const SizedBox(width: 4),
                 PopupMenuButton<String>(
                   onSelected: (value) {
@@ -87,7 +89,11 @@ class VehicleCard extends StatelessWidget {
                         value: 'default',
                         child: Row(
                           children: [
-                            Icon(Icons.star, size: 20, color: Colors.amber[600]),
+                            Icon(
+                              Icons.star,
+                              size: 20,
+                              color: Colors.amber[600],
+                            ),
                             const SizedBox(width: 8),
                             const Text('Marcar como favorito'),
                           ],

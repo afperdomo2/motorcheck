@@ -65,6 +65,8 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
       }
       return vehicles;
     });
+    ref.invalidate(vehiclesProvider);
+    ref.invalidate(defaultVehicleProvider);
   }
 
   Future<void> update(Vehicle vehicle) async {
@@ -76,6 +78,8 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
       }
       return _repo.getAll();
     });
+    ref.invalidate(vehiclesProvider);
+    ref.invalidate(defaultVehicleProvider);
   }
 
   Future<void> remove(int id) async {
@@ -91,11 +95,15 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
       }
       return vehicles;
     });
+    ref.invalidate(vehiclesProvider);
+    ref.invalidate(defaultVehicleProvider);
   }
 
   Future<void> setDefault(int id) async {
     await _repo.setDefault(id);
     state = await AsyncValue.guard(() => _repo.getAll());
+    ref.invalidate(vehiclesProvider);
+    ref.invalidate(defaultVehicleProvider);
   }
 }
 

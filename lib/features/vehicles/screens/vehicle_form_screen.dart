@@ -90,13 +90,9 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
         : null;
     final autoName = name.isNotEmpty
         ? name
-        : [brand, model]
-                .whereType<String>()
-                .join(' ')
-                .trim()
-                .isNotEmpty
-            ? [brand, model].whereType<String>().join(' ').trim()
-            : 'Mi vehículo';
+        : [brand, model].whereType<String>().join(' ').trim().isNotEmpty
+        ? [brand, model].whereType<String>().join(' ').trim()
+        : 'Mi vehículo';
 
     final vehicle = Vehicle(
       id: widget.vehicleId,
@@ -145,8 +141,9 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration:
-                    const InputDecoration(labelText: 'Nombre (opcional)'),
+                decoration: const InputDecoration(
+                  labelText: 'Nombre (opcional)',
+                ),
               ),
               const SizedBox(height: 16),
               const Text(

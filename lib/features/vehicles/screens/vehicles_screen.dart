@@ -42,11 +42,9 @@ class VehiclesScreen extends ConsumerWidget {
           }
 
           return RefreshIndicator(
-            onRefresh:
-                ref.read(vehiclesNotifierProvider.notifier).loadVehicles,
+            onRefresh: ref.read(vehiclesNotifierProvider.notifier).loadVehicles,
             child: ListView.builder(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: vehicles.length,
               itemBuilder: (context, index) {
                 final vehicle = vehicles[index];
@@ -56,12 +54,10 @@ class VehiclesScreen extends ConsumerWidget {
                     vehicle: vehicle,
                     isSelected: vehicle.id == selectedId,
                     onTap: () {
-                      ref
-                          .read(selectedVehicleIdProvider.notifier)
-                          .state = vehicle.id;
+                      ref.read(selectedVehicleIdProvider.notifier).state =
+                          vehicle.id;
                     },
-                    onEdit: () =>
-                        context.push('/vehicles/${vehicle.id}/edit'),
+                    onEdit: () => context.push('/vehicles/${vehicle.id}/edit'),
                     onSetDefault: () {
                       ref
                           .read(vehiclesNotifierProvider.notifier)

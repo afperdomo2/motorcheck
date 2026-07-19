@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../vehicles/providers.dart';
 import '../providers.dart';
 import '../widgets/quick_stats.dart';
@@ -18,9 +19,8 @@ class DashboardScreen extends ConsumerWidget {
     final summaryAsync = ref.watch(dashboardSummaryProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('MotorCheck'),
-      ),
+      appBar: AppBar(title: const Text('MotorCheck')),
+      floatingActionButton: _buildFab(context, ref),
       body: vehiclesAsync.when(
         loading: () => const LoadingIndicator(),
         error: (err, _) => ErrorState(
@@ -68,5 +68,33 @@ class DashboardScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  Widget? _buildFab(BuildContext context, WidgetRef ref) {
+    final vehicles = ref.watch(vehiclesProvider).valueOrNull ?? [];
+    if (vehicles.isEmpty) return null;
+
+    return FloatingActionButton(
+      onPressed: () => _addMaintenance(context, ref),
+      tooltip: 'Agregar mantenimiento',
+      child: const Icon(Icons.build),
+    );
+  }
+
+  Future<void> _addMaintenance(BuildContext context, WidgetRef ref) async {
+    final vehicles = ref.read(vehiclesProvider).valueOrNull ?? [];
+    if (vehicles.isEmpty) return;
+
+    if (vehicles.length == 1) {
+      if (context.mounted) {
+        context.push('/maintenance/add?vehicleId=${vehicles.first.id}');
+      }
+      return;
+    }
+
+    final selected = await VehicleSelectorSheet.show(context);
+    if (selected != null && context.mounted) {
+      context.push('/maintenance/add?vehicleId=${selected.id}');
+    }
   }
 }

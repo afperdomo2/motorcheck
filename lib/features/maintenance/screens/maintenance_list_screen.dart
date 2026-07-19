@@ -5,6 +5,7 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
+import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../vehicles/providers.dart';
 import '../../vehicles/models/vehicle.dart';
 import '../models/maintenance.dart';
@@ -20,8 +21,7 @@ class MaintenanceListScreen extends ConsumerStatefulWidget {
       _MaintenanceListScreenState();
 }
 
-class _MaintenanceListScreenState
-    extends ConsumerState<MaintenanceListScreen> {
+class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
   int? _selectedVehicleId;
   String? _selectedCategory;
 
@@ -29,8 +29,7 @@ class _MaintenanceListScreenState
   Widget build(BuildContext context) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
     final maintenancesAsync = ref.watch(maintenancesNotifierProvider);
-    final hasMultipleVehicles =
-        (vehiclesAsync.valueOrNull?.length ?? 0) > 1;
+    final hasMultipleVehicles = (vehiclesAsync.valueOrNull?.length ?? 0) > 1;
 
     return Scaffold(
       appBar: AppBar(
@@ -47,6 +46,11 @@ class _MaintenanceListScreenState
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _addMaintenance(context),
+        tooltip: 'Agregar mantenimiento',
+        child: const Icon(Icons.build),
+      ),
       body: Column(
         children: [
           _buildFilterBar(context, hasMultipleVehicles),
@@ -61,8 +65,7 @@ class _MaintenanceListScreenState
               ),
               data: (maintenances) {
                 final filtered = _applyFilters(maintenances);
-                final vehicles =
-                    vehiclesAsync.valueOrNull ?? [];
+                final vehicles = vehiclesAsync.valueOrNull ?? [];
 
                 if (filtered.isEmpty) {
                   return _buildEmptyState(vehicles);
@@ -86,8 +89,7 @@ class _MaintenanceListScreenState
                         child: MaintenanceCard(
                           maintenance: m,
                           vehicleName: vehicle?.name,
-                          onTap: () =>
-                              context.push('/maintenance/${m.id}'),
+                          onTap: () => context.push('/maintenance/${m.id}'),
                           onEdit: () =>
                               context.push('/maintenance/${m.id}/edit'),
                           onDelete: () async {
@@ -101,8 +103,7 @@ class _MaintenanceListScreenState
                             );
                             if (confirmed == true && context.mounted) {
                               ref
-                                  .read(
-                                      maintenancesNotifierProvider.notifier)
+                                  .read(maintenancesNotifierProvider.notifier)
                                   .remove(m.id!);
                             }
                           },
@@ -127,8 +128,11 @@ class _MaintenanceListScreenState
         child: Row(
           children: [
             if (hasMultipleVehicles) ...[
-              _chip('Todos', _selectedVehicleId == null,
-                  (_) => setState(() => _selectedVehicleId = null)),
+              _chip(
+                'Todos',
+                _selectedVehicleId == null,
+                (_) => setState(() => _selectedVehicleId = null),
+              ),
               const SizedBox(width: 6),
               ...(ref.watch(vehiclesProvider).valueOrNull ?? []).map((v) {
                 return Padding(
@@ -142,8 +146,11 @@ class _MaintenanceListScreenState
               }),
               const SizedBox(width: 12),
             ],
-            _chip('Todas', _selectedCategory == null,
-                (_) => setState(() => _selectedCategory = null)),
+            _chip(
+              'Todas',
+              _selectedCategory == null,
+              (_) => setState(() => _selectedCategory = null),
+            ),
             const SizedBox(width: 6),
             ...['oil', 'tires', 'filters', 'brakes', 'general'].map((cat) {
               return Padding(
@@ -186,8 +193,7 @@ class _MaintenanceListScreenState
   }
 
   Widget _buildEmptyState(List<Vehicle> vehicles) {
-    final hasFilters =
-        _selectedVehicleId != null || _selectedCategory != null;
+    final hasFilters = _selectedVehicleId != null || _selectedCategory != null;
     if (vehicles.isEmpty) {
       return const EmptyState(
         icon: Icons.build,
@@ -230,5 +236,22 @@ class _MaintenanceListScreenState
       'general' => 'General',
       _ => cat,
     };
+  }
+
+  Future<void> _addMaintenance(BuildContext context) async {
+    final vehicles = ref.read(vehiclesProvider).valueOrNull ?? [];
+    if (vehicles.isEmpty) return;
+
+    if (vehicles.length == 1) {
+      if (context.mounted) {
+        context.push('/maintenance/add?vehicleId=${vehicles.first.id}');
+      }
+      return;
+    }
+
+    final selected = await VehicleSelectorSheet.show(context);
+    if (selected != null && context.mounted) {
+      context.push('/maintenance/add?vehicleId=${selected.id}');
+    }
   }
 }

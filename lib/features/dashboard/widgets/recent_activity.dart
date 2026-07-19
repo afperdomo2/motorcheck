@@ -42,8 +42,7 @@ class RecentActivity extends StatelessWidget {
                 title: Text(maintenance.title),
                 subtitle: Text(formatDate(maintenance.date)),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () =>
-                    context.push('/maintenance/${maintenance.id}'),
+                onTap: () => context.push('/maintenance/${maintenance.id}'),
               ),
             ),
           ],
