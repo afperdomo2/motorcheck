@@ -30,6 +30,7 @@ mixin _$Vehicle {
   String? get plate => throw _privateConstructorUsedError;
   String? get color => throw _privateConstructorUsedError;
   String? get imagePath => throw _privateConstructorUsedError;
+  int? get currentMileage => throw _privateConstructorUsedError;
   bool get isDefault => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
@@ -58,6 +59,7 @@ abstract class $VehicleCopyWith<$Res> {
     String? plate,
     String? color,
     String? imagePath,
+    int? currentMileage,
     bool isDefault,
     DateTime createdAt,
     DateTime updatedAt,
@@ -88,6 +90,7 @@ class _$VehicleCopyWithImpl<$Res, $Val extends Vehicle>
     Object? plate = freezed,
     Object? color = freezed,
     Object? imagePath = freezed,
+    Object? currentMileage = freezed,
     Object? isDefault = null,
     Object? createdAt = null,
     Object? updatedAt = null,
@@ -130,6 +133,10 @@ class _$VehicleCopyWithImpl<$Res, $Val extends Vehicle>
                 ? _value.imagePath
                 : imagePath // ignore: cast_nullable_to_non_nullable
                       as String?,
+            currentMileage: freezed == currentMileage
+                ? _value.currentMileage
+                : currentMileage // ignore: cast_nullable_to_non_nullable
+                      as int?,
             isDefault: null == isDefault
                 ? _value.isDefault
                 : isDefault // ignore: cast_nullable_to_non_nullable
@@ -166,6 +173,7 @@ abstract class _$$VehicleImplCopyWith<$Res> implements $VehicleCopyWith<$Res> {
     String? plate,
     String? color,
     String? imagePath,
+    int? currentMileage,
     bool isDefault,
     DateTime createdAt,
     DateTime updatedAt,
@@ -195,6 +203,7 @@ class __$$VehicleImplCopyWithImpl<$Res>
     Object? plate = freezed,
     Object? color = freezed,
     Object? imagePath = freezed,
+    Object? currentMileage = freezed,
     Object? isDefault = null,
     Object? createdAt = null,
     Object? updatedAt = null,
@@ -237,6 +246,10 @@ class __$$VehicleImplCopyWithImpl<$Res>
             ? _value.imagePath
             : imagePath // ignore: cast_nullable_to_non_nullable
                   as String?,
+        currentMileage: freezed == currentMileage
+            ? _value.currentMileage
+            : currentMileage // ignore: cast_nullable_to_non_nullable
+                  as int?,
         isDefault: null == isDefault
             ? _value.isDefault
             : isDefault // ignore: cast_nullable_to_non_nullable
@@ -267,6 +280,7 @@ class _$VehicleImpl implements _Vehicle {
     this.plate,
     this.color,
     this.imagePath,
+    this.currentMileage,
     this.isDefault = false,
     required this.createdAt,
     required this.updatedAt,
@@ -295,6 +309,8 @@ class _$VehicleImpl implements _Vehicle {
   @override
   final String? imagePath;
   @override
+  final int? currentMileage;
+  @override
   @JsonKey()
   final bool isDefault;
   @override
@@ -304,7 +320,7 @@ class _$VehicleImpl implements _Vehicle {
 
   @override
   String toString() {
-    return 'Vehicle(id: $id, name: $name, type: $type, brand: $brand, model: $model, year: $year, plate: $plate, color: $color, imagePath: $imagePath, isDefault: $isDefault, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Vehicle(id: $id, name: $name, type: $type, brand: $brand, model: $model, year: $year, plate: $plate, color: $color, imagePath: $imagePath, currentMileage: $currentMileage, isDefault: $isDefault, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -322,6 +338,8 @@ class _$VehicleImpl implements _Vehicle {
             (identical(other.color, color) || other.color == color) &&
             (identical(other.imagePath, imagePath) ||
                 other.imagePath == imagePath) &&
+            (identical(other.currentMileage, currentMileage) ||
+                other.currentMileage == currentMileage) &&
             (identical(other.isDefault, isDefault) ||
                 other.isDefault == isDefault) &&
             (identical(other.createdAt, createdAt) ||
@@ -343,6 +361,7 @@ class _$VehicleImpl implements _Vehicle {
     plate,
     color,
     imagePath,
+    currentMileage,
     isDefault,
     createdAt,
     updatedAt,
@@ -373,6 +392,7 @@ abstract class _Vehicle implements Vehicle {
     final String? plate,
     final String? color,
     final String? imagePath,
+    final int? currentMileage,
     final bool isDefault,
     required final DateTime createdAt,
     required final DateTime updatedAt,
@@ -398,6 +418,8 @@ abstract class _Vehicle implements Vehicle {
   String? get color;
   @override
   String? get imagePath;
+  @override
+  int? get currentMileage;
   @override
   bool get isDefault;
   @override

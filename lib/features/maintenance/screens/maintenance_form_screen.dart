@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/utils/formatters.dart';
 import '../../vehicles/providers.dart';
 import '../models/maintenance.dart';
 import '../models/maintenance_item.dart';
@@ -28,6 +29,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
   final List<MaintenanceItem> _items = [];
   bool _isLoading = false;
   DateTime? _originalCreatedAt;
+  int? _vehicleCurrentMileage;
 
   bool get _isEditing => widget.maintenanceId != null;
 
@@ -40,6 +42,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
 
     if (!_isEditing) {
       _addItem();
+      Future.microtask(() => _loadVehicleMileage());
     } else {
       Future.microtask(() => _loadMaintenance());
     }
@@ -84,6 +87,17 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
         ),
       );
     });
+  }
+
+  Future<void> _loadVehicleMileage() async {
+    final vehicleId =
+        widget.vehicleId ?? ref.read(selectedVehicleIdProvider);
+    if (vehicleId == null) return;
+    final vehicle =
+        await ref.read(vehicleRepositoryProvider).getById(vehicleId);
+    if (vehicle != null && vehicle.currentMileage != null && mounted) {
+      setState(() => _vehicleCurrentMileage = vehicle.currentMileage);
+    }
   }
 
   void _removeItem(int index) {
@@ -222,6 +236,13 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                   return null;
                 },
               ),
+              if (_vehicleCurrentMileage != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Kilometraje actual del vehículo: ${formatMileage(_vehicleCurrentMileage)}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
               const SizedBox(height: 16),
               TextFormField(
                 controller: _notesController,

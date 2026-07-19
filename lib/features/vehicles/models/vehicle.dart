@@ -15,6 +15,7 @@ class Vehicle with _$Vehicle {
     String? plate,
     String? color,
     String? imagePath,
+    int? currentMileage,
     @Default(false) bool isDefault,
     required DateTime createdAt,
     required DateTime updatedAt,

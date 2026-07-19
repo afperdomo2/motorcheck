@@ -24,7 +24,12 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'motorcheck.db');
 
-    return openDatabase(path, version: 1, onCreate: _onCreate);
+    return openDatabase(
+      path,
+      version: 2,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -33,5 +38,13 @@ class DatabaseHelper {
     batch.execute(Tables.createMaintenances);
     batch.execute(Tables.createMaintenanceItems);
     await batch.commit(noResult: true);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute(
+        'ALTER TABLE vehicles ADD COLUMN current_mileage INTEGER',
+      );
+    }
   }
 }

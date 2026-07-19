@@ -23,6 +23,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
   late final TextEditingController _yearController;
   late final TextEditingController _plateController;
   late final TextEditingController _colorController;
+  late final TextEditingController _mileageController;
   String _type = 'car';
   bool _isDefault = false;
   bool _isLoading = false;
@@ -39,6 +40,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
     _yearController = TextEditingController();
     _plateController = TextEditingController();
     _colorController = TextEditingController();
+    _mileageController = TextEditingController();
 
     if (_isEditing) {
       Future.microtask(() => _loadVehicle());
@@ -56,6 +58,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
       _yearController.text = vehicle.year?.toString() ?? '';
       _plateController.text = vehicle.plate ?? '';
       _colorController.text = vehicle.color ?? '';
+      _mileageController.text = vehicle.currentMileage?.toString() ?? '';
       setState(() {
         _type = vehicle.type;
         _isDefault = vehicle.isDefault;
@@ -72,6 +75,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
     _yearController.dispose();
     _plateController.dispose();
     _colorController.dispose();
+    _mileageController.dispose();
     super.dispose();
   }
 
@@ -107,6 +111,8 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
       color: _colorController.text.trim().isEmpty
           ? null
           : _colorController.text.trim(),
+      currentMileage:
+          int.tryParse(_mileageController.text.trim()),
       isDefault: _isDefault,
       createdAt: _originalCreatedAt ?? now,
       updatedAt: now,
@@ -209,6 +215,15 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
               TextFormField(
                 controller: _colorController,
                 decoration: const InputDecoration(labelText: 'Color'),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _mileageController,
+                decoration: const InputDecoration(
+                  labelText: 'Kilometraje actual',
+                  hintText: 'Ej: 15000',
+                ),
+                keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 16),
               SwitchListTile(

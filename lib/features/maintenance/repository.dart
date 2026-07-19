@@ -50,9 +50,25 @@ class MaintenanceRepository {
     List<MaintenanceItem> items,
   ) async {
     final db = await _db.database;
-    final id = await db.insert('maintenances', _maintenanceToMap(maintenance));
-    await _insertItems(db, id, items);
-    return id;
+    return db.transaction((txn) async {
+      final id = await txn.insert(
+        'maintenances',
+        _maintenanceToMap(maintenance),
+      );
+      await _insertItems(txn, id, items);
+      if (maintenance.mileage != null) {
+        await txn.update(
+          'vehicles',
+          {
+            'current_mileage': maintenance.mileage,
+            'updated_at': formatDateTime(DateTime.now()),
+          },
+          where: 'id = ?',
+          whereArgs: [maintenance.vehicleId],
+        );
+      }
+      return id;
+    });
   }
 
   Future<void> update(
@@ -104,7 +120,7 @@ class MaintenanceRepository {
   }
 
   Future<void> _insertItems(
-    Database db,
+    DatabaseExecutor db,
     int maintenanceId,
     List<MaintenanceItem> items,
   ) async {
