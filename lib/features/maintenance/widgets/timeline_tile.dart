@@ -65,16 +65,13 @@ class TimelineTile extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 vehicleName!,
-                                style:
-                                    Theme.of(context).textTheme.titleMedium,
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
                             ),
                             if (total > 0)
                               Text(
                                 formatCurrency(total),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
+                                style: Theme.of(context).textTheme.labelLarge
                                     ?.copyWith(fontWeight: FontWeight.w600),
                               ),
                           ],

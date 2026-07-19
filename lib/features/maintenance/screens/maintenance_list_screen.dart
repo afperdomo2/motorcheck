@@ -7,7 +7,6 @@ import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../vehicles/providers.dart';
 import '../../vehicles/models/vehicle.dart';
-import '../categories.dart';
 import '../models/maintenance.dart';
 import '../models/workshop.dart';
 import '../providers.dart';
@@ -24,7 +23,14 @@ class MaintenanceListScreen extends ConsumerStatefulWidget {
 
 class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
   int? _selectedVehicleId;
-  String? _selectedCategory;
+
+  IconData _vehicleIcon(String type) => switch (type) {
+    'motorcycle' => Icons.motorcycle,
+    'bike' => Icons.pedal_bike,
+    'truck' => Icons.local_shipping,
+    'other' => Icons.help_outline,
+    _ => Icons.directions_car,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +162,14 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
   Widget _buildFilterBar(BuildContext context) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
     final vehicles = vehiclesAsync.valueOrNull ?? [];
-    final hasMultipleVehicles = vehicles.length > 1;
+    if (vehicles.length <= 1) return const SizedBox.shrink();
+
+    final sorted = List<Vehicle>.from(vehicles)
+      ..sort((a, b) {
+        if (a.isDefault && !b.isDefault) return -1;
+        if (!a.isDefault && b.isDefault) return 1;
+        return a.name.compareTo(b.name);
+      });
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -165,104 +178,60 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
           bottom: BorderSide(color: Theme.of(context).dividerColor, width: 0.5),
         ),
       ),
-      child: Column(
-        children: [
-          if (hasMultipleVehicles)
-            DropdownButtonFormField<int?>(
-              value: _selectedVehicleId,
-              decoration: const InputDecoration(
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 0,
-                ),
-                isDense: true,
-                prefixIcon: Icon(Icons.directions_car, size: 20),
-              ),
-              items: [
-                const DropdownMenuItem<int?>(
-                  value: null,
-                  child: Text('Todos los vehículos'),
-                ),
-                ...vehicles.map(
-                  (v) =>
-                      DropdownMenuItem<int?>(value: v.id, child: Text(v.name)),
-                ),
-              ],
-              onChanged: (v) => setState(() => _selectedVehicleId = v),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _chip(
+              label: 'Todos',
+              icon: Icons.filter_list,
+              selected: _selectedVehicleId == null,
+              onSelected: (_) => setState(() => _selectedVehicleId = null),
             ),
-          const SizedBox(height: 4),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _chip(
-                  'Todas',
-                  _selectedCategory == null,
-                  (_) => setState(() => _selectedCategory = null),
+            const SizedBox(width: 6),
+            ...sorted.map((v) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: _chip(
+                  label: v.name,
+                  icon: _vehicleIcon(v.type),
+                  selected: _selectedVehicleId == v.id,
+                  onSelected: (_) => setState(() => _selectedVehicleId = v.id),
                 ),
-                const SizedBox(width: 6),
-                ..._allCategoryFilters(vehicles).map((cat) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: _chip(
-                      MaintenanceCategories.label(cat),
-                      _selectedCategory == cat,
-                      (_) => setState(() => _selectedCategory = cat),
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-        ],
+              );
+            }),
+          ],
+        ),
       ),
     );
   }
 
-  List<String> _allCategoryFilters(List<Vehicle> vehicles) {
-    final selectedVehicle = vehicles.where(
-      (v) => _selectedVehicleId == null || v.id == _selectedVehicleId,
-    );
-    final types = selectedVehicle.map((v) => v.type).toSet();
-    if (types.isEmpty) {
-      return MaintenanceCategories.all.map((c) => c.key).toList();
-    }
-    final categories = <String>{};
-    for (final type in types) {
-      categories.addAll(
-        MaintenanceCategories.forVehicleType(type).map((c) => c.key),
-      );
-    }
-    return categories.toList()..sort();
-  }
-
-  Widget _chip(String label, bool selected, ValueChanged<bool> onSelected) {
+  Widget _chip({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required ValueChanged<bool> onSelected,
+  }) {
     return FilterChip(
+      avatar: Icon(icon, size: 16),
       label: Text(label),
       selected: selected,
       onSelected: onSelected,
       visualDensity: VisualDensity.compact,
       labelStyle: const TextStyle(fontSize: 12),
+      showCheckmark: false,
     );
   }
 
   List<Maintenance> _applyFilters(List<Maintenance> maintenances) {
-    var filtered = maintenances;
-    if (_selectedVehicleId != null) {
-      filtered = filtered
-          .where((m) => m.vehicleId == _selectedVehicleId)
-          .toList();
-    }
-    if (_selectedCategory != null) {
-      filtered = filtered.where((m) {
-        return true;
-      }).toList();
-    }
-    return filtered;
+    if (_selectedVehicleId == null) return maintenances;
+    return maintenances
+        .where((m) => m.vehicleId == _selectedVehicleId)
+        .toList();
   }
 
   Widget _buildEmptyState(List<Vehicle> vehicles) {
-    final hasFilters = _selectedVehicleId != null || _selectedCategory != null;
+    final hasFilters = _selectedVehicleId != null;
     if (vehicles.isEmpty) {
       return const EmptyState(
         icon: Icons.build,
@@ -277,7 +246,6 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
         subtitle: 'Intenta con otros filtros',
         onAction: () => setState(() {
           _selectedVehicleId = null;
-          _selectedCategory = null;
         }),
         actionLabel: 'Limpiar filtros',
       );
