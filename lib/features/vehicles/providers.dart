@@ -95,7 +95,7 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
 
   Future<void> setDefault(int id) async {
     await _repo.setDefault(id);
-    ref.invalidate(vehiclesProvider);
+    state = await AsyncValue.guard(() => _repo.getAll());
   }
 }
 

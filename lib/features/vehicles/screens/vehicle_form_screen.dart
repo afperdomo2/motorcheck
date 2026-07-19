@@ -81,16 +81,29 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
     setState(() => _isLoading = true);
 
     final now = DateTime.now();
+    final name = _nameController.text.trim();
+    final brand = _brandController.text.trim().isNotEmpty
+        ? _brandController.text.trim()
+        : null;
+    final model = _modelController.text.trim().isNotEmpty
+        ? _modelController.text.trim()
+        : null;
+    final autoName = name.isNotEmpty
+        ? name
+        : [brand, model]
+                .whereType<String>()
+                .join(' ')
+                .trim()
+                .isNotEmpty
+            ? [brand, model].whereType<String>().join(' ').trim()
+            : 'Mi vehículo';
+
     final vehicle = Vehicle(
       id: widget.vehicleId,
-      name: _nameController.text.trim(),
+      name: autoName,
       type: _type,
-      brand: _brandController.text.trim().isEmpty
-          ? null
-          : _brandController.text.trim(),
-      model: _modelController.text.trim().isEmpty
-          ? null
-          : _modelController.text.trim(),
+      brand: brand,
+      model: model,
       year: int.tryParse(_yearController.text.trim()),
       plate: _plateController.text.trim().isEmpty
           ? null
@@ -132,9 +145,8 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nombre *'),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Requerido' : null,
+                decoration:
+                    const InputDecoration(labelText: 'Nombre (opcional)'),
               ),
               const SizedBox(height: 16),
               const Text(

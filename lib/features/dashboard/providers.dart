@@ -1,36 +1,32 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../vehicles/providers.dart';
-import '../vehicles/models/vehicle.dart';
 import '../maintenance/providers.dart';
 import '../maintenance/models/maintenance.dart';
 
 final dashboardSummaryProvider = FutureProvider<DashboardSummary?>((ref) async {
-  final vehicleId = ref.watch(selectedVehicleIdProvider);
-  if (vehicleId == null) return null;
+  final vehicles = await ref.read(vehicleRepositoryProvider).getAll();
+  if (vehicles.isEmpty) return null;
 
-  final vehicle = await ref.read(vehicleRepositoryProvider).getById(vehicleId);
-  if (vehicle == null) return null;
+  final repository = ref.read(maintenanceRepositoryProvider);
 
-  final recentMaintenances = await ref
-      .read(maintenanceRepositoryProvider)
-      .getRecentByVehicleId(vehicleId, limit: 5);
+  final allMaintenances = await repository.getAll();
 
-  final totalCount = await ref
-      .read(maintenanceRepositoryProvider)
-      .countByVehicleId(vehicleId);
+  final totalMaintenances = allMaintenances.length;
 
-  final lastMaintenance = recentMaintenances.isNotEmpty
-      ? recentMaintenances.first
-      : null;
-
-  final totalSpent = recentMaintenances.fold<double>(
+  final totalSpent = allMaintenances.fold<double>(
     0,
     (sum, m) => sum + m.totalLaborCost + m.totalPartsCost,
   );
 
+  final sorted = List<Maintenance>.from(allMaintenances)
+    ..sort((a, b) => b.date.compareTo(a.date));
+
+  final lastMaintenance = sorted.isNotEmpty ? sorted.first : null;
+  final recentMaintenances = sorted.take(5).toList();
+
   return DashboardSummary(
-    vehicle: vehicle,
-    totalMaintenances: totalCount,
+    totalVehicles: vehicles.length,
+    totalMaintenances: totalMaintenances,
     lastMaintenance: lastMaintenance,
     recentMaintenances: recentMaintenances,
     totalSpent: totalSpent,
@@ -38,14 +34,14 @@ final dashboardSummaryProvider = FutureProvider<DashboardSummary?>((ref) async {
 });
 
 class DashboardSummary {
-  final Vehicle vehicle;
+  final int totalVehicles;
   final int totalMaintenances;
   final Maintenance? lastMaintenance;
   final List<Maintenance> recentMaintenances;
   final double totalSpent;
 
   const DashboardSummary({
-    required this.vehicle,
+    required this.totalVehicles,
     required this.totalMaintenances,
     this.lastMaintenance,
     this.recentMaintenances = const [],

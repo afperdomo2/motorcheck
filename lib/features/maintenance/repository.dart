@@ -7,6 +7,12 @@ import 'models/maintenance_item.dart';
 class MaintenanceRepository {
   final DatabaseHelper _db = DatabaseHelper.instance;
 
+  Future<List<Maintenance>> getAll() async {
+    final db = await _db.database;
+    final maps = await db.query('maintenances', orderBy: 'date DESC');
+    return maps.map(_maintenanceFromMap).toList();
+  }
+
   Future<List<Maintenance>> getByVehicleId(int vehicleId) async {
     final db = await _db.database;
     final maps = await db.query(

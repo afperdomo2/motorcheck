@@ -7,6 +7,7 @@ class MaintenanceCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final String? vehicleName;
 
   const MaintenanceCard({
     super.key,
@@ -14,6 +15,7 @@ class MaintenanceCard extends StatelessWidget {
     required this.onTap,
     this.onEdit,
     this.onDelete,
+    this.vehicleName,
   });
 
   @override
@@ -72,6 +74,17 @@ class MaintenanceCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
+              if (vehicleName != null)
+                Row(
+                  children: [
+                    const Icon(Icons.directions_car, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      vehicleName!,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
               Row(
                 children: [
                   const Icon(Icons.calendar_today, size: 16),

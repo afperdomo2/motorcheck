@@ -62,6 +62,11 @@ class VehiclesScreen extends ConsumerWidget {
                     },
                     onEdit: () =>
                         context.push('/vehicles/${vehicle.id}/edit'),
+                    onSetDefault: () {
+                      ref
+                          .read(vehiclesNotifierProvider.notifier)
+                          .setDefault(vehicle.id!);
+                    },
                     onDelete: () async {
                       final confirmed = await showConfirmDialog(
                         context,

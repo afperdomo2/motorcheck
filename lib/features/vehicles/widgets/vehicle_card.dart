@@ -8,6 +8,7 @@ class VehicleCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final VoidCallback? onSetDefault;
 
   const VehicleCard({
     super.key,
@@ -16,6 +17,7 @@ class VehicleCard extends StatelessWidget {
     required this.onTap,
     this.onEdit,
     this.onDelete,
+    this.onSetDefault,
   });
 
   @override
@@ -66,15 +68,32 @@ class VehicleCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (vehicle.isDefault) const Chip(label: Text('Default')),
-              if (onEdit != null || onDelete != null) ...[
-                const SizedBox(width: 8),
+              if (vehicle.isDefault)
+                Tooltip(
+                  message: 'Favorito',
+                  child: Icon(Icons.star, color: Colors.amber[600], size: 22),
+                ),
+              if (onEdit != null || onDelete != null || onSetDefault != null) ...[
+                const SizedBox(width: 4),
                 PopupMenuButton<String>(
                   onSelected: (value) {
                     if (value == 'edit') onEdit?.call();
                     if (value == 'delete') onDelete?.call();
+                    if (value == 'default') onSetDefault?.call();
                   },
                   itemBuilder: (context) => [
+                    if (!vehicle.isDefault) ...[
+                      PopupMenuItem(
+                        value: 'default',
+                        child: Row(
+                          children: [
+                            Icon(Icons.star, size: 20, color: Colors.amber[600]),
+                            const SizedBox(width: 8),
+                            const Text('Marcar como favorito'),
+                          ],
+                        ),
+                      ),
+                    ],
                     const PopupMenuItem(
                       value: 'edit',
                       child: Row(

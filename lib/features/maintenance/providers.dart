@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../vehicles/providers.dart';
+import '../vehicles/models/vehicle.dart';
 import 'models/maintenance.dart';
 import 'models/maintenance_item.dart';
 import 'repository.dart';
@@ -9,10 +10,8 @@ final maintenanceRepositoryProvider = Provider<MaintenanceRepository>((ref) {
 });
 
 final maintenancesProvider = FutureProvider<List<Maintenance>>((ref) async {
-  final vehicleId = ref.watch(selectedVehicleIdProvider);
-  if (vehicleId == null) return [];
   final repository = ref.watch(maintenanceRepositoryProvider);
-  return repository.getByVehicleId(vehicleId);
+  return repository.getAll();
 });
 
 final maintenanceItemsProvider =
@@ -30,31 +29,31 @@ final maintenanceByIdProvider =
   return repository.getById(maintenanceId);
 });
 
+final vehicleNamesProvider = FutureProvider<Map<int, Vehicle>>((ref) async {
+  final vehicles = await ref.watch(vehiclesProvider.future);
+  return {for (final v in vehicles) v.id!: v};
+});
+
 class MaintenancesNotifier extends Notifier<AsyncValue<List<Maintenance>>> {
   MaintenanceRepository get _repo => ref.read(maintenanceRepositoryProvider);
 
   @override
   AsyncValue<List<Maintenance>> build() {
-    ref.listen(selectedVehicleIdProvider, (_, next) {
-      if (next != null) loadMaintenances();
-    });
-    final vehicleId = ref.read(selectedVehicleIdProvider);
-    if (vehicleId != null) loadMaintenances();
+    _load();
     return const AsyncValue.data([]);
   }
 
-  Future<void> loadMaintenances() async {
-    final vehicleId = ref.read(selectedVehicleIdProvider);
-    if (vehicleId == null) return;
-    state = await AsyncValue.guard(() => _repo.getByVehicleId(vehicleId));
+  Future<void> _load() async {
+    state = await AsyncValue.guard(() => _repo.getAll());
   }
+
+  Future<void> loadMaintenances() => _load();
 
   Future<void> add(Maintenance maintenance, List<MaintenanceItem> items) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await _repo.insert(maintenance, items);
-      final vehicleId = ref.read(selectedVehicleIdProvider)!;
-      return _repo.getByVehicleId(vehicleId);
+      return _repo.getAll();
     });
   }
 
@@ -65,8 +64,7 @@ class MaintenancesNotifier extends Notifier<AsyncValue<List<Maintenance>>> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await _repo.update(maintenance, items);
-      final vehicleId = ref.read(selectedVehicleIdProvider)!;
-      return _repo.getByVehicleId(vehicleId);
+      return _repo.getAll();
     });
   }
 
@@ -74,8 +72,7 @@ class MaintenancesNotifier extends Notifier<AsyncValue<List<Maintenance>>> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await _repo.delete(id);
-      final vehicleId = ref.read(selectedVehicleIdProvider)!;
-      return _repo.getByVehicleId(vehicleId);
+      return _repo.getAll();
     });
   }
 }

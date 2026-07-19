@@ -10,7 +10,9 @@ import '../widgets/item_form_row.dart';
 class MaintenanceFormScreen extends ConsumerStatefulWidget {
   final int? maintenanceId;
 
-  const MaintenanceFormScreen({super.key, this.maintenanceId});
+  final int? vehicleId;
+
+  const MaintenanceFormScreen({super.key, this.maintenanceId, this.vehicleId});
 
   @override
   ConsumerState<MaintenanceFormScreen> createState() =>
@@ -102,7 +104,9 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
 
     setState(() => _isLoading = true);
 
-    final vehicleId = ref.read(selectedVehicleIdProvider)!;
+    final vehicleId =
+        widget.vehicleId ?? ref.read(selectedVehicleIdProvider);
+    if (vehicleId == null) return;
     final now = DateTime.now();
 
     final totalLabor = validItems.fold<double>(

@@ -16,36 +16,21 @@ class QuickStats extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: AppColors.forVehicleType(
-                    summary.vehicle.type,
-                  ).withValues(alpha: 0.15),
-                  child: Icon(
-                    _icon(summary.vehicle.type),
-                    color: AppColors.forVehicleType(summary.vehicle.type),
+            Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.garage,
+                    size: 40,
+                    color: AppColors.primary.withValues(alpha: 0.7),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        summary.vehicle.name,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      if (summary.vehicle.plate != null)
-                        Text(
-                          summary.vehicle.plate!,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                    ],
+                  const SizedBox(height: 4),
+                  Text(
+                    '${summary.totalVehicles} vehículo${summary.totalVehicles == 1 ? '' : 's'}',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const Divider(height: 32),
             Row(
@@ -78,16 +63,6 @@ class QuickStats extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  IconData _icon(String type) {
-    return switch (type) {
-      'car' => Icons.directions_car,
-      'motorcycle' => Icons.motorcycle,
-      'bike' => Icons.pedal_bike,
-      'truck' => Icons.local_shipping,
-      _ => Icons.help_outline,
-    };
   }
 }
 
