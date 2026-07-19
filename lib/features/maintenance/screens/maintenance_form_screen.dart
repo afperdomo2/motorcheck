@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../vehicles/providers.dart';
 import '../../vehicles/models/vehicle.dart';
+import '../../settings/providers.dart';
 import '../models/maintenance.dart';
 import '../models/maintenance_item.dart';
 import '../providers.dart';
@@ -244,8 +245,8 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     );
     if (result != null && mounted) {
       final id = await ref
-          .read(maintenanceRepositoryProvider)
-          .insertWorkshop(result.name, location: result.location);
+          .read(workshopRepositoryProvider)
+          .insert(result.name, location: result.location);
       ref.invalidate(workshopsProvider);
       setState(() => _workshopId = id);
     }

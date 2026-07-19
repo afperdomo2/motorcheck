@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../settings/providers.dart';
 import '../vehicles/providers.dart';
 import '../vehicles/models/vehicle.dart';
 import 'models/maintenance.dart';
@@ -86,8 +87,8 @@ final maintenancesNotifierProvider =
     );
 
 final workshopsProvider = FutureProvider<List<Workshop>>((ref) async {
-  final repository = ref.watch(maintenanceRepositoryProvider);
-  return repository.getWorkshops();
+  final repository = ref.watch(workshopRepositoryProvider);
+  return repository.getAll();
 });
 
 final workshopItemsProvider =

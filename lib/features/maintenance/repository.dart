@@ -3,7 +3,6 @@ import '../../core/database/database_helper.dart';
 import '../../core/utils/formatters.dart';
 import 'models/maintenance.dart';
 import 'models/maintenance_item.dart';
-import 'models/workshop.dart';
 
 class MaintenanceRepository {
   final DatabaseHelper _db = DatabaseHelper.instance;
@@ -120,21 +119,6 @@ class MaintenanceRepository {
     return (result.first['count'] as int?) ?? 0;
   }
 
-  Future<List<Workshop>> getWorkshops() async {
-    final db = await _db.database;
-    final maps = await db.query('workshops', orderBy: 'name ASC');
-    return maps.map(_workshopFromMap).toList();
-  }
-
-  Future<int> insertWorkshop(String name, {String? location}) async {
-    final db = await _db.database;
-    return db.insert('workshops', {
-      'name': name,
-      'location': location,
-      'created_at': formatDateTime(DateTime.now()),
-    });
-  }
-
   Future<List<MaintenanceItem>> getItemsByMaintenanceIds(List<int> ids) async {
     if (ids.isEmpty) return [];
     final db = await _db.database;
@@ -196,13 +180,6 @@ class MaintenanceRepository {
     category: m['category'] as String? ?? 'general',
     partsCost: (m['parts_cost'] as num?)?.toDouble() ?? 0,
     notes: m['notes'] as String?,
-    createdAt: parseDateTime(m['created_at'] as String),
-  );
-
-  Workshop _workshopFromMap(Map<String, dynamic> m) => Workshop(
-    id: m['id'] as int,
-    name: m['name'] as String,
-    location: m['location'] as String?,
     createdAt: parseDateTime(m['created_at'] as String),
   );
 }

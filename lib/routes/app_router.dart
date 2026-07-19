@@ -6,6 +6,9 @@ import '../features/vehicles/screens/vehicle_form_screen.dart';
 import '../features/maintenance/screens/maintenance_list_screen.dart';
 import '../features/maintenance/screens/maintenance_form_screen.dart';
 import '../features/maintenance/screens/maintenance_detail_screen.dart';
+import '../features/settings/screens/settings_screen.dart';
+import '../features/settings/screens/workshops_screen.dart';
+import '../features/settings/screens/workshop_form_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -76,6 +79,35 @@ final appRouter = GoRouter(
             ),
           ],
         ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/settings',
+              builder: (context, state) => const SettingsScreen(),
+              routes: [
+                GoRoute(
+                  path: 'workshops',
+                  builder: (context, state) => const WorkshopsScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'add',
+                      builder: (context, state) => const WorkshopFormScreen(),
+                    ),
+                    GoRoute(
+                      path: ':id/edit',
+                      builder: (context, state) {
+                        final id = int.tryParse(
+                          state.pathParameters['id'] ?? '',
+                        );
+                        return WorkshopFormScreen(workshopId: id);
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ],
     ),
   ],
@@ -113,6 +145,11 @@ class AppShell extends StatelessWidget {
             icon: Icon(Icons.directions_car_outlined),
             selectedIcon: Icon(Icons.directions_car),
             label: 'Vehículos',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.tune),
+            selectedIcon: Icon(Icons.tune),
+            label: 'Config',
           ),
         ],
       ),
