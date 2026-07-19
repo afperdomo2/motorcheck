@@ -1,85 +1,112 @@
 # MotorCheck - Instrucciones para Agentes
 
-## Resumen del Proyecto
+## Resumen
 
-MotorCheck es una aplicación Flutter para el seguimiento del mantenimiento personal de vehículos.
-Usuario único, almacenamiento local SQLite, sin autenticación.
+MotorCheck es una app Flutter para seguimiento de mantenimiento de vehículos.
+Usuario único, SQLite local, sin backend ni autenticación.
 
 ## Comandos
 
 ```bash
-# Instalar dependencias
-flutter pub get
-
-# Generar código (después de modificar clases anotadas con @freezed o @riverpod)
-dart run build_runner build --delete-conflicting-outputs
-
-# Modo watch para generación de código (recomendado durante desarrollo)
-dart run build_runner watch --delete-conflicting-outputs
-
-# Formatear código
-dart format .
-
-# Análisis estático (REQUERIDO antes de hacer commit)
-flutter analyze
-
-# Ejecutar todas las pruebas
-flutter test
-
-# Ejecutar pruebas con cobertura
-flutter test --coverage
-
-# Ejecutar la app en un dispositivo/emulador conectado
-flutter run
+flutter pub get                              # Instalar dependencias
+dart run build_runner build --delete-conflicting-outputs  # Generar código (freezed/ riverpod)
+dart run build_runner watch --delete-conflicting-outputs  # Modo watch (recomendado)
+dart format .                                # Formatear
+flutter analyze                              # Análisis estático (REQUERIDO antes de commit)
+flutter test                                 # Todas las pruebas
+flutter test test/features/vehicles/         # Pruebas por feature
+flutter test --name "formatea" test/core/utils/formatters_test.dart  # Por nombre (regex)
+flutter test --coverage                      # Con cobertura
+flutter run                                  # Ejecutar en dispositivo
+flutter clean                                # Limpiar caché
 ```
 
 ## Reglas de Trabajo
 
-1. **Antes de hacer commit**: ejecutar `flutter analyze` (cero advertencias), `dart format .` y `flutter test`
-2. **Después de modificar modelos o providers**: ejecutar `dart run build_runner build --delete-conflicting-outputs` inmediatamente
-3. **Constructores const**: siempre usar `const` en widgets estáticos, bordes, padding, etc.
-4. **Patrón Smart/Dumb**: pantallas + providers = smart (lógica de estado), widgets = dumb (reciben datos + callbacks)
-5. **Nombrado de archivos**: snake_case para archivos, PascalCase para clases
-6. **Imports**: usar imports relativos para archivos del proyecto, imports de paquete para dependencias externas
-7. **Riverpod**: usar ConsumerWidget/ConsumerStatefulWidget para la UI, Notifier para el estado
-8. **Modelos**: todos los modelos usan @freezed para inmutabilidad, igualdad, copyWith y serialización JSON
+1. **Antes de commit**: `flutter analyze` (cero issues), `dart format .`, `flutter test`
+2. **Después de modificar modelos/providers**: ejecutar `build_runner` inmediatamente
+3. **Constructores const**: siempre en widgets estáticos, EdgeInsets, SizedBox, bordes, etc.
+4. **Patrón Smart/Dumb**: pantallas + providers = smart, widgets = dumb (datos + callbacks)
+5. **Archivos**: snake_case. **Clases**: PascalCase. **Providers**: sufijo `Provider`
+6. **Imports**: relativos para archivos del proyecto, package para dependencias externas
+7. **Riverpod**: `ConsumerWidget`/`ConsumerStatefulWidget` para UI, `Notifier` para estado
+8. **Modelos**: `@freezed` para inmutabilidad, igualdad, `copyWith`, JSON
+9. **Estado asíncrono**: siempre usar `AsyncValue.when()` con loading/error/data
+10. **Errores**: `AsyncValue.guard()` en notifiers, nunca `try/catch` vacío
+
+## Seguridad Operativa
+
+- **NUNCA hacer commits**: los commits solo los crea el usuario. No usar `git add`, `git commit`, ni `git push`
+- **No ejecutar `flutter test` ni `flutter analyze`** tras cambios exclusivamente en archivos `.md`
+- **No ejecutar comandos destructivos** sin confirmación (`git push --force`, `flutter clean` sin preguntar)
 
 ## Arquitectura
 
-**Orientada a features** con core compartido y widgets reutilizables.
-Ver `docs/architecture.md` y `docs/database.md` para más detalles.
+Orientada a features con core compartido. Ver `docs/architecture.md`, `docs/database.md` y `docs/code-style.md`.
 
 ```
 lib/
-├── main.dart              # Punto de entrada + ProviderScope
-├── app.dart               # MaterialApp.router + tema
+├── main.dart | app.dart           # Entry point + MaterialApp.router
 ├── core/
-│   ├── theme/             # Colores, AppTheme, TextStyles
-│   ├── database/          # SQLite helper + DDL
-│   └── utils/             # Formateadores, extensiones
+│   ├── theme/                     # Colores, tema, tipografía
+│   ├── database/                  # SQLite helper + DDL
+│   └── utils/                     # Formateadores, extensiones
 ├── features/
-│   ├── vehicles/          # CRUD vehículos + selección por defecto
-│   ├── maintenance/       # CRUD mantenimientos + items
-│   └── dashboard/         # Resumen del vehículo por defecto
-├── shared/widgets/        # Componentes dumb reutilizables
-└── routes/                # Configuración GoRouter
+│   ├── vehicles/                  # CRUD vehículos + selección default
+│   ├── maintenance/               # CRUD mantenimientos + items
+│   └── dashboard/                 # Resumen del vehículo default
+├── shared/widgets/                # Componentes dumb reutilizables
+└── routes/                        # GoRouter (StatefulShellRoute)
 ```
 
-## Skills Disponibles
+### Feature típica
 
-Carga estas skills cuando sean relevantes para la tarea:
+```
+features/vehicles/
+├── models/vehicle.dart            # @freezed
+├── repository.dart                # Acceso SQLite
+├── providers.dart                 # Riverpod providers + Notifiers
+├── screens/                       # Pantallas (smart)
+└── widgets/                       # Componentes (dumb)
+```
 
-| Skill | Ruta | Cuándo Usar |
+### Navegación
+
+| Acción | Método |
+|--------|--------|
+| Sub-ruta (formulario) | `context.push('/ruta')` |
+| Volver atrás | `context.pop()` |
+| Cambiar tab | `context.go('/ruta')` |
+
+## Skills
+
+| Skill | Ruta | Cuándo usar |
 |-------|------|-------------|
 | flutter-expert | `.agents/skills/flutter-expert/` | Widgets, estado, navegación, rendimiento |
-| flutter-animations | `.agents/skills/flutter-animations/` | Animaciones, transiciones, efectos de movimiento |
-| dart-best-practices | `.agents/skills/dart-best-practices/` | Estilo de código, convenciones, características del lenguaje |
+| flutter-animations | `.agents/skills/flutter-animations/` | Animaciones, transiciones |
+| dart-best-practices | `.agents/skills/dart-best-practices/` | Convenciones, features del lenguaje |
 
-## Context7 MCP
+## MCPs
 
-Usa Context7 MCP para obtener documentación actualizada de:
-- APIs de librerías (Riverpod, GoRouter, sqflite, freezed, etc.)
-- Preguntas de configuración sobre cualquier dependencia
-- Documentación específica de versiones
+### Context7 MCP
+Documentación actualizada de Riverpod, GoRouter, sqflite, freezed, etc.
+Siempre resolver ID primero (`context7_resolve-library-id`), luego `context7_query-docs`.
 
-Siempre resuelve el ID de la librería primero (`context7_resolve-library-id`), luego consulta la documentación.
+### Dart MCP Server
+Configurado en `opencode.json`. Funcionalidades:
+- `dart-mcp-server_analyze_files` — analizar archivos específicos post-edición
+- `dart-mcp-server_pub_dev_search` — buscar paquetes antes de agregar dependencias
+- `dart-mcp-server_pub` — `pub add`, `pub get`, `pub upgrade`
+- `dart-mcp-server_lsp` — hover, signature help, resolve workspace symbols
+- `dart-mcp-server_dtd` — hot reload/restart, widget inspector en apps conectadas
+- `dart-mcp-server_flutter_driver_command` — interacción con widgets en ejecución
+
+## Documentación
+
+| Documento | Contenido |
+|-----------|-----------|
+| `docs/architecture.md` | Stack, estructura, patrón Smart/Dumb, flujo de datos |
+| `docs/database.md` | Esquema SQL, tablas, relaciones |
+| `docs/code-style.md` | Imports, nombrado, widgets, estado asíncrono, errores |
+| `docs/design-system.md` | Colores, tipografía, espaciado, componentes base |
+| `docs/testing.md` | Estrategia, ejecución, mocktail, SQLite en memoria |

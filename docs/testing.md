@@ -8,13 +8,38 @@
 | Widget | flutter_test | Componentes UI (pantallas, widgets) |
 | Base de datos | sqflite_common_ffi | Consultas SQLite en memoria |
 
+## Estructura
+
+```
+test/                           # Espejo de lib/
+├── core/
+│   ├── database/               # Pruebas de SQLite con sqflite_common_ffi
+│   └── utils/                  # Pruebas de formateadores
+├── features/
+│   ├── vehicles/               # Modelos, repositorios
+│   └── maintenance/            # Modelos
+└── shared/widgets/             # Widgets dumb
+```
+
+## Ejecución
+
+```bash
+flutter test                                    # Todas las pruebas
+flutter test test/features/vehicles/            # Por feature
+flutter test --name "formatea"                  # Por nombre (regex)
+flutter test test/features/vehicles/vehicle_test.dart  # Archivo específico
+flutter test --coverage                         # Con cobertura
+```
+
 ## Convenciones
 
 1. Los archivos de prueba reflejan la estructura de `lib/` dentro de `test/`
-2. Nombrado de archivos: `*_test.dart` coincidiendo con el archivo fuente
+2. Nombrado: `*_test.dart` coincidiendo con el archivo fuente
 3. Agrupar pruebas por método o comportamiento usando `group()`
-4. Usar `setUp` para arreglos comunes
+4. Usar `setUp`/`setUpAll` para arreglos comunes
 5. Preferir `mocktail` sobre `mockito` (sin generación de código)
+6. `sqflite_common_ffi` para pruebas de BD en memoria
+7. **NO ejecutar `flutter test` tras cambios en archivos `.md` o documentación**
 
 ## Ejemplo con Mocktail
 
@@ -43,8 +68,6 @@ void main() {
 
 ## Testing de SQLite
 
-Usa `sqflite_common_ffi` para ejecutar SQLite en memoria sin dispositivo:
-
 ```dart
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -57,23 +80,9 @@ void main() {
   test('debe insertar un vehículo', () async {
     final db = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath);
     await db.execute(CREATE_TABLE_VEHICLES);
-    // ... probar inserts/queries
     await db.close();
   });
 }
-```
-
-## Ejecutar Pruebas
-
-```bash
-# Todas las pruebas
-flutter test
-
-# Archivo específico
-flutter test test/features/vehicles/repository_test.dart
-
-# Con cobertura
-flutter test --coverage
 ```
 
 ## Objetivo de Cobertura
