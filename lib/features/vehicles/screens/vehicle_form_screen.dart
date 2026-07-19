@@ -26,6 +26,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
   String _type = 'car';
   bool _isDefault = false;
   bool _isLoading = false;
+  DateTime? _originalCreatedAt;
 
   bool get _isEditing => widget.vehicleId != null;
 
@@ -58,6 +59,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
       setState(() {
         _type = vehicle.type;
         _isDefault = vehicle.isDefault;
+        _originalCreatedAt = vehicle.createdAt;
       });
     }
   }
@@ -97,19 +99,16 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
           ? null
           : _colorController.text.trim(),
       isDefault: _isDefault,
-      createdAt: _isEditing ? now : now,
+      createdAt: _originalCreatedAt ?? now,
       updatedAt: now,
     );
 
     final notifier = ref.read(vehiclesNotifierProvider.notifier);
 
     if (_isEditing) {
-      await notifier.add(vehicle);
+      await notifier.update(vehicle);
     } else {
       await notifier.add(vehicle);
-      if (_isDefault && vehicle.id != null) {
-        await notifier.setDefault(vehicle.id!);
-      }
     }
 
     if (mounted) {

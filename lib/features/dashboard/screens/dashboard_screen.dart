@@ -44,10 +44,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
               data: (summary) {
                 if (summary == null) {
-                  return const EmptyState(
-                    icon: Icons.error,
-                    title: 'Sin datos',
-                  );
+                  return const EmptyState(icon: Icons.error, title: 'Sin datos');
                 }
 
                 return RefreshIndicator(

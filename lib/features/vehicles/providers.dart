@@ -57,10 +57,24 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
     state = await AsyncValue.guard(() async {
       final id = await _repo.insert(vehicle);
       final vehicles = await _repo.getAll();
-      if (ref.read(selectedVehicleIdProvider) == null) {
+      if (vehicles.length == 1) {
         ref.read(selectedVehicleIdProvider.notifier).state = id;
       }
+      if (vehicle.isDefault) {
+        await _repo.setDefault(id);
+      }
       return vehicles;
+    });
+  }
+
+  Future<void> update(Vehicle vehicle) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await _repo.update(vehicle);
+      if (vehicle.isDefault) {
+        await _repo.setDefault(vehicle.id!);
+      }
+      return _repo.getAll();
     });
   }
 

@@ -25,6 +25,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
   DateTime _date = DateTime.now();
   final List<MaintenanceItem> _items = [];
   bool _isLoading = false;
+  DateTime? _originalCreatedAt;
 
   bool get _isEditing => widget.maintenanceId != null;
 
@@ -56,6 +57,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     _notesController.text = maintenance.notes ?? '';
     setState(() {
       _date = maintenance.date;
+      _originalCreatedAt = maintenance.createdAt;
       _items
         ..clear()
         ..addAll(items);
@@ -123,7 +125,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
       notes: _notesController.text.trim().isEmpty
           ? null
           : _notesController.text.trim(),
-      createdAt: _isEditing ? now : now,
+      createdAt: _originalCreatedAt ?? now,
       updatedAt: now,
     );
 
