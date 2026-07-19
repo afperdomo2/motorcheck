@@ -23,11 +23,11 @@ Maintenance _$MaintenanceFromJson(Map<String, dynamic> json) {
 mixin _$Maintenance {
   int? get id => throw _privateConstructorUsedError;
   int get vehicleId => throw _privateConstructorUsedError;
-  String get title => throw _privateConstructorUsedError;
   DateTime get date => throw _privateConstructorUsedError;
   int? get mileage => throw _privateConstructorUsedError;
-  double get totalLaborCost => throw _privateConstructorUsedError;
+  double get maintenanceCost => throw _privateConstructorUsedError;
   double get totalPartsCost => throw _privateConstructorUsedError;
+  int? get workshopId => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
@@ -52,11 +52,11 @@ abstract class $MaintenanceCopyWith<$Res> {
   $Res call({
     int? id,
     int vehicleId,
-    String title,
     DateTime date,
     int? mileage,
-    double totalLaborCost,
+    double maintenanceCost,
     double totalPartsCost,
+    int? workshopId,
     String? notes,
     DateTime createdAt,
     DateTime updatedAt,
@@ -80,11 +80,11 @@ class _$MaintenanceCopyWithImpl<$Res, $Val extends Maintenance>
   $Res call({
     Object? id = freezed,
     Object? vehicleId = null,
-    Object? title = null,
     Object? date = null,
     Object? mileage = freezed,
-    Object? totalLaborCost = null,
+    Object? maintenanceCost = null,
     Object? totalPartsCost = null,
+    Object? workshopId = freezed,
     Object? notes = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
@@ -99,10 +99,6 @@ class _$MaintenanceCopyWithImpl<$Res, $Val extends Maintenance>
                 ? _value.vehicleId
                 : vehicleId // ignore: cast_nullable_to_non_nullable
                       as int,
-            title: null == title
-                ? _value.title
-                : title // ignore: cast_nullable_to_non_nullable
-                      as String,
             date: null == date
                 ? _value.date
                 : date // ignore: cast_nullable_to_non_nullable
@@ -111,14 +107,18 @@ class _$MaintenanceCopyWithImpl<$Res, $Val extends Maintenance>
                 ? _value.mileage
                 : mileage // ignore: cast_nullable_to_non_nullable
                       as int?,
-            totalLaborCost: null == totalLaborCost
-                ? _value.totalLaborCost
-                : totalLaborCost // ignore: cast_nullable_to_non_nullable
+            maintenanceCost: null == maintenanceCost
+                ? _value.maintenanceCost
+                : maintenanceCost // ignore: cast_nullable_to_non_nullable
                       as double,
             totalPartsCost: null == totalPartsCost
                 ? _value.totalPartsCost
                 : totalPartsCost // ignore: cast_nullable_to_non_nullable
                       as double,
+            workshopId: freezed == workshopId
+                ? _value.workshopId
+                : workshopId // ignore: cast_nullable_to_non_nullable
+                      as int?,
             notes: freezed == notes
                 ? _value.notes
                 : notes // ignore: cast_nullable_to_non_nullable
@@ -149,11 +149,11 @@ abstract class _$$MaintenanceImplCopyWith<$Res>
   $Res call({
     int? id,
     int vehicleId,
-    String title,
     DateTime date,
     int? mileage,
-    double totalLaborCost,
+    double maintenanceCost,
     double totalPartsCost,
+    int? workshopId,
     String? notes,
     DateTime createdAt,
     DateTime updatedAt,
@@ -176,11 +176,11 @@ class __$$MaintenanceImplCopyWithImpl<$Res>
   $Res call({
     Object? id = freezed,
     Object? vehicleId = null,
-    Object? title = null,
     Object? date = null,
     Object? mileage = freezed,
-    Object? totalLaborCost = null,
+    Object? maintenanceCost = null,
     Object? totalPartsCost = null,
+    Object? workshopId = freezed,
     Object? notes = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
@@ -195,10 +195,6 @@ class __$$MaintenanceImplCopyWithImpl<$Res>
             ? _value.vehicleId
             : vehicleId // ignore: cast_nullable_to_non_nullable
                   as int,
-        title: null == title
-            ? _value.title
-            : title // ignore: cast_nullable_to_non_nullable
-                  as String,
         date: null == date
             ? _value.date
             : date // ignore: cast_nullable_to_non_nullable
@@ -207,14 +203,18 @@ class __$$MaintenanceImplCopyWithImpl<$Res>
             ? _value.mileage
             : mileage // ignore: cast_nullable_to_non_nullable
                   as int?,
-        totalLaborCost: null == totalLaborCost
-            ? _value.totalLaborCost
-            : totalLaborCost // ignore: cast_nullable_to_non_nullable
+        maintenanceCost: null == maintenanceCost
+            ? _value.maintenanceCost
+            : maintenanceCost // ignore: cast_nullable_to_non_nullable
                   as double,
         totalPartsCost: null == totalPartsCost
             ? _value.totalPartsCost
             : totalPartsCost // ignore: cast_nullable_to_non_nullable
                   as double,
+        workshopId: freezed == workshopId
+            ? _value.workshopId
+            : workshopId // ignore: cast_nullable_to_non_nullable
+                  as int?,
         notes: freezed == notes
             ? _value.notes
             : notes // ignore: cast_nullable_to_non_nullable
@@ -238,11 +238,11 @@ class _$MaintenanceImpl implements _Maintenance {
   const _$MaintenanceImpl({
     this.id,
     required this.vehicleId,
-    required this.title,
     required this.date,
     this.mileage,
-    this.totalLaborCost = 0,
+    this.maintenanceCost = 0,
     this.totalPartsCost = 0,
+    this.workshopId,
     this.notes,
     required this.createdAt,
     required this.updatedAt,
@@ -256,17 +256,17 @@ class _$MaintenanceImpl implements _Maintenance {
   @override
   final int vehicleId;
   @override
-  final String title;
-  @override
   final DateTime date;
   @override
   final int? mileage;
   @override
   @JsonKey()
-  final double totalLaborCost;
+  final double maintenanceCost;
   @override
   @JsonKey()
   final double totalPartsCost;
+  @override
+  final int? workshopId;
   @override
   final String? notes;
   @override
@@ -276,7 +276,7 @@ class _$MaintenanceImpl implements _Maintenance {
 
   @override
   String toString() {
-    return 'Maintenance(id: $id, vehicleId: $vehicleId, title: $title, date: $date, mileage: $mileage, totalLaborCost: $totalLaborCost, totalPartsCost: $totalPartsCost, notes: $notes, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Maintenance(id: $id, vehicleId: $vehicleId, date: $date, mileage: $mileage, maintenanceCost: $maintenanceCost, totalPartsCost: $totalPartsCost, workshopId: $workshopId, notes: $notes, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -287,13 +287,14 @@ class _$MaintenanceImpl implements _Maintenance {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.vehicleId, vehicleId) ||
                 other.vehicleId == vehicleId) &&
-            (identical(other.title, title) || other.title == title) &&
             (identical(other.date, date) || other.date == date) &&
             (identical(other.mileage, mileage) || other.mileage == mileage) &&
-            (identical(other.totalLaborCost, totalLaborCost) ||
-                other.totalLaborCost == totalLaborCost) &&
+            (identical(other.maintenanceCost, maintenanceCost) ||
+                other.maintenanceCost == maintenanceCost) &&
             (identical(other.totalPartsCost, totalPartsCost) ||
                 other.totalPartsCost == totalPartsCost) &&
+            (identical(other.workshopId, workshopId) ||
+                other.workshopId == workshopId) &&
             (identical(other.notes, notes) || other.notes == notes) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
@@ -307,11 +308,11 @@ class _$MaintenanceImpl implements _Maintenance {
     runtimeType,
     id,
     vehicleId,
-    title,
     date,
     mileage,
-    totalLaborCost,
+    maintenanceCost,
     totalPartsCost,
+    workshopId,
     notes,
     createdAt,
     updatedAt,
@@ -335,11 +336,11 @@ abstract class _Maintenance implements Maintenance {
   const factory _Maintenance({
     final int? id,
     required final int vehicleId,
-    required final String title,
     required final DateTime date,
     final int? mileage,
-    final double totalLaborCost,
+    final double maintenanceCost,
     final double totalPartsCost,
+    final int? workshopId,
     final String? notes,
     required final DateTime createdAt,
     required final DateTime updatedAt,
@@ -353,15 +354,15 @@ abstract class _Maintenance implements Maintenance {
   @override
   int get vehicleId;
   @override
-  String get title;
-  @override
   DateTime get date;
   @override
   int? get mileage;
   @override
-  double get totalLaborCost;
+  double get maintenanceCost;
   @override
   double get totalPartsCost;
+  @override
+  int? get workshopId;
   @override
   String? get notes;
   @override

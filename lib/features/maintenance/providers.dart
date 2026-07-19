@@ -3,6 +3,7 @@ import '../vehicles/providers.dart';
 import '../vehicles/models/vehicle.dart';
 import 'models/maintenance.dart';
 import 'models/maintenance_item.dart';
+import 'models/workshop.dart';
 import 'repository.dart';
 
 final maintenanceRepositoryProvider = Provider<MaintenanceRepository>((ref) {
@@ -83,3 +84,23 @@ final maintenancesNotifierProvider =
     NotifierProvider<MaintenancesNotifier, AsyncValue<List<Maintenance>>>(
       MaintenancesNotifier.new,
     );
+
+final workshopsProvider = FutureProvider<List<Workshop>>((ref) async {
+  final repository = ref.watch(maintenanceRepositoryProvider);
+  return repository.getWorkshops();
+});
+
+final workshopItemsProvider =
+    FutureProvider.family<Map<int, List<MaintenanceItem>>, List<int>>((
+      ref,
+      maintenanceIds,
+    ) async {
+      if (maintenanceIds.isEmpty) return {};
+      final repository = ref.watch(maintenanceRepositoryProvider);
+      final items = await repository.getItemsByMaintenanceIds(maintenanceIds);
+      final result = <int, List<MaintenanceItem>>{};
+      for (final item in items) {
+        result.putIfAbsent(item.maintenanceId, () => []).add(item);
+      }
+      return result;
+    });

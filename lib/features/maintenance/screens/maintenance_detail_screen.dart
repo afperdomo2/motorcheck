@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/error_state.dart';
+import '../categories.dart';
 import '../models/maintenance.dart';
 import '../models/maintenance_item.dart';
+import '../models/workshop.dart';
 import '../providers.dart';
 
 class MaintenanceDetailScreen extends ConsumerWidget {
@@ -17,6 +19,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final maintenanceAsync = ref.watch(maintenanceByIdProvider(maintenanceId));
     final itemsAsync = ref.watch(maintenanceItemsProvider(maintenanceId));
+    final workshopsAsync = ref.watch(workshopsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -49,10 +52,16 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                   ref.invalidate(maintenanceItemsProvider(maintenanceId)),
             ),
             data: (items) {
+              final workshops = workshopsAsync.valueOrNull ?? [];
+              final workshop = _findWorkshop(workshops, maintenance.workshopId);
+
               return ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  _DetailCard(maintenance: maintenance),
+                  _DetailCard(
+                    maintenance: maintenance,
+                    workshopName: workshop?.name,
+                  ),
                   const SizedBox(height: 16),
                   if (items.isNotEmpty) ...[
                     Text(
@@ -81,16 +90,25 @@ class MaintenanceDetailScreen extends ConsumerWidget {
       ),
     );
   }
+
+  Workshop? _findWorkshop(List<Workshop> workshops, int? workshopId) {
+    if (workshopId == null) return null;
+    for (final w in workshops) {
+      if (w.id == workshopId) return w;
+    }
+    return null;
+  }
 }
 
 class _DetailCard extends StatelessWidget {
   final Maintenance maintenance;
+  final String? workshopName;
 
-  const _DetailCard({required this.maintenance});
+  const _DetailCard({required this.maintenance, this.workshopName});
 
   @override
   Widget build(BuildContext context) {
-    final total = maintenance.totalLaborCost + maintenance.totalPartsCost;
+    final total = maintenance.maintenanceCost + maintenance.totalPartsCost;
 
     return Card(
       child: Padding(
@@ -99,8 +117,8 @@ class _DetailCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              maintenance.title,
-              style: Theme.of(context).textTheme.headlineMedium,
+              'Mantenimiento',
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 12),
             _DetailRow(
@@ -116,32 +134,38 @@ class _DetailCard extends StatelessWidget {
                 value: formatMileage(maintenance.mileage),
               ),
             ],
-            if (total > 0) ...[
+            if (workshopName != null) ...[
               const SizedBox(height: 8),
               _DetailRow(
-                icon: Icons.payments,
-                label: 'Costo total',
-                value: formatCurrency(total),
+                icon: Icons.handyman,
+                label: 'Taller',
+                value: workshopName!,
               ),
             ],
-            if (maintenance.totalLaborCost > 0) ...[
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.only(left: 40),
-                child: Text(
-                  'Mano de obra: ${formatCurrency(maintenance.totalLaborCost)}',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+            if (maintenance.maintenanceCost > 0) ...[
+              const SizedBox(height: 8),
+              _DetailRow(
+                icon: Icons.attach_money,
+                label: 'Precio',
+                value: formatCurrency(maintenance.maintenanceCost),
               ),
             ],
             if (maintenance.totalPartsCost > 0) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.only(left: 40),
                 child: Text(
                   'Repuestos: ${formatCurrency(maintenance.totalPartsCost)}',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
+              ),
+            ],
+            if (total > 0) ...[
+              const SizedBox(height: 8),
+              _DetailRow(
+                icon: Icons.summarize,
+                label: 'Total',
+                value: formatCurrency(total),
               ),
             ],
             if (maintenance.notes != null && maintenance.notes!.isNotEmpty) ...[
@@ -176,7 +200,9 @@ class _DetailRow extends StatelessWidget {
         Icon(icon, size: 20, color: Theme.of(context).disabledColor),
         const SizedBox(width: 8),
         Text('$label: ', style: Theme.of(context).textTheme.bodyMedium),
-        Text(value, style: Theme.of(context).textTheme.bodyLarge),
+        Flexible(
+          child: Text(value, style: Theme.of(context).textTheme.bodyLarge),
+        ),
       ],
     );
   }
@@ -189,27 +215,35 @@ class _ItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final itemTotal = item.laborCost + item.partsCost;
-
     return Card(
-      child: ListTile(
-        title: Text(item.name),
-        subtitle: itemTotal > 0
-            ? Text('Total: ${formatCurrency(itemTotal)}')
-            : null,
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
           children: [
-            if (item.laborCost > 0)
-              Text(
-                'MO: ${formatCurrency(item.laborCost)}',
-                style: Theme.of(context).textTheme.labelMedium,
+            Icon(MaintenanceCategories.icon(item.category), size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    MaintenanceCategories.label(item.category),
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  if (item.notes != null && item.notes!.isNotEmpty)
+                    Text(
+                      item.notes!,
+                      style: Theme.of(context).textTheme.bodySmall,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
               ),
+            ),
             if (item.partsCost > 0)
               Text(
-                'Rep: ${formatCurrency(item.partsCost)}',
-                style: Theme.of(context).textTheme.labelMedium,
+                formatCurrency(item.partsCost),
+                style: Theme.of(context).textTheme.titleSmall,
               ),
           ],
         ),

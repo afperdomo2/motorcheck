@@ -61,13 +61,15 @@ class VehicleCard extends StatelessWidget {
                         ].whereType<String>().join(' '),
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                    if (vehicle.plate != null ||
-                        vehicle.currentMileage != null)
+                    if (vehicle.plate != null || vehicle.currentMileage != null)
                       Row(
                         children: [
                           if (vehicle.plate != null) ...[
-                            Icon(Icons.pin, size: 14,
-                                color: Theme.of(context).disabledColor),
+                            Icon(
+                              Icons.pin,
+                              size: 14,
+                              color: Theme.of(context).disabledColor,
+                            ),
                             const SizedBox(width: 2),
                             Text(
                               vehicle.plate!,
@@ -78,8 +80,11 @@ class VehicleCard extends StatelessWidget {
                               vehicle.currentMileage != null)
                             const SizedBox(width: 14),
                           if (vehicle.currentMileage != null) ...[
-                            Icon(Icons.speed, size: 14,
-                                color: Theme.of(context).disabledColor),
+                            Icon(
+                              Icons.speed,
+                              size: 14,
+                              color: Theme.of(context).disabledColor,
+                            ),
                             const SizedBox(width: 2),
                             Text(
                               formatMileage(vehicle.currentMileage),

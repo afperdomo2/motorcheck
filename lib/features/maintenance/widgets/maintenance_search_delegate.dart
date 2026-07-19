@@ -35,17 +35,31 @@ class MaintenanceSearchDelegate extends SearchDelegate<Maintenance?> {
 
   Widget _buildSearchResults(BuildContext context) {
     final maintenancesAsync = ref.watch(maintenancesProvider);
+    final workshopsAsync = ref.watch(workshopsProvider);
 
     return maintenancesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, _) => Center(child: Text('Error: $err')),
       data: (maintenances) {
         final q = query.toLowerCase().trim();
-        final filtered = q.isEmpty
-            ? maintenances
-            : maintenances
-                  .where((m) => m.title.toLowerCase().contains(q))
-                  .toList();
+        final workshops = workshopsAsync.valueOrNull ?? [];
+
+        List<Maintenance> filtered;
+        if (q.isEmpty) {
+          filtered = maintenances;
+        } else {
+          filtered = maintenances.where((m) {
+            final dateStr = formatDate(m.date).toLowerCase();
+            final notesStr = (m.notes ?? '').toLowerCase();
+            final workshop = workshops
+                .where((w) => w.id == m.workshopId)
+                .firstOrNull;
+            final workshopName = (workshop?.name ?? '').toLowerCase();
+            return dateStr.contains(q) ||
+                notesStr.contains(q) ||
+                workshopName.contains(q);
+          }).toList();
+        }
 
         if (filtered.isEmpty) {
           return Center(
@@ -63,15 +77,43 @@ class MaintenanceSearchDelegate extends SearchDelegate<Maintenance?> {
           );
         }
 
+        final maintenanceIds = filtered.map((m) => m.id!).toList();
+        final itemsProviderRef = ref;
+        final itemsAsync = itemsProviderRef.watch(
+          workshopItemsProvider(maintenanceIds),
+        );
+        final itemsByMaintenance = itemsAsync.valueOrNull ?? {};
+
         return ListView.builder(
           itemCount: filtered.length,
           itemBuilder: (context, index) {
             final maintenance = filtered[index];
+            final items = itemsByMaintenance[maintenance.id] ?? [];
             final total =
-                maintenance.totalLaborCost + maintenance.totalPartsCost;
+                maintenance.maintenanceCost + maintenance.totalPartsCost;
+            final workshop = workshops
+                .where((w) => w.id == maintenance.workshopId)
+                .firstOrNull;
+
             return ListTile(
-              title: Text(maintenance.title),
-              subtitle: Text(formatDate(maintenance.date)),
+              title: Text(formatDate(maintenance.date)),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (items.isNotEmpty)
+                    Text(
+                      items.map((i) => i.category).join(', '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  if (workshop != null)
+                    Text(
+                      workshop.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
               trailing: total > 0 ? Text(formatCurrency(total)) : null,
               onTap: () {
                 close(context, null);

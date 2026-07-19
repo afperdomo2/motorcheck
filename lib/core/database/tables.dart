@@ -19,19 +19,29 @@ CREATE TABLE vehicles (
 )
 ''';
 
+  static const createWorkshops = '''
+CREATE TABLE workshops (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  location TEXT,
+  created_at TEXT NOT NULL
+)
+''';
+
   static const createMaintenances = '''
 CREATE TABLE maintenances (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   vehicle_id INTEGER NOT NULL,
-  title TEXT NOT NULL,
   date TEXT NOT NULL,
   mileage INTEGER,
-  total_labor_cost REAL DEFAULT 0,
+  maintenance_cost REAL DEFAULT 0,
   total_parts_cost REAL DEFAULT 0,
+  workshop_id INTEGER,
   notes TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
-  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE,
+  FOREIGN KEY (workshop_id) REFERENCES workshops(id) ON DELETE SET NULL
 )
 ''';
 
@@ -39,9 +49,7 @@ CREATE TABLE maintenances (
 CREATE TABLE maintenance_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   maintenance_id INTEGER NOT NULL,
-  name TEXT NOT NULL,
-  category TEXT,
-  labor_cost REAL DEFAULT 0,
+  category TEXT DEFAULT 'general',
   parts_cost REAL DEFAULT 0,
   notes TEXT,
   created_at TEXT NOT NULL,

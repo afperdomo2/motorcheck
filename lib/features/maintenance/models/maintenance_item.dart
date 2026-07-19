@@ -8,9 +8,7 @@ class MaintenanceItem with _$MaintenanceItem {
   const factory MaintenanceItem({
     int? id,
     required int maintenanceId,
-    required String name,
-    @Default('other') String category,
-    @Default(0) double laborCost,
+    @Default('general') String category,
     @Default(0) double partsCost,
     String? notes,
     required DateTime createdAt,

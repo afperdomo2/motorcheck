@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../categories.dart';
 import '../models/maintenance_item.dart';
 
 class ItemFormRow extends StatelessWidget {
@@ -7,6 +8,7 @@ class ItemFormRow extends StatelessWidget {
   final VoidCallback onRemove;
   final bool canRemove;
   final ValueChanged<MaintenanceItem> onChanged;
+  final String vehicleType;
 
   const ItemFormRow({
     super.key,
@@ -15,10 +17,13 @@ class ItemFormRow extends StatelessWidget {
     required this.onRemove,
     required this.canRemove,
     required this.onChanged,
+    required this.vehicleType,
   });
 
   @override
   Widget build(BuildContext context) {
+    final categories = MaintenanceCategories.forVehicleType(vehicleType);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -41,79 +46,57 @@ class ItemFormRow extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            TextFormField(
-              initialValue: item.name,
-              decoration: const InputDecoration(labelText: 'Nombre *'),
-              onChanged: (v) => onChanged(item.copyWith(name: v)),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Requerido' : null,
-            ),
-            const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              initialValue: item.category,
-              decoration: const InputDecoration(labelText: 'Categoría'),
-              items: const [
-                DropdownMenuItem(value: 'oil', child: Text('Aceite')),
-                DropdownMenuItem(value: 'tires', child: Text('Llantas')),
-                DropdownMenuItem(value: 'filters', child: Text('Filtros')),
-                DropdownMenuItem(value: 'brakes', child: Text('Frenos')),
-                DropdownMenuItem(
-                  value: 'suspension',
-                  child: Text('Suspensión'),
-                ),
-                DropdownMenuItem(value: 'general', child: Text('General')),
-                DropdownMenuItem(value: 'other', child: Text('Otro')),
-              ],
+              initialValue: categories.any((c) => c.key == item.category)
+                  ? item.category
+                  : 'general',
+              decoration: const InputDecoration(
+                labelText: 'Categoría',
+                prefixIcon: Icon(Icons.category),
+              ),
+              items: categories
+                  .map(
+                    (c) => DropdownMenuItem(
+                      value: c.key,
+                      child: Row(
+                        children: [
+                          Icon(c.icon, size: 20),
+                          const SizedBox(width: 8),
+                          Text(c.label),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
               onChanged: (v) =>
-                  onChanged(item.copyWith(category: v ?? 'other')),
+                  onChanged(item.copyWith(category: v ?? 'general')),
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    initialValue: item.laborCost > 0
-                        ? item.laborCost.toStringAsFixed(0)
-                        : '',
-                    decoration: const InputDecoration(
-                      labelText: 'Mano de obra',
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return null;
-                      final cost = double.tryParse(v.trim());
-                      if (cost == null || cost < 0) {
-                        return 'Inválido';
-                      }
-                      return null;
-                    },
-                    onChanged: (v) => onChanged(
-                      item.copyWith(laborCost: double.tryParse(v) ?? 0),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    initialValue: item.partsCost > 0
-                        ? item.partsCost.toStringAsFixed(0)
-                        : '',
-                    decoration: const InputDecoration(labelText: 'Repuestos'),
-                    keyboardType: TextInputType.number,
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return null;
-                      final cost = double.tryParse(v.trim());
-                      if (cost == null || cost < 0) {
-                        return 'Inválido';
-                      }
-                      return null;
-                    },
-                    onChanged: (v) => onChanged(
-                      item.copyWith(partsCost: double.tryParse(v) ?? 0),
-                    ),
-                  ),
-                ),
-              ],
+            TextFormField(
+              initialValue: item.partsCost > 0
+                  ? item.partsCost.toStringAsFixed(0)
+                  : '',
+              decoration: const InputDecoration(
+                labelText: 'Repuestos',
+                prefixIcon: Icon(Icons.attach_money),
+                prefixText: '\$ ',
+              ),
+              keyboardType: TextInputType.number,
+              onChanged: (v) =>
+                  onChanged(item.copyWith(partsCost: double.tryParse(v) ?? 0)),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              initialValue: item.notes ?? '',
+              decoration: const InputDecoration(
+                labelText: 'Nota del item',
+                prefixIcon: Icon(Icons.note_alt_outlined),
+                hintText: 'Ej: Compré el filtro original',
+              ),
+              maxLines: 2,
+              onChanged: (v) => onChanged(
+                item.copyWith(notes: v.trim().isEmpty ? null : v.trim()),
+              ),
             ),
           ],
         ),

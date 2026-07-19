@@ -111,8 +111,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
       color: _colorController.text.trim().isEmpty
           ? null
           : _colorController.text.trim(),
-      currentMileage:
-          int.tryParse(_mileageController.text.trim()),
+      currentMileage: int.tryParse(_mileageController.text.trim()),
       isDefault: _isDefault,
       createdAt: _originalCreatedAt ?? now,
       updatedAt: now,

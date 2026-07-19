@@ -11,9 +11,7 @@ _$MaintenanceItemImpl _$$MaintenanceItemImplFromJson(
 ) => _$MaintenanceItemImpl(
   id: (json['id'] as num?)?.toInt(),
   maintenanceId: (json['maintenanceId'] as num).toInt(),
-  name: json['name'] as String,
-  category: json['category'] as String? ?? 'other',
-  laborCost: (json['laborCost'] as num?)?.toDouble() ?? 0,
+  category: json['category'] as String? ?? 'general',
   partsCost: (json['partsCost'] as num?)?.toDouble() ?? 0,
   notes: json['notes'] as String?,
   createdAt: DateTime.parse(json['createdAt'] as String),
@@ -24,9 +22,7 @@ Map<String, dynamic> _$$MaintenanceItemImplToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'maintenanceId': instance.maintenanceId,
-  'name': instance.name,
   'category': instance.category,
-  'laborCost': instance.laborCost,
   'partsCost': instance.partsCost,
   'notes': instance.notes,
   'createdAt': instance.createdAt.toIso8601String(),

@@ -3,6 +3,7 @@ import '../../core/database/database_helper.dart';
 import '../../core/utils/formatters.dart';
 import 'models/maintenance.dart';
 import 'models/maintenance_item.dart';
+import 'models/workshop.dart';
 
 class MaintenanceRepository {
   final DatabaseHelper _db = DatabaseHelper.instance;
@@ -119,6 +120,32 @@ class MaintenanceRepository {
     return (result.first['count'] as int?) ?? 0;
   }
 
+  Future<List<Workshop>> getWorkshops() async {
+    final db = await _db.database;
+    final maps = await db.query('workshops', orderBy: 'name ASC');
+    return maps.map(_workshopFromMap).toList();
+  }
+
+  Future<int> insertWorkshop(String name, {String? location}) async {
+    final db = await _db.database;
+    return db.insert('workshops', {
+      'name': name,
+      'location': location,
+      'created_at': formatDateTime(DateTime.now()),
+    });
+  }
+
+  Future<List<MaintenanceItem>> getItemsByMaintenanceIds(List<int> ids) async {
+    if (ids.isEmpty) return [];
+    final db = await _db.database;
+    final placeholders = ids.map((_) => '?').join(',');
+    final maps = await db.rawQuery(
+      'SELECT * FROM maintenance_items WHERE maintenance_id IN ($placeholders)',
+      ids,
+    );
+    return maps.map(_itemFromMap).toList();
+  }
+
   Future<void> _insertItems(
     DatabaseExecutor db,
     int maintenanceId,
@@ -132,11 +159,11 @@ class MaintenanceRepository {
   Map<String, dynamic> _maintenanceToMap(Maintenance m) => {
     if (m.id != null) 'id': m.id,
     'vehicle_id': m.vehicleId,
-    'title': m.title,
     'date': formatDate(m.date),
     'mileage': m.mileage,
-    'total_labor_cost': m.totalLaborCost,
+    'maintenance_cost': m.maintenanceCost,
     'total_parts_cost': m.totalPartsCost,
+    'workshop_id': m.workshopId,
     'notes': m.notes,
     'created_at': formatDateTime(m.createdAt),
     'updated_at': formatDateTime(m.updatedAt),
@@ -145,11 +172,11 @@ class MaintenanceRepository {
   Maintenance _maintenanceFromMap(Map<String, dynamic> m) => Maintenance(
     id: m['id'] as int,
     vehicleId: m['vehicle_id'] as int,
-    title: m['title'] as String,
     date: parseDate(m['date'] as String),
     mileage: m['mileage'] as int?,
-    totalLaborCost: (m['total_labor_cost'] as num?)?.toDouble() ?? 0,
+    maintenanceCost: (m['maintenance_cost'] as num?)?.toDouble() ?? 0,
     totalPartsCost: (m['total_parts_cost'] as num?)?.toDouble() ?? 0,
+    workshopId: m['workshop_id'] as int?,
     notes: m['notes'] as String?,
     createdAt: parseDateTime(m['created_at'] as String),
     updatedAt: parseDateTime(m['updated_at'] as String),
@@ -157,9 +184,7 @@ class MaintenanceRepository {
 
   Map<String, dynamic> _itemToMap(MaintenanceItem item, int maintenanceId) => {
     'maintenance_id': maintenanceId,
-    'name': item.name,
     'category': item.category,
-    'labor_cost': item.laborCost,
     'parts_cost': item.partsCost,
     'notes': item.notes,
     'created_at': formatDateTime(item.createdAt),
@@ -168,11 +193,16 @@ class MaintenanceRepository {
   MaintenanceItem _itemFromMap(Map<String, dynamic> m) => MaintenanceItem(
     id: m['id'] as int,
     maintenanceId: m['maintenance_id'] as int,
-    name: m['name'] as String,
-    category: m['category'] as String? ?? 'other',
-    laborCost: (m['labor_cost'] as num?)?.toDouble() ?? 0,
+    category: m['category'] as String? ?? 'general',
     partsCost: (m['parts_cost'] as num?)?.toDouble() ?? 0,
     notes: m['notes'] as String?,
+    createdAt: parseDateTime(m['created_at'] as String),
+  );
+
+  Workshop _workshopFromMap(Map<String, dynamic> m) => Workshop(
+    id: m['id'] as int,
+    name: m['name'] as String,
+    location: m['location'] as String?,
     createdAt: parseDateTime(m['created_at'] as String),
   );
 }

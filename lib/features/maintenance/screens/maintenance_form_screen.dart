@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../vehicles/providers.dart';
+import '../../vehicles/models/vehicle.dart';
 import '../models/maintenance.dart';
 import '../models/maintenance_item.dart';
 import '../providers.dart';
@@ -10,7 +11,6 @@ import '../widgets/item_form_row.dart';
 
 class MaintenanceFormScreen extends ConsumerStatefulWidget {
   final int? maintenanceId;
-
   final int? vehicleId;
 
   const MaintenanceFormScreen({super.key, this.maintenanceId, this.vehicleId});
@@ -22,27 +22,28 @@ class MaintenanceFormScreen extends ConsumerStatefulWidget {
 
 class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _titleController;
   late final TextEditingController _mileageController;
   late final TextEditingController _notesController;
+  late final TextEditingController _maintenanceCostController;
   DateTime _date = DateTime.now();
   final List<MaintenanceItem> _items = [];
   bool _isLoading = false;
   DateTime? _originalCreatedAt;
   int? _vehicleCurrentMileage;
+  int? _workshopId;
+  Vehicle? _vehicle;
 
   bool get _isEditing => widget.maintenanceId != null;
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController();
     _mileageController = TextEditingController();
     _notesController = TextEditingController();
+    _maintenanceCostController = TextEditingController();
 
     if (!_isEditing) {
-      _addItem();
-      Future.microtask(() => _loadVehicleMileage());
+      Future.microtask(() => _loadVehicle());
     } else {
       Future.microtask(() => _loadMaintenance());
     }
@@ -57,23 +58,45 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
         .read(maintenanceRepositoryProvider)
         .getItems(maintenance.id!);
 
-    _titleController.text = maintenance.title;
+    final vehicle = await ref
+        .read(vehicleRepositoryProvider)
+        .getById(maintenance.vehicleId);
+
     _mileageController.text = maintenance.mileage?.toString() ?? '';
     _notesController.text = maintenance.notes ?? '';
+    _maintenanceCostController.text = maintenance.maintenanceCost > 0
+        ? maintenance.maintenanceCost.toStringAsFixed(0)
+        : '';
     setState(() {
       _date = maintenance.date;
       _originalCreatedAt = maintenance.createdAt;
+      _workshopId = maintenance.workshopId;
+      _vehicle = vehicle;
       _items
         ..clear()
         ..addAll(items);
     });
   }
 
+  Future<void> _loadVehicle() async {
+    final vehicleId = widget.vehicleId ?? ref.read(selectedVehicleIdProvider);
+    if (vehicleId == null) return;
+    final vehicle = await ref
+        .read(vehicleRepositoryProvider)
+        .getById(vehicleId);
+    if (vehicle != null && mounted) {
+      setState(() {
+        _vehicleCurrentMileage = vehicle.currentMileage;
+        _vehicle = vehicle;
+      });
+    }
+  }
+
   @override
   void dispose() {
-    _titleController.dispose();
     _mileageController.dispose();
     _notesController.dispose();
+    _maintenanceCostController.dispose();
     super.dispose();
   }
 
@@ -82,39 +105,32 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
       _items.add(
         MaintenanceItem(
           maintenanceId: widget.maintenanceId ?? 0,
-          name: '',
           createdAt: DateTime.now(),
         ),
       );
     });
   }
 
-  Future<void> _loadVehicleMileage() async {
-    final vehicleId =
-        widget.vehicleId ?? ref.read(selectedVehicleIdProvider);
-    if (vehicleId == null) return;
-    final vehicle =
-        await ref.read(vehicleRepositoryProvider).getById(vehicleId);
-    if (vehicle != null && vehicle.currentMileage != null && mounted) {
-      setState(() => _vehicleCurrentMileage = vehicle.currentMileage);
-    }
-  }
-
   void _removeItem(int index) {
-    if (_items.length > 1) {
-      setState(() => _items.removeAt(index));
-    }
+    setState(() => _items.removeAt(index));
   }
 
   void _updateItem(int index, MaintenanceItem updated) {
     setState(() => _items[index] = updated);
   }
 
+  double get _totalParts =>
+      _items.fold<double>(0, (sum, i) => sum + i.partsCost);
+
+  double get _maintenanceCost =>
+      double.tryParse(_maintenanceCostController.text.trim()) ?? 0;
+
+  double get _total => _maintenanceCost + _totalParts;
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final validItems = _items.where((i) => i.name.trim().isNotEmpty).toList();
-    if (validItems.isEmpty) return;
+    final validItems = _items.toList();
 
     setState(() => _isLoading = true);
 
@@ -122,23 +138,14 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     if (vehicleId == null) return;
     final now = DateTime.now();
 
-    final totalLabor = validItems.fold<double>(
-      0,
-      (sum, i) => sum + i.laborCost,
-    );
-    final totalParts = validItems.fold<double>(
-      0,
-      (sum, i) => sum + i.partsCost,
-    );
-
     final maintenance = Maintenance(
       id: widget.maintenanceId,
       vehicleId: vehicleId,
-      title: _titleController.text.trim(),
       date: _date,
       mileage: int.tryParse(_mileageController.text.trim()),
-      totalLaborCost: totalLabor,
-      totalPartsCost: totalParts,
+      maintenanceCost: _maintenanceCost,
+      totalPartsCost: _totalParts,
+      workshopId: _workshopId,
       notes: _notesController.text.trim().isEmpty
           ? null
           : _notesController.text.trim(),
@@ -181,8 +188,74 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     }
   }
 
+  Future<void> _addWorkshop() async {
+    final result = await showDialog<({String name, String? location})>(
+      context: context,
+      builder: (ctx) {
+        String name = '';
+        String location = '';
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) => AlertDialog(
+            title: const Text('Nuevo taller'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  autofocus: true,
+                  onChanged: (v) => name = v,
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre del taller *',
+                    hintText: 'Ej: Taller Juan, Concesionario Toyota',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  onChanged: (v) => location = v,
+                  decoration: const InputDecoration(
+                    labelText: 'Ciudad / Ubicación',
+                    hintText: 'Ej: Bogotá, Zona Norte',
+                    prefixIcon: Icon(Icons.location_on_outlined),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  if (name.trim().isNotEmpty) {
+                    Navigator.pop(ctx, (
+                      name: name.trim(),
+                      location: location.trim().isEmpty
+                          ? null
+                          : location.trim(),
+                    ));
+                  }
+                },
+                child: const Text('Guardar'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (result != null && mounted) {
+      final id = await ref
+          .read(maintenanceRepositoryProvider)
+          .insertWorkshop(result.name, location: result.location);
+      ref.invalidate(workshopsProvider);
+      setState(() => _workshopId = id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final workshopsAsync = ref.watch(workshopsProvider);
+    final vehicleType = _vehicle?.type ?? 'other';
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -196,61 +269,117 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Título *',
-                  hintText: 'Ej: Cambio de aceite',
-                ),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Requerido' : null,
-              ),
-              const SizedBox(height: 16),
-              InkWell(
-                onTap: _pickDate,
-                child: InputDecorator(
-                  decoration: const InputDecoration(labelText: 'Fecha *'),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('${_date.day}/${_date.month}/${_date.year}'),
-                      const Icon(Icons.calendar_today, size: 20),
-                    ],
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: _pickDate,
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Fecha *',
+                          prefixIcon: Icon(Icons.calendar_today),
+                        ),
+                        child: Text(
+                          '${_date.day}/${_date.month}/${_date.year}',
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _mileageController,
-                decoration: const InputDecoration(
-                  labelText: 'Kilometraje',
-                  hintText: 'Ej: 15000',
-                ),
-                keyboardType: TextInputType.number,
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return null;
-                  final km = int.tryParse(v.trim());
-                  if (km == null || km < 0) {
-                    return 'Ingresa un kilometraje válido';
-                  }
-                  return null;
-                },
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _mileageController,
+                      decoration: const InputDecoration(
+                        labelText: 'Kilometraje',
+                        prefixIcon: Icon(Icons.speed),
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return null;
+                        final km = int.tryParse(v.trim());
+                        if (km == null || km < 0) {
+                          return 'Inválido';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
               ),
               if (_vehicleCurrentMileage != null) ...[
                 const SizedBox(height: 4),
                 Text(
-                  'Kilometraje actual del vehículo: ${formatMileage(_vehicleCurrentMileage)}',
+                  'Kilometraje actual: ${formatMileage(_vehicleCurrentMileage)}',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
+              const SizedBox(height: 16),
+              workshopsAsync.when(
+                loading: () => const SizedBox(
+                  height: 48,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (_, _) => const SizedBox.shrink(),
+                data: (workshops) {
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<int?>(
+                          value: workshops.any((w) => w.id == _workshopId)
+                              ? _workshopId
+                              : null,
+                          decoration: const InputDecoration(
+                            labelText: '¿Dónde se hizo?',
+                            prefixIcon: Icon(Icons.handyman),
+                          ),
+                          items: [
+                            const DropdownMenuItem<int?>(
+                              value: null,
+                              child: Text('--'),
+                            ),
+                            ...workshops.map(
+                              (w) => DropdownMenuItem<int?>(
+                                value: w.id,
+                                child: Text(
+                                  w.location != null && w.location!.isNotEmpty
+                                      ? '${w.name} · ${w.location}'
+                                      : w.name,
+                                ),
+                              ),
+                            ),
+                          ],
+                          onChanged: (v) => setState(() => _workshopId = v),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: _addWorkshop,
+                        icon: const Icon(Icons.add_circle_outline),
+                        tooltip: 'Agregar taller',
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _maintenanceCostController,
+                decoration: const InputDecoration(
+                  labelText: 'Precio del mantenimiento',
+                  prefixIcon: Icon(Icons.attach_money),
+                  prefixText: '\$ ',
+                ),
+                keyboardType: TextInputType.number,
+              ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _notesController,
                 decoration: const InputDecoration(
                   labelText: 'Notas',
                   hintText: 'Observaciones adicionales',
+                  prefixIcon: Icon(Icons.note_alt_outlined),
                 ),
-                maxLines: 3,
+                maxLines: 2,
               ),
               const SizedBox(height: 24),
               Row(
@@ -274,12 +403,45 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                   child: ItemFormRow(
                     item: entry.value,
                     index: entry.key,
-                    canRemove: _items.length > 1,
+                    canRemove: true,
+                    vehicleType: vehicleType,
                     onRemove: () => _removeItem(entry.key),
                     onChanged: (updated) => _updateItem(entry.key, updated),
                   ),
                 ),
               ),
+              if (_maintenanceCost > 0 || _totalParts > 0) ...[
+                const SizedBox(height: 16),
+                Card(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.summarize, size: 24),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Total:',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          formatCurrency(_total),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 32),
               SizedBox(
                 height: 48,

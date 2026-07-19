@@ -26,7 +26,7 @@ class DatabaseHelper {
 
     return openDatabase(
       path,
-      version: 2,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -35,6 +35,7 @@ class DatabaseHelper {
   Future<void> _onCreate(Database db, int version) async {
     final batch = db.batch();
     batch.execute(Tables.createVehicles);
+    batch.execute(Tables.createWorkshops);
     batch.execute(Tables.createMaintenances);
     batch.execute(Tables.createMaintenanceItems);
     await batch.commit(noResult: true);
@@ -45,6 +46,42 @@ class DatabaseHelper {
       await db.execute(
         'ALTER TABLE vehicles ADD COLUMN current_mileage INTEGER',
       );
+    }
+    if (oldVersion < 3) {
+      await db.execute(Tables.createWorkshops);
+      await db.execute(
+        'ALTER TABLE maintenances ADD COLUMN maintenance_cost REAL DEFAULT 0',
+      );
+      await db.execute(
+        'ALTER TABLE maintenances ADD COLUMN workshop_id INTEGER REFERENCES workshops(id) ON DELETE SET NULL',
+      );
+    }
+    if (oldVersion < 4) {
+      await db.execute(
+        'CREATE TABLE maintenance_items_new ('
+        'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+        'maintenance_id INTEGER NOT NULL, '
+        'category TEXT DEFAULT \'general\', '
+        'parts_cost REAL DEFAULT 0, '
+        'notes TEXT, '
+        'created_at TEXT NOT NULL, '
+        'FOREIGN KEY (maintenance_id) REFERENCES maintenances(id) ON DELETE CASCADE'
+        ')',
+      );
+      await db.execute(
+        'INSERT INTO maintenance_items_new '
+        '(id, maintenance_id, category, parts_cost, notes, created_at) '
+        'SELECT id, maintenance_id, COALESCE(category, \'general\'), '
+        'COALESCE(parts_cost, 0), notes, created_at '
+        'FROM maintenance_items',
+      );
+      await db.execute('DROP TABLE maintenance_items');
+      await db.execute(
+        'ALTER TABLE maintenance_items_new RENAME TO maintenance_items',
+      );
+    }
+    if (oldVersion < 5) {
+      await db.execute('ALTER TABLE workshops ADD COLUMN location TEXT');
     }
   }
 }

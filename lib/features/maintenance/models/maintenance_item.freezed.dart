@@ -23,9 +23,7 @@ MaintenanceItem _$MaintenanceItemFromJson(Map<String, dynamic> json) {
 mixin _$MaintenanceItem {
   int? get id => throw _privateConstructorUsedError;
   int get maintenanceId => throw _privateConstructorUsedError;
-  String get name => throw _privateConstructorUsedError;
   String get category => throw _privateConstructorUsedError;
-  double get laborCost => throw _privateConstructorUsedError;
   double get partsCost => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
@@ -50,9 +48,7 @@ abstract class $MaintenanceItemCopyWith<$Res> {
   $Res call({
     int? id,
     int maintenanceId,
-    String name,
     String category,
-    double laborCost,
     double partsCost,
     String? notes,
     DateTime createdAt,
@@ -76,9 +72,7 @@ class _$MaintenanceItemCopyWithImpl<$Res, $Val extends MaintenanceItem>
   $Res call({
     Object? id = freezed,
     Object? maintenanceId = null,
-    Object? name = null,
     Object? category = null,
-    Object? laborCost = null,
     Object? partsCost = null,
     Object? notes = freezed,
     Object? createdAt = null,
@@ -93,18 +87,10 @@ class _$MaintenanceItemCopyWithImpl<$Res, $Val extends MaintenanceItem>
                 ? _value.maintenanceId
                 : maintenanceId // ignore: cast_nullable_to_non_nullable
                       as int,
-            name: null == name
-                ? _value.name
-                : name // ignore: cast_nullable_to_non_nullable
-                      as String,
             category: null == category
                 ? _value.category
                 : category // ignore: cast_nullable_to_non_nullable
                       as String,
-            laborCost: null == laborCost
-                ? _value.laborCost
-                : laborCost // ignore: cast_nullable_to_non_nullable
-                      as double,
             partsCost: null == partsCost
                 ? _value.partsCost
                 : partsCost // ignore: cast_nullable_to_non_nullable
@@ -135,9 +121,7 @@ abstract class _$$MaintenanceItemImplCopyWith<$Res>
   $Res call({
     int? id,
     int maintenanceId,
-    String name,
     String category,
-    double laborCost,
     double partsCost,
     String? notes,
     DateTime createdAt,
@@ -160,9 +144,7 @@ class __$$MaintenanceItemImplCopyWithImpl<$Res>
   $Res call({
     Object? id = freezed,
     Object? maintenanceId = null,
-    Object? name = null,
     Object? category = null,
-    Object? laborCost = null,
     Object? partsCost = null,
     Object? notes = freezed,
     Object? createdAt = null,
@@ -177,18 +159,10 @@ class __$$MaintenanceItemImplCopyWithImpl<$Res>
             ? _value.maintenanceId
             : maintenanceId // ignore: cast_nullable_to_non_nullable
                   as int,
-        name: null == name
-            ? _value.name
-            : name // ignore: cast_nullable_to_non_nullable
-                  as String,
         category: null == category
             ? _value.category
             : category // ignore: cast_nullable_to_non_nullable
                   as String,
-        laborCost: null == laborCost
-            ? _value.laborCost
-            : laborCost // ignore: cast_nullable_to_non_nullable
-                  as double,
         partsCost: null == partsCost
             ? _value.partsCost
             : partsCost // ignore: cast_nullable_to_non_nullable
@@ -212,9 +186,7 @@ class _$MaintenanceItemImpl implements _MaintenanceItem {
   const _$MaintenanceItemImpl({
     this.id,
     required this.maintenanceId,
-    required this.name,
-    this.category = 'other',
-    this.laborCost = 0,
+    this.category = 'general',
     this.partsCost = 0,
     this.notes,
     required this.createdAt,
@@ -228,13 +200,8 @@ class _$MaintenanceItemImpl implements _MaintenanceItem {
   @override
   final int maintenanceId;
   @override
-  final String name;
-  @override
   @JsonKey()
   final String category;
-  @override
-  @JsonKey()
-  final double laborCost;
   @override
   @JsonKey()
   final double partsCost;
@@ -245,7 +212,7 @@ class _$MaintenanceItemImpl implements _MaintenanceItem {
 
   @override
   String toString() {
-    return 'MaintenanceItem(id: $id, maintenanceId: $maintenanceId, name: $name, category: $category, laborCost: $laborCost, partsCost: $partsCost, notes: $notes, createdAt: $createdAt)';
+    return 'MaintenanceItem(id: $id, maintenanceId: $maintenanceId, category: $category, partsCost: $partsCost, notes: $notes, createdAt: $createdAt)';
   }
 
   @override
@@ -256,11 +223,8 @@ class _$MaintenanceItemImpl implements _MaintenanceItem {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.maintenanceId, maintenanceId) ||
                 other.maintenanceId == maintenanceId) &&
-            (identical(other.name, name) || other.name == name) &&
             (identical(other.category, category) ||
                 other.category == category) &&
-            (identical(other.laborCost, laborCost) ||
-                other.laborCost == laborCost) &&
             (identical(other.partsCost, partsCost) ||
                 other.partsCost == partsCost) &&
             (identical(other.notes, notes) || other.notes == notes) &&
@@ -274,9 +238,7 @@ class _$MaintenanceItemImpl implements _MaintenanceItem {
     runtimeType,
     id,
     maintenanceId,
-    name,
     category,
-    laborCost,
     partsCost,
     notes,
     createdAt,
@@ -303,9 +265,7 @@ abstract class _MaintenanceItem implements MaintenanceItem {
   const factory _MaintenanceItem({
     final int? id,
     required final int maintenanceId,
-    required final String name,
     final String category,
-    final double laborCost,
     final double partsCost,
     final String? notes,
     required final DateTime createdAt,
@@ -319,11 +279,7 @@ abstract class _MaintenanceItem implements MaintenanceItem {
   @override
   int get maintenanceId;
   @override
-  String get name;
-  @override
   String get category;
-  @override
-  double get laborCost;
   @override
   double get partsCost;
   @override

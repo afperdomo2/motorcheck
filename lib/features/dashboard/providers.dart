@@ -15,7 +15,7 @@ final dashboardSummaryProvider = FutureProvider<DashboardSummary?>((ref) async {
 
   final totalSpent = allMaintenances.fold<double>(
     0,
-    (sum, m) => sum + m.totalLaborCost + m.totalPartsCost,
+    (sum, m) => sum + m.maintenanceCost + m.totalPartsCost,
   );
 
   final sorted = List<Maintenance>.from(allMaintenances)
