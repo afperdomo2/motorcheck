@@ -8,6 +8,7 @@ import '../../../shared/widgets/confirm_dialog.dart';
 import '../../vehicles/providers.dart';
 import '../providers.dart';
 import '../widgets/maintenance_card.dart';
+import '../widgets/maintenance_search_delegate.dart';
 
 class MaintenanceListScreen extends ConsumerWidget {
   const MaintenanceListScreen({super.key});
@@ -18,7 +19,20 @@ class MaintenanceListScreen extends ConsumerWidget {
     final maintenancesAsync = ref.watch(maintenancesNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mantenimientos')),
+      appBar: AppBar(
+        title: const Text('Mantenimientos'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: MaintenanceSearchDelegate(ref),
+              );
+            },
+          ),
+        ],
+      ),
       floatingActionButton: vehicleId != null
           ? FloatingActionButton.extended(
               onPressed: () => context.push('/maintenance/add'),
@@ -51,40 +65,45 @@ class MaintenanceListScreen extends ConsumerWidget {
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+                return RefreshIndicator(
+                  onRefresh: ref
+                      .read(maintenancesNotifierProvider.notifier)
+                      .loadMaintenances,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    itemCount: maintenances.length,
+                    itemBuilder: (context, index) {
+                      final maintenance = maintenances[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: MaintenanceCard(
+                          maintenance: maintenance,
+                          onTap: () =>
+                              context.push('/maintenance/${maintenance.id}'),
+                          onEdit: () =>
+                              context.push('/maintenance/${maintenance.id}/edit'),
+                          onDelete: () async {
+                            final confirmed = await showConfirmDialog(
+                              context,
+                              title: 'Eliminar mantenimiento',
+                              message:
+                                  '¿Eliminar "${maintenance.title}" y todos sus items?',
+                              confirmLabel: 'Eliminar',
+                              isDestructive: true,
+                            );
+                            if (confirmed == true && context.mounted) {
+                              ref
+                                  .read(maintenancesNotifierProvider.notifier)
+                                  .remove(maintenance.id!);
+                            }
+                          },
+                        ),
+                      );
+                    },
                   ),
-                  itemCount: maintenances.length,
-                  itemBuilder: (context, index) {
-                    final maintenance = maintenances[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: MaintenanceCard(
-                        maintenance: maintenance,
-                        onTap: () =>
-                            context.push('/maintenance/${maintenance.id}/edit'),
-                        onEdit: () =>
-                            context.push('/maintenance/${maintenance.id}/edit'),
-                        onDelete: () async {
-                          final confirmed = await showConfirmDialog(
-                            context,
-                            title: 'Eliminar mantenimiento',
-                            message:
-                                '¿Eliminar "${maintenance.title}" y todos sus items?',
-                            confirmLabel: 'Eliminar',
-                            isDestructive: true,
-                          );
-                          if (confirmed == true && context.mounted) {
-                            ref
-                                .read(maintenancesNotifierProvider.notifier)
-                                .remove(maintenance.id!);
-                          }
-                        },
-                      ),
-                    );
-                  },
                 );
               },
             ),

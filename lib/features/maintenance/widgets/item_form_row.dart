@@ -79,6 +79,14 @@ class ItemFormRow extends StatelessWidget {
                       labelText: 'Mano de obra',
                     ),
                     keyboardType: TextInputType.number,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return null;
+                      final cost = double.tryParse(v.trim());
+                      if (cost == null || cost < 0) {
+                        return 'Inválido';
+                      }
+                      return null;
+                    },
                     onChanged: (v) => onChanged(
                       item.copyWith(laborCost: double.tryParse(v) ?? 0),
                     ),
@@ -90,8 +98,18 @@ class ItemFormRow extends StatelessWidget {
                     initialValue: item.partsCost > 0
                         ? item.partsCost.toStringAsFixed(0)
                         : '',
-                    decoration: const InputDecoration(labelText: 'Repuestos'),
+                    decoration: const InputDecoration(
+                      labelText: 'Repuestos',
+                    ),
                     keyboardType: TextInputType.number,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return null;
+                      final cost = double.tryParse(v.trim());
+                      if (cost == null || cost < 0) {
+                        return 'Inválido';
+                      }
+                      return null;
+                    },
                     onChanged: (v) => onChanged(
                       item.copyWith(partsCost: double.tryParse(v) ?? 0),
                     ),

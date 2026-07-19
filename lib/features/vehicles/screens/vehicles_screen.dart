@@ -41,39 +41,46 @@ class VehiclesScreen extends ConsumerWidget {
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            itemCount: vehicles.length,
-            itemBuilder: (context, index) {
-              final vehicle = vehicles[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: VehicleCard(
-                  vehicle: vehicle,
-                  isSelected: vehicle.id == selectedId,
-                  onTap: () {
-                    ref.read(selectedVehicleIdProvider.notifier).state =
-                        vehicle.id;
-                  },
-                  onEdit: () => context.push('/vehicles/${vehicle.id}/edit'),
-                  onDelete: () async {
-                    final confirmed = await showConfirmDialog(
-                      context,
-                      title: 'Eliminar vehículo',
-                      message:
-                          '¿Estás seguro de eliminar "${vehicle.name}"? Se perderán todos sus mantenimientos.',
-                      confirmLabel: 'Eliminar',
-                      isDestructive: true,
-                    );
-                    if (confirmed == true && context.mounted) {
+          return RefreshIndicator(
+            onRefresh:
+                ref.read(vehiclesNotifierProvider.notifier).loadVehicles,
+            child: ListView.builder(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: vehicles.length,
+              itemBuilder: (context, index) {
+                final vehicle = vehicles[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: VehicleCard(
+                    vehicle: vehicle,
+                    isSelected: vehicle.id == selectedId,
+                    onTap: () {
                       ref
-                          .read(vehiclesNotifierProvider.notifier)
-                          .remove(vehicle.id!);
-                    }
-                  },
-                ),
-              );
-            },
+                          .read(selectedVehicleIdProvider.notifier)
+                          .state = vehicle.id;
+                    },
+                    onEdit: () =>
+                        context.push('/vehicles/${vehicle.id}/edit'),
+                    onDelete: () async {
+                      final confirmed = await showConfirmDialog(
+                        context,
+                        title: 'Eliminar vehículo',
+                        message:
+                            '¿Estás seguro de eliminar "${vehicle.name}"? Se perderán todos sus mantenimientos.',
+                        confirmLabel: 'Eliminar',
+                        isDestructive: true,
+                      );
+                      if (confirmed == true && context.mounted) {
+                        ref
+                            .read(vehiclesNotifierProvider.notifier)
+                            .remove(vehicle.id!);
+                      }
+                    },
+                  ),
+                );
+              },
+            ),
           );
         },
       ),

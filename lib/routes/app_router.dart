@@ -5,6 +5,7 @@ import '../features/vehicles/screens/vehicles_screen.dart';
 import '../features/vehicles/screens/vehicle_form_screen.dart';
 import '../features/maintenance/screens/maintenance_list_screen.dart';
 import '../features/maintenance/screens/maintenance_form_screen.dart';
+import '../features/maintenance/screens/maintenance_detail_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -31,6 +32,13 @@ final appRouter = GoRouter(
                 GoRoute(
                   path: 'add',
                   builder: (context, state) => const MaintenanceFormScreen(),
+                ),
+                GoRoute(
+                  path: ':id',
+                  builder: (context, state) {
+                    final id = int.parse(state.pathParameters['id']!);
+                    return MaintenanceDetailScreen(maintenanceId: id);
+                  },
                 ),
                 GoRoute(
                   path: ':id/edit',

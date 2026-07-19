@@ -175,6 +175,16 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                       controller: _yearController,
                       decoration: const InputDecoration(labelText: 'Año'),
                       keyboardType: TextInputType.number,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return null;
+                        final year = int.tryParse(v.trim());
+                        if (year == null) return 'Ingresa un año válido';
+                        final currentYear = DateTime.now().year;
+                        if (year < 1886 || year > currentYear + 1) {
+                          return 'Año fuera de rango';
+                        }
+                        return null;
+                      },
                     ),
                   ),
                   const SizedBox(width: 16),

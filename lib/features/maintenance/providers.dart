@@ -17,12 +17,18 @@ final maintenancesProvider = FutureProvider<List<Maintenance>>((ref) async {
 
 final maintenanceItemsProvider =
     FutureProvider.family<List<MaintenanceItem>, int>((
-      ref,
-      maintenanceId,
-    ) async {
-      final repository = ref.watch(maintenanceRepositoryProvider);
-      return repository.getItems(maintenanceId);
-    });
+  ref,
+  maintenanceId,
+) async {
+  final repository = ref.watch(maintenanceRepositoryProvider);
+  return repository.getItems(maintenanceId);
+});
+
+final maintenanceByIdProvider =
+    FutureProvider.family<Maintenance?, int>((ref, maintenanceId) async {
+  final repository = ref.watch(maintenanceRepositoryProvider);
+  return repository.getById(maintenanceId);
+});
 
 class MaintenancesNotifier extends Notifier<AsyncValue<List<Maintenance>>> {
   MaintenanceRepository get _repo => ref.read(maintenanceRepositoryProvider);

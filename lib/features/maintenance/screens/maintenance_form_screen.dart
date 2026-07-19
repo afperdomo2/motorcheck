@@ -210,6 +210,14 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                   hintText: 'Ej: 15000',
                 ),
                 keyboardType: TextInputType.number,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return null;
+                  final km = int.tryParse(v.trim());
+                  if (km == null || km < 0) {
+                    return 'Ingresa un kilometraje válido';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
