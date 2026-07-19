@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
-import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../vehicles/providers.dart';
 import '../../vehicles/models/vehicle.dart';
@@ -14,7 +13,6 @@ import '../models/workshop.dart';
 import '../providers.dart';
 import '../widgets/timeline_tile.dart';
 import '../widgets/maintenance_search_delegate.dart';
-import '../../../core/utils/formatters.dart';
 
 class MaintenanceListScreen extends ConsumerStatefulWidget {
   const MaintenanceListScreen({super.key});
@@ -32,7 +30,6 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
   Widget build(BuildContext context) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
     final maintenancesAsync = ref.watch(maintenancesNotifierProvider);
-    final hasMultipleVehicles = (vehiclesAsync.valueOrNull?.length ?? 0) > 1;
 
     return Scaffold(
       appBar: AppBar(
@@ -56,7 +53,7 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
       ),
       body: Column(
         children: [
-          _buildFilterBar(context, hasMultipleVehicles),
+          _buildFilterBar(context),
           Expanded(
             child: maintenancesAsync.when(
               loading: () => const LoadingIndicator(),
@@ -95,102 +92,129 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
     );
     final itemsByMaintenance = itemsAsync.valueOrNull ?? {};
 
+    final groups = <DateTime, List<Maintenance>>{};
+    for (final m in maintenances) {
+      final key = DateTime(m.date.year, m.date.month, m.date.day);
+      groups.putIfAbsent(key, () => []).add(m);
+    }
+    final sortedGroups = groups.entries.toList()
+      ..sort((a, b) => b.key.compareTo(a.key));
+
+    final flatItems = <dynamic>[];
+    for (final group in sortedGroups) {
+      flatItems.add(group.key);
+      flatItems.addAll(group.value);
+    }
+
     return RefreshIndicator(
       onRefresh: ref
           .read(maintenancesNotifierProvider.notifier)
           .loadMaintenances,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: maintenances.length,
+        itemCount: flatItems.length,
         itemBuilder: (context, index) {
-          final m = maintenances[index];
-          final vehicle = _findVehicle(vehicles, m.vehicleId);
-          final workshop = _findWorkshop(workshops, m.workshopId);
-          final items = itemsByMaintenance[m.id] ?? [];
-          final vehicleName = vehicle?.name;
-          final vehicleType = vehicle?.type;
-          final workshopName = workshop?.name;
-          final workshopLocation = workshop?.location;
-          final dateStr = formatDate(m.date);
+          final item = flatItems[index];
 
-          return TimelineTile(
-            maintenance: m,
-            items: items,
-            vehicleName: vehicleName,
-            vehicleType: vehicleType,
-            workshopName: workshopName,
-            workshopLocation: workshopLocation,
-            isLast: index == maintenances.length - 1,
-            onTap: () => context.push('/maintenance/${m.id}'),
-            onEdit: () => context.push('/maintenance/${m.id}/edit'),
-            onDelete: () async {
-              final dateId = dateStr;
-              final vehicleId = vehicleName ?? 'Vehículo';
-              final confirmed = await showConfirmDialog(
-                context,
-                title: 'Eliminar mantenimiento',
-                message:
-                    '¿Eliminar el mantenimiento del $dateId ($vehicleId) y todos sus items?',
-                confirmLabel: 'Eliminar',
-                isDestructive: true,
-              );
-              if (confirmed == true && context.mounted) {
-                ref.read(maintenancesNotifierProvider.notifier).remove(m.id!);
-              }
-            },
-          );
+          if (item is DateTime) {
+            final nextItem = index + 1 < flatItems.length
+                ? flatItems[index + 1]
+                : null;
+            final isLastGroup = nextItem is DateTime || nextItem == null;
+            return _DateHeader(date: item, hasLine: !isLastGroup);
+          }
+
+          if (item is Maintenance) {
+            final nextItem = index + 1 < flatItems.length
+                ? flatItems[index + 1]
+                : null;
+            final isLastInGroup = nextItem is DateTime || nextItem == null;
+
+            final vehicle = _findVehicle(vehicles, item.vehicleId);
+            final workshop = _findWorkshop(workshops, item.workshopId);
+            final items = itemsByMaintenance[item.id] ?? [];
+
+            return TimelineTile(
+              maintenance: item,
+              items: items,
+              vehicleName: vehicle?.name,
+              vehicleType: vehicle?.type,
+              workshopName: workshop?.name,
+              workshopLocation: workshop?.location,
+              showConnector: true,
+              isLastInGroup: isLastInGroup,
+              onTap: () => context.push('/maintenance/${item.id}'),
+            );
+          }
+
+          return const SizedBox.shrink();
         },
       ),
     );
   }
 
-  Widget _buildFilterBar(BuildContext context, bool hasMultipleVehicles) {
+  Widget _buildFilterBar(BuildContext context) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
     final vehicles = vehiclesAsync.valueOrNull ?? [];
+    final hasMultipleVehicles = vehicles.length > 1;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            if (hasMultipleVehicles) ...[
-              _chip(
-                'Todos',
-                _selectedVehicleId == null,
-                (_) => setState(() => _selectedVehicleId = null),
-              ),
-              const SizedBox(width: 6),
-              ...vehicles.map((v) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: _chip(
-                    v.name,
-                    _selectedVehicleId == v.id,
-                    (_) => setState(() => _selectedVehicleId = v.id),
-                  ),
-                );
-              }),
-              const SizedBox(width: 12),
-            ],
-            _chip(
-              'Todas',
-              _selectedCategory == null,
-              (_) => setState(() => _selectedCategory = null),
-            ),
-            const SizedBox(width: 6),
-            ..._allCategoryFilters(vehicles).map((cat) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: _chip(
-                  MaintenanceCategories.label(cat),
-                  _selectedCategory == cat,
-                  (_) => setState(() => _selectedCategory = cat),
-                ),
-              );
-            }),
-          ],
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 0.5),
         ),
+      ),
+      child: Column(
+        children: [
+          if (hasMultipleVehicles)
+            DropdownButtonFormField<int?>(
+              value: _selectedVehicleId,
+              decoration: const InputDecoration(
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 0,
+                ),
+                isDense: true,
+                prefixIcon: Icon(Icons.directions_car, size: 20),
+              ),
+              items: [
+                const DropdownMenuItem<int?>(
+                  value: null,
+                  child: Text('Todos los vehículos'),
+                ),
+                ...vehicles.map(
+                  (v) =>
+                      DropdownMenuItem<int?>(value: v.id, child: Text(v.name)),
+                ),
+              ],
+              onChanged: (v) => setState(() => _selectedVehicleId = v),
+            ),
+          const SizedBox(height: 4),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _chip(
+                  'Todas',
+                  _selectedCategory == null,
+                  (_) => setState(() => _selectedCategory = null),
+                ),
+                const SizedBox(width: 6),
+                ..._allCategoryFilters(vehicles).map((cat) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: _chip(
+                      MaintenanceCategories.label(cat),
+                      _selectedCategory == cat,
+                      (_) => setState(() => _selectedCategory = cat),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -217,6 +241,8 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
       label: Text(label),
       selected: selected,
       onSelected: onSelected,
+      visualDensity: VisualDensity.compact,
+      labelStyle: const TextStyle(fontSize: 12),
     );
   }
 
@@ -229,14 +255,10 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
     }
     if (_selectedCategory != null) {
       filtered = filtered.where((m) {
-        return _categoryContains(_selectedCategory!, m.id ?? 0);
+        return true;
       }).toList();
     }
     return filtered;
-  }
-
-  bool _categoryContains(String category, int maintenanceId) {
-    return true;
   }
 
   Widget _buildEmptyState(List<Vehicle> vehicles) {
@@ -297,5 +319,91 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
     if (selected != null && context.mounted) {
       context.push('/maintenance/add?vehicleId=${selected.id}');
     }
+  }
+}
+
+class _DateHeader extends StatelessWidget {
+  final DateTime date;
+  final bool hasLine;
+
+  const _DateHeader({required this.date, required this.hasLine});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    final months = [
+      '',
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 28,
+            child: Column(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      date.day.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                if (hasLine)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      color: color.withValues(alpha: 0.3),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: RichText(
+                text: TextSpan(
+                  style: Theme.of(context).textTheme.titleSmall,
+                  children: [
+                    TextSpan(
+                      text: '${date.day} ',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(text: months[date.month]),
+                    TextSpan(text: ' ${date.year}'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

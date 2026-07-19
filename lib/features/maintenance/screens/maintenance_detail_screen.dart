@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/error_state.dart';
+import '../../../shared/widgets/confirm_dialog.dart';
 import '../categories.dart';
 import '../models/maintenance.dart';
 import '../models/maintenance_item.dart';
@@ -30,6 +31,11 @@ class MaintenanceDetailScreen extends ConsumerWidget {
             onPressed: () =>
                 context.pushReplacement('/maintenance/$maintenanceId/edit'),
             tooltip: 'Editar',
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () => _deleteMaintenance(context, ref, maintenanceId),
+            tooltip: 'Eliminar',
           ),
         ],
       ),
@@ -71,17 +77,6 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                     const SizedBox(height: 8),
                     ...items.map((item) => _ItemTile(item: item)),
                   ],
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    height: 48,
-                    child: ElevatedButton.icon(
-                      onPressed: () => context.pushReplacement(
-                        '/maintenance/$maintenanceId/edit',
-                      ),
-                      icon: const Icon(Icons.edit),
-                      label: const Text('Editar'),
-                    ),
-                  ),
                 ],
               );
             },
@@ -97,6 +92,25 @@ class MaintenanceDetailScreen extends ConsumerWidget {
       if (w.id == workshopId) return w;
     }
     return null;
+  }
+
+  Future<void> _deleteMaintenance(
+    BuildContext context,
+    WidgetRef ref,
+    int maintenanceId,
+  ) async {
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'Eliminar mantenimiento',
+      message:
+          '¿Estás seguro de eliminar este mantenimiento y todos sus items?',
+      confirmLabel: 'Eliminar',
+      isDestructive: true,
+    );
+    if (confirmed == true && context.mounted) {
+      ref.read(maintenancesNotifierProvider.notifier).remove(maintenanceId);
+      context.pop();
+    }
   }
 }
 

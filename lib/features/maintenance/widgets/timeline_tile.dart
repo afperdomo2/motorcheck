@@ -15,27 +15,25 @@ IconData _vehicleIcon(String? type) => switch (type) {
 class TimelineTile extends StatelessWidget {
   final Maintenance maintenance;
   final VoidCallback onTap;
-  final VoidCallback? onEdit;
-  final VoidCallback? onDelete;
   final String? vehicleName;
   final String? vehicleType;
   final String? workshopName;
   final String? workshopLocation;
   final List<MaintenanceItem> items;
-  final bool isLast;
+  final bool showConnector;
+  final bool isLastInGroup;
 
   const TimelineTile({
     super.key,
     required this.maintenance,
     required this.onTap,
-    this.onEdit,
-    this.onDelete,
     this.vehicleName,
     this.vehicleType,
     this.workshopName,
     this.workshopLocation,
     this.items = const [],
-    this.isLast = false,
+    this.showConnector = true,
+    this.isLastInGroup = false,
   });
 
   @override
@@ -47,20 +45,19 @@ class TimelineTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _TimelineIndicator(date: maintenance.date, isLast: isLast),
-          const SizedBox(width: 12),
+          _ConnectorLine(showConnector: showConnector, isLast: isLastInGroup),
           Expanded(
             child: Card(
-              margin: const EdgeInsets.only(bottom: 8),
+              margin: const EdgeInsets.only(bottom: 6),
               child: InkWell(
                 onTap: onTap,
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (vehicleName != null) ...[
+                      if (vehicleName != null)
                         Row(
                           children: [
                             Icon(_vehicleIcon(vehicleType), size: 18),
@@ -68,97 +65,68 @@ class TimelineTile extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 vehicleName!,
-                                style: Theme.of(context).textTheme.titleMedium,
+                                style:
+                                    Theme.of(context).textTheme.titleMedium,
                               ),
                             ),
+                            if (total > 0)
+                              Text(
+                                formatCurrency(total),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelLarge
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
                           ],
                         ),
-                        if (workshopName != null ||
-                            categoryKeys.isNotEmpty ||
-                            maintenance.mileage != null)
-                          const SizedBox(height: 8),
-                      ],
-                      if (workshopName != null) ...[
-                        Row(
-                          children: [
-                            const Icon(Icons.handyman, size: 16),
-                            const SizedBox(width: 6),
-                            Text(
-                              workshopName!,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ],
-                        ),
-                        if (workshopLocation != null &&
-                            workshopLocation!.isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              const SizedBox(width: 22),
-                              Icon(
-                                Icons.location_on_outlined,
-                                size: 14,
-                                color: Theme.of(context).disabledColor,
-                              ),
-                              const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  workshopLocation!,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.labelMedium,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                      if (categoryKeys.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        _buildCategoryBadges(context, categoryKeys),
                       ],
                       if (maintenance.mileage != null) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.speed,
+                              size: 14,
+                              color: Theme.of(context).disabledColor,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              formatMileage(maintenance.mileage),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (workshopName != null) ...[
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.speed, size: 16),
-                            const SizedBox(width: 6),
-                            Text(
-                              formatMileage(maintenance.mileage),
-                              style: Theme.of(context).textTheme.bodyMedium,
+                            Icon(
+                              Icons.handyman,
+                              size: 14,
+                              color: Theme.of(context).disabledColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                workshopLocation != null &&
+                                        workshopLocation!.isNotEmpty
+                                    ? '${workshopName!} · $workshopLocation'
+                                    : workshopName!,
+                                style: Theme.of(context).textTheme.bodySmall,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
-                        ),
-                      ],
-                      if (categoryKeys.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
-                          children: categoryKeys.map((key) {
-                            return Chip(
-                              avatar: Icon(
-                                MaintenanceCategories.icon(key),
-                                size: 16,
-                              ),
-                              label: Text(
-                                MaintenanceCategories.label(key),
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              visualDensity: VisualDensity.compact,
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                            );
-                          }).toList(),
-                        ),
-                      ],
-                      if (total > 0) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          formatCurrency(total),
-                          style: Theme.of(context).textTheme.labelLarge
-                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
                       ],
                       if (maintenance.notes != null &&
                           maintenance.notes!.isNotEmpty) ...[
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 4),
                         Text(
                           maintenance.notes!,
                           style: Theme.of(context).textTheme.bodySmall,
@@ -172,110 +140,83 @@ class TimelineTile extends StatelessWidget {
               ),
             ),
           ),
-          if (onEdit != null || onDelete != null)
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'edit') onEdit?.call();
-                if (value == 'delete') onDelete?.call();
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'edit',
-                  child: Row(
-                    children: [
-                      Icon(Icons.edit, size: 20),
-                      SizedBox(width: 8),
-                      Text('Editar'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete, size: 20, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text('Eliminar', style: TextStyle(color: Colors.red)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCategoryBadges(BuildContext context, List<String> categoryKeys) {
+    const showMax = 2;
+    final visible = categoryKeys.take(showMax);
+    final remaining = categoryKeys.length - showMax;
+
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        ...visible.map((key) {
+          final cat = MaintenanceCategories.byKey(key);
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(cat?.icon ?? Icons.build, size: 12),
+                const SizedBox(width: 3),
+                Text(cat?.label ?? key, style: const TextStyle(fontSize: 10)),
+              ],
+            ),
+          );
+        }),
+        if (remaining > 0)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '+$remaining',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
 
-class _TimelineIndicator extends StatelessWidget {
-  final DateTime date;
+class _ConnectorLine extends StatelessWidget {
+  final bool showConnector;
   final bool isLast;
 
-  const _TimelineIndicator({required this.date, required this.isLast});
+  const _ConnectorLine({required this.showConnector, required this.isLast});
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
-    final day = date.day.toString();
-    final month = _monthAbbr(date.month);
-
     return SizedBox(
-      width: 40,
+      width: 28,
       child: Column(
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            child: Center(
-              child: Text(
-                day,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            month,
-            style: TextStyle(
-              fontSize: 10,
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          if (!isLast)
+          if (showConnector)
             Expanded(
               child: Container(
                 width: 2,
-                color: color.withValues(alpha: 0.3),
-                margin: const EdgeInsets.only(top: 4),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.3),
               ),
             ),
+          if (!showConnector) const Expanded(child: SizedBox.shrink()),
         ],
       ),
     );
-  }
-
-  String _monthAbbr(int month) {
-    const months = [
-      '',
-      'Ene',
-      'Feb',
-      'Mar',
-      'Abr',
-      'May',
-      'Jun',
-      'Jul',
-      'Ago',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dic',
-    ];
-    return months[month];
   }
 }
