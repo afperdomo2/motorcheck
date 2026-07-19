@@ -6,6 +6,7 @@ import '../features/vehicles/screens/vehicle_form_screen.dart';
 import '../features/maintenance/screens/maintenance_list_screen.dart';
 import '../features/maintenance/screens/maintenance_form_screen.dart';
 import '../features/maintenance/screens/maintenance_detail_screen.dart';
+import '../features/maintenance/screens/maintenance_search_screen.dart';
 import '../features/settings/screens/settings_screen.dart';
 import '../features/settings/screens/workshops_screen.dart';
 import '../features/settings/screens/workshop_form_screen.dart';
@@ -39,6 +40,10 @@ final appRouter = GoRouter(
                     );
                     return MaintenanceFormScreen(vehicleId: vehicleId);
                   },
+                ),
+                GoRoute(
+                  path: 'search',
+                  builder: (context, state) => const MaintenanceSearchScreen(),
                 ),
                 GoRoute(
                   path: ':id',

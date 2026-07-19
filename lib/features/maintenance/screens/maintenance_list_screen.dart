@@ -11,7 +11,6 @@ import '../models/maintenance.dart';
 import '../models/workshop.dart';
 import '../providers.dart';
 import '../widgets/timeline_tile.dart';
-import '../widgets/maintenance_search_delegate.dart';
 
 class MaintenanceListScreen extends ConsumerStatefulWidget {
   const MaintenanceListScreen({super.key});
@@ -43,12 +42,7 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
-            onPressed: () {
-              showSearch(
-                context: context,
-                delegate: MaintenanceSearchDelegate(ref),
-              );
-            },
+            onPressed: () => context.push('/maintenance/search'),
           ),
         ],
       ),
