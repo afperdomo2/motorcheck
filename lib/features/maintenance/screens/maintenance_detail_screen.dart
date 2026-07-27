@@ -138,7 +138,7 @@ class _DetailCard extends StatelessWidget {
             _DetailRow(
               icon: Icons.calendar_today,
               label: 'Fecha',
-              value: formatDate(maintenance.date),
+              value: formatDisplayDate(maintenance.date),
             ),
             if (maintenance.mileage != null) ...[
               const SizedBox(height: 8),

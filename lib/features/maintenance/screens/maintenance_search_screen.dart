@@ -316,7 +316,7 @@ class _MaintenanceSearchScreenState
               Row(
                 children: [
                   Text(
-                    formatDate(maintenance.date),
+                    formatDisplayDate(maintenance.date),
                     style: Theme.of(context).textTheme.labelSmall,
                   ),
                   if (categoryKeys.isNotEmpty) ...[

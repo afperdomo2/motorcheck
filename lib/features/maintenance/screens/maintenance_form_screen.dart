@@ -285,9 +285,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                           labelText: 'Fecha *',
                           prefixIcon: Icon(Icons.calendar_today),
                         ),
-                        child: Text(
-                          '${_date.day}/${_date.month}/${_date.year}',
-                        ),
+                        child: Text(formatDisplayDate(_date)),
                       ),
                     ),
                   ),
@@ -321,7 +319,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                 const SizedBox(height: 4),
                 Text(
                   'Último registro: ${formatMileage(_vehicleCurrentMileage)}'
-                  '${_vehicleMileageUpdatedAt != null ? ' (${_vehicleMileageUpdatedAt!.day}/${_vehicleMileageUpdatedAt!.month}/${_vehicleMileageUpdatedAt!.year})' : ''}',
+                  '${_vehicleMileageUpdatedAt != null ? ' (${formatDisplayDate(_vehicleMileageUpdatedAt!)})' : ''}',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],

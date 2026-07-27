@@ -55,7 +55,7 @@ class QuickStats extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                formatDate(summary.lastMaintenance!.date),
+                formatDisplayDate(summary.lastMaintenance!.date),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
