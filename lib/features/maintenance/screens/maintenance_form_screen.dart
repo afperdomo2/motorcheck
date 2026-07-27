@@ -137,11 +137,10 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final validItems = _items.toList();
+    final vehicleId = widget.vehicleId ?? _vehicle?.id;
+    if (vehicleId == null) return;
 
     setState(() => _isLoading = true);
-
-    final vehicleId = widget.vehicleId ?? ref.read(selectedVehicleIdProvider);
-    if (vehicleId == null) return;
     final now = DateTime.now();
 
     final maintenance = Maintenance(
