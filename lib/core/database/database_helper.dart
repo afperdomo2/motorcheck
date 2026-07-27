@@ -26,7 +26,7 @@ class DatabaseHelper {
 
     return openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -82,6 +82,11 @@ class DatabaseHelper {
     }
     if (oldVersion < 5) {
       await db.execute('ALTER TABLE workshops ADD COLUMN location TEXT');
+    }
+    if (oldVersion < 6) {
+      await db.execute(
+        'ALTER TABLE vehicles ADD COLUMN mileage_updated_at TEXT',
+      );
     }
   }
 }

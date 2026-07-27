@@ -31,6 +31,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
   bool _isLoading = false;
   DateTime? _originalCreatedAt;
   int? _vehicleCurrentMileage;
+  DateTime? _vehicleMileageUpdatedAt;
   int? _workshopId;
   Vehicle? _vehicle;
 
@@ -88,8 +89,12 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     if (vehicle != null && mounted) {
       setState(() {
         _vehicleCurrentMileage = vehicle.currentMileage;
+        _vehicleMileageUpdatedAt = vehicle.mileageUpdatedAt;
         _vehicle = vehicle;
       });
+      if (vehicle.currentMileage != null) {
+        _mileageController.text = vehicle.currentMileage.toString();
+      }
     }
   }
 
@@ -290,13 +295,18 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _mileageController,
-                      decoration: const InputDecoration(
-                        labelText: 'Kilometraje',
-                        prefixIcon: Icon(Icons.speed),
+                      decoration: InputDecoration(
+                        labelText: _vehicleCurrentMileage != null
+                            ? 'Kilometraje *'
+                            : 'Kilometraje',
+                        prefixIcon: const Icon(Icons.speed),
                       ),
                       keyboardType: TextInputType.number,
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return null;
+                        final isRequired = _vehicleCurrentMileage != null;
+                        if (v == null || v.trim().isEmpty) {
+                          return isRequired ? 'Requerido' : null;
+                        }
                         final km = int.tryParse(v.trim());
                         if (km == null || km < 0) {
                           return 'Inválido';
@@ -310,7 +320,8 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
               if (_vehicleCurrentMileage != null) ...[
                 const SizedBox(height: 4),
                 Text(
-                  'Kilometraje actual: ${formatMileage(_vehicleCurrentMileage)}',
+                  'Último registro: ${formatMileage(_vehicleCurrentMileage)}'
+                  '${_vehicleMileageUpdatedAt != null ? ' (${_vehicleMileageUpdatedAt!.day}/${_vehicleMileageUpdatedAt!.month}/${_vehicleMileageUpdatedAt!.year})' : ''}',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],

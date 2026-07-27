@@ -28,6 +28,8 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
   bool _isDefault = false;
   bool _isLoading = false;
   DateTime? _originalCreatedAt;
+  int? _originalMileage;
+  DateTime? _originalMileageUpdatedAt;
 
   bool get _isEditing => widget.vehicleId != null;
 
@@ -63,6 +65,8 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
         _type = vehicle.type;
         _isDefault = vehicle.isDefault;
         _originalCreatedAt = vehicle.createdAt;
+        _originalMileage = vehicle.currentMileage;
+        _originalMileageUpdatedAt = vehicle.mileageUpdatedAt;
       });
     }
   }
@@ -98,6 +102,9 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
         ? [brand, model].whereType<String>().join(' ').trim()
         : 'Mi vehículo';
 
+    final mileageText = _mileageController.text.trim();
+    final newMileage = int.tryParse(mileageText);
+
     final vehicle = Vehicle(
       id: widget.vehicleId,
       name: autoName,
@@ -111,7 +118,10 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
       color: _colorController.text.trim().isEmpty
           ? null
           : _colorController.text.trim(),
-      currentMileage: int.tryParse(_mileageController.text.trim()),
+      currentMileage: newMileage,
+      mileageUpdatedAt: mileageText.isNotEmpty
+          ? (newMileage == _originalMileage ? _originalMileageUpdatedAt : now)
+          : null,
       isDefault: _isDefault,
       createdAt: _originalCreatedAt ?? now,
       updatedAt: now,

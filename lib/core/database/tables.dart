@@ -13,6 +13,7 @@ CREATE TABLE vehicles (
   color TEXT,
   image_path TEXT,
   current_mileage INTEGER,
+  mileage_updated_at TEXT,
   is_default INTEGER DEFAULT 0,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL

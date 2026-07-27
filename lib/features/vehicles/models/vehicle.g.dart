@@ -18,6 +18,9 @@ _$VehicleImpl _$$VehicleImplFromJson(Map<String, dynamic> json) =>
       color: json['color'] as String?,
       imagePath: json['imagePath'] as String?,
       currentMileage: (json['currentMileage'] as num?)?.toInt(),
+      mileageUpdatedAt: json['mileageUpdatedAt'] == null
+          ? null
+          : DateTime.parse(json['mileageUpdatedAt'] as String),
       isDefault: json['isDefault'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -35,6 +38,7 @@ Map<String, dynamic> _$$VehicleImplToJson(_$VehicleImpl instance) =>
       'color': instance.color,
       'imagePath': instance.imagePath,
       'currentMileage': instance.currentMileage,
+      'mileageUpdatedAt': instance.mileageUpdatedAt?.toIso8601String(),
       'isDefault': instance.isDefault,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),

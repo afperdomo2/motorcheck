@@ -73,6 +73,9 @@ class VehicleRepository {
     'color': v.color,
     'image_path': v.imagePath,
     'current_mileage': v.currentMileage,
+    'mileage_updated_at': v.mileageUpdatedAt != null
+        ? formatDateTime(v.mileageUpdatedAt!)
+        : null,
     'is_default': v.isDefault ? 1 : 0,
     'created_at': formatDateTime(v.createdAt),
     'updated_at': formatDateTime(v.updatedAt),
@@ -89,6 +92,9 @@ class VehicleRepository {
     color: m['color'] as String?,
     imagePath: m['image_path'] as String?,
     currentMileage: m['current_mileage'] as int?,
+    mileageUpdatedAt: m['mileage_updated_at'] != null
+        ? parseDateTime(m['mileage_updated_at'] as String)
+        : null,
     isDefault: (m['is_default'] as int?) == 1,
     createdAt: parseDateTime(m['created_at'] as String),
     updatedAt: parseDateTime(m['updated_at'] as String),

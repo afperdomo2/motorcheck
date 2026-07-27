@@ -61,6 +61,7 @@ class MaintenanceRepository {
           'vehicles',
           {
             'current_mileage': maintenance.mileage,
+            'mileage_updated_at': formatDateTime(DateTime.now()),
             'updated_at': formatDateTime(DateTime.now()),
           },
           where: 'id = ?',

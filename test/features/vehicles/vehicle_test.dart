@@ -14,6 +14,8 @@ void main() {
         'plate': 'ABC123',
         'color': 'Rojo',
         'imagePath': null,
+        'currentMileage': null,
+        'mileageUpdatedAt': null,
         'isDefault': true,
         'createdAt': '2024-01-01T00:00:00',
         'updatedAt': '2024-01-01T00:00:00',
@@ -29,6 +31,8 @@ void main() {
       expect(vehicle.year, 2020);
       expect(vehicle.plate, 'ABC123');
       expect(vehicle.color, 'Rojo');
+      expect(vehicle.currentMileage, isNull);
+      expect(vehicle.mileageUpdatedAt, isNull);
       expect(vehicle.isDefault, true);
     });
 

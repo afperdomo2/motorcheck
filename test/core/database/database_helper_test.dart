@@ -42,6 +42,8 @@ void main() {
     expect(columnNames.contains('plate'), isTrue);
     expect(columnNames.contains('color'), isTrue);
     expect(columnNames.contains('image_path'), isTrue);
+    expect(columnNames.contains('current_mileage'), isTrue);
+    expect(columnNames.contains('mileage_updated_at'), isTrue);
     expect(columnNames.contains('is_default'), isTrue);
     expect(columnNames.contains('created_at'), isTrue);
     expect(columnNames.contains('updated_at'), isTrue);
