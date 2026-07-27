@@ -81,6 +81,15 @@ class MaintenancesNotifier extends Notifier<AsyncValue<List<Maintenance>>> {
   }
 }
 
+final vehicleMaintenanceSummaryProvider =
+    FutureProvider.family<
+      ({int count, double totalCost, DateTime? lastDate}),
+      int
+    >((ref, vehicleId) async {
+      final repository = ref.watch(maintenanceRepositoryProvider);
+      return repository.getMaintenanceSummary(vehicleId);
+    });
+
 final maintenancesNotifierProvider =
     NotifierProvider<MaintenancesNotifier, AsyncValue<List<Maintenance>>>(
       MaintenancesNotifier.new,

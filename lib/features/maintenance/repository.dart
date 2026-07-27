@@ -120,6 +120,26 @@ class MaintenanceRepository {
     return (result.first['count'] as int?) ?? 0;
   }
 
+  Future<({int count, double totalCost, DateTime? lastDate})>
+  getMaintenanceSummary(int vehicleId) async {
+    final db = await _db.database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count, '
+      'COALESCE(SUM(maintenance_cost + total_parts_cost), 0) as total, '
+      'MAX(date) as last_date '
+      'FROM maintenances WHERE vehicle_id = ?',
+      [vehicleId],
+    );
+    final row = result.first;
+    return (
+      count: (row['count'] as int?) ?? 0,
+      totalCost: (row['total'] as num?)?.toDouble() ?? 0,
+      lastDate: row['last_date'] != null
+          ? parseDate(row['last_date'] as String)
+          : null,
+    );
+  }
+
   Future<List<MaintenanceItem>> getItemsByMaintenanceIds(List<int> ids) async {
     if (ids.isEmpty) return [];
     final db = await _db.database;

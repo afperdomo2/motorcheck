@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
-import '../../../shared/widgets/confirm_dialog.dart';
 import '../providers.dart';
 import '../widgets/vehicle_card.dart';
 
@@ -14,7 +13,6 @@ class VehiclesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final vehiclesAsync = ref.watch(vehiclesNotifierProvider);
-    final selectedId = ref.watch(selectedVehicleIdProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mis Vehículos')),
@@ -52,31 +50,11 @@ class VehiclesScreen extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: VehicleCard(
                     vehicle: vehicle,
-                    isSelected: vehicle.id == selectedId,
-                    onTap: () {
-                      ref.read(selectedVehicleIdProvider.notifier).state =
-                          vehicle.id;
-                    },
-                    onEdit: () => context.push('/vehicles/${vehicle.id}/edit'),
+                    onTap: () => context.push('/vehicles/${vehicle.id}'),
                     onSetDefault: () {
                       ref
                           .read(vehiclesNotifierProvider.notifier)
                           .setDefault(vehicle.id!);
-                    },
-                    onDelete: () async {
-                      final confirmed = await showConfirmDialog(
-                        context,
-                        title: 'Eliminar vehículo',
-                        message:
-                            '¿Estás seguro de eliminar "${vehicle.name}"? Se perderán todos sus mantenimientos.',
-                        confirmLabel: 'Eliminar',
-                        isDestructive: true,
-                      );
-                      if (confirmed == true && context.mounted) {
-                        ref
-                            .read(vehiclesNotifierProvider.notifier)
-                            .remove(vehicle.id!);
-                      }
                     },
                   ),
                 );

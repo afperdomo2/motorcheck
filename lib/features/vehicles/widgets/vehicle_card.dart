@@ -5,19 +5,13 @@ import '../models/vehicle.dart';
 
 class VehicleCard extends StatelessWidget {
   final Vehicle vehicle;
-  final bool isSelected;
   final VoidCallback onTap;
-  final VoidCallback? onEdit;
-  final VoidCallback? onDelete;
   final VoidCallback? onSetDefault;
 
   const VehicleCard({
     super.key,
     required this.vehicle,
-    this.isSelected = false,
     required this.onTap,
-    this.onEdit,
-    this.onDelete,
     this.onSetDefault,
   });
 
@@ -26,11 +20,8 @@ class VehicleCard extends StatelessWidget {
     final typeColor = AppColors.forVehicleType(vehicle.type);
 
     return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-        side: isSelected
-            ? const BorderSide(color: AppColors.primary, width: 2)
-            : BorderSide.none,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
       ),
       child: InkWell(
         onTap: onTap,
@@ -96,61 +87,25 @@ class VehicleCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (vehicle.isDefault)
-                Tooltip(
-                  message: 'Favorito',
-                  child: Icon(Icons.star, color: Colors.amber[600], size: 22),
+              GestureDetector(
+                onTap: onSetDefault,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    vehicle.isDefault ? Icons.star : Icons.star_border,
+                    color: vehicle.isDefault ? Colors.amber[600] : null,
+                    size: 24,
+                  ),
                 ),
-              if (onEdit != null ||
-                  onDelete != null ||
-                  onSetDefault != null) ...[
-                const SizedBox(width: 4),
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'edit') onEdit?.call();
-                    if (value == 'delete') onDelete?.call();
-                    if (value == 'default') onSetDefault?.call();
-                  },
-                  itemBuilder: (context) => [
-                    if (!vehicle.isDefault) ...[
-                      PopupMenuItem(
-                        value: 'default',
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.star,
-                              size: 20,
-                              color: Colors.amber[600],
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('Marcar como favorito'),
-                          ],
-                        ),
-                      ),
-                    ],
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit, size: 20),
-                          SizedBox(width: 8),
-                          Text('Editar'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete, size: 20, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Eliminar', style: TextStyle(color: Colors.red)),
-                        ],
-                      ),
-                    ),
-                  ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Icon(
+                  Icons.chevron_right,
+                  color: Theme.of(context).disabledColor,
                 ),
-              ],
+              ),
             ],
           ),
         ),
