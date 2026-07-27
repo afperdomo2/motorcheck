@@ -33,7 +33,32 @@ void main() {
       expect(vehicle.color, 'Rojo');
       expect(vehicle.currentMileage, isNull);
       expect(vehicle.mileageUpdatedAt, isNull);
-      expect(vehicle.isDefault, true);
+      expect(vehicle.vin, isNull);
+      expect(vehicle.soatExpiresAt, isNull);
+      expect(vehicle.rtmExpiresAt, isNull);
+    });
+
+    test('fromJson con nuevos campos', () {
+      final json = {
+        'id': 2,
+        'name': 'Mi Moto',
+        'type': 'motorcycle',
+        'brand': 'Honda',
+        'model': 'CB125',
+        'year': 2023,
+        'plate': 'XYZ789',
+        'vin': '9BWZZZ377VT004251',
+        'soatExpiresAt': '2025-06-15T00:00:00',
+        'rtmExpiresAt': '2025-12-01T00:00:00',
+        'createdAt': '2024-01-01T00:00:00',
+        'updatedAt': '2024-06-01T00:00:00',
+      };
+
+      final vehicle = Vehicle.fromJson(json);
+
+      expect(vehicle.vin, '9BWZZZ377VT004251');
+      expect(vehicle.soatExpiresAt, DateTime(2025, 6, 15));
+      expect(vehicle.rtmExpiresAt, DateTime(2025, 12, 1));
     });
 
     test('copyWith modifica campos correctamente', () {

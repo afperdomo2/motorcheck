@@ -9,6 +9,7 @@ import '../../vehicles/providers.dart';
 import '../providers.dart';
 import '../widgets/quick_stats.dart';
 import '../widgets/recent_activity.dart';
+import '../widgets/expiry_alerts.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -58,7 +59,7 @@ class DashboardScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   children: [
                     QuickStats(summary: summary),
-                    const SizedBox(height: 16),
+                    const ExpiryAlerts(),
                     RecentActivity(summary: summary),
                   ],
                 ),

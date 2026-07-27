@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:motorcheck/core/utils/formatters.dart';
 
@@ -62,6 +63,48 @@ void main() {
       expect(date.year, 2024);
       expect(date.month, 3);
       expect(date.day, 15);
+    });
+  });
+
+  group('formatDaysRemaining', () {
+    test('devuelve vacío para null', () {
+      expect(formatDaysRemaining(null), '');
+    });
+
+    test('muestra vence en X días para fecha futura', () {
+      final futureDate = DateTime.now().add(const Duration(days: 10));
+      expect(formatDaysRemaining(futureDate), 'Vence en 10 días');
+    });
+
+    test('muestra vencido hace X días para fecha pasada', () {
+      final pastDate = DateTime.now().subtract(const Duration(days: 5));
+      expect(formatDaysRemaining(pastDate), 'Vencido hace 5 días');
+    });
+
+    test('muestra vence hoy para fecha actual', () {
+      final today = DateTime.now();
+      expect(formatDaysRemaining(today), 'Vence hoy');
+    });
+  });
+
+  group('expiryColor', () {
+    test('devuelve gris para null', () {
+      expect(expiryColor(null), Colors.grey);
+    });
+
+    test('devuelve rojo para fecha vencida', () {
+      final pastDate = DateTime.now().subtract(const Duration(days: 1));
+      expect(expiryColor(pastDate), Colors.red);
+    });
+
+    test('devuelve naranja para fecha dentro de 30 días', () {
+      final futureDate = DateTime.now().add(const Duration(days: 30));
+      expect(expiryColor(futureDate), Colors.orange);
+    });
+
+    test('devuelve verde para fecha más allá de 30 días', () {
+      final futureDate = DateTime.now().add(const Duration(days: 31));
+      expect(expiryColor(futureDate), Colors.green);
     });
   });
 }

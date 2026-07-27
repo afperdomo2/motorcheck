@@ -213,11 +213,32 @@ class _InfoCard extends StatelessWidget {
                 label: 'Kilometraje',
                 value: formatMileage(vehicle.currentMileage),
               ),
+            if (vehicle.vin != null)
+              _InfoRow(
+                icon: Icons.numbers,
+                label: 'VIN',
+                value: vehicle.vin!,
+              ),
+            if (vehicle.soatExpiresAt != null)
+              _ExpiryRow(
+                icon: Icons.health_and_safety_outlined,
+                label: 'SOAT',
+                date: vehicle.soatExpiresAt!,
+              ),
+            if (vehicle.rtmExpiresAt != null)
+              _ExpiryRow(
+                icon: Icons.engineering_outlined,
+                label: 'Tecnomecánica',
+                date: vehicle.rtmExpiresAt!,
+              ),
             if (vehicle.brand == null &&
                 vehicle.model == null &&
                 vehicle.year == null &&
                 vehicle.plate == null &&
                 vehicle.color == null &&
+                vehicle.vin == null &&
+                vehicle.soatExpiresAt == null &&
+                vehicle.rtmExpiresAt == null &&
                 vehicle.currentMileage == null)
               const EmptyState(
                 icon: Icons.info_outline,
@@ -253,6 +274,53 @@ class _InfoRow extends StatelessWidget {
           Text('$label: ', style: Theme.of(context).textTheme.bodyMedium),
           Flexible(
             child: Text(value, style: Theme.of(context).textTheme.bodyLarge),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExpiryRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final DateTime date;
+
+  const _ExpiryRow({
+    required this.icon,
+    required this.label,
+    required this.date,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = expiryColor(date);
+    final daysText = formatDaysRemaining(date);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Theme.of(context).disabledColor),
+          const SizedBox(width: 8),
+          Text('$label: ', style: Theme.of(context).textTheme.bodyMedium),
+          Flexible(
+            child: Text(
+              formatDisplayDate(date),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              daysText,
+              style: TextStyle(fontSize: 12, color: color),
+            ),
           ),
         ],
       ),

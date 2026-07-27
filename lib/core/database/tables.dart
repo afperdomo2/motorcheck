@@ -14,6 +14,9 @@ CREATE TABLE vehicles (
   image_path TEXT,
   current_mileage INTEGER,
   mileage_updated_at TEXT,
+  vin TEXT,
+  soat_expires_at TEXT,
+  rtm_expires_at TEXT,
   is_default INTEGER DEFAULT 0,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL

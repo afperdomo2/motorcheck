@@ -21,6 +21,13 @@ _$VehicleImpl _$$VehicleImplFromJson(Map<String, dynamic> json) =>
       mileageUpdatedAt: json['mileageUpdatedAt'] == null
           ? null
           : DateTime.parse(json['mileageUpdatedAt'] as String),
+      vin: json['vin'] as String?,
+      soatExpiresAt: json['soatExpiresAt'] == null
+          ? null
+          : DateTime.parse(json['soatExpiresAt'] as String),
+      rtmExpiresAt: json['rtmExpiresAt'] == null
+          ? null
+          : DateTime.parse(json['rtmExpiresAt'] as String),
       isDefault: json['isDefault'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -39,6 +46,9 @@ Map<String, dynamic> _$$VehicleImplToJson(_$VehicleImpl instance) =>
       'imagePath': instance.imagePath,
       'currentMileage': instance.currentMileage,
       'mileageUpdatedAt': instance.mileageUpdatedAt?.toIso8601String(),
+      'vin': instance.vin,
+      'soatExpiresAt': instance.soatExpiresAt?.toIso8601String(),
+      'rtmExpiresAt': instance.rtmExpiresAt?.toIso8601String(),
       'isDefault': instance.isDefault,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),

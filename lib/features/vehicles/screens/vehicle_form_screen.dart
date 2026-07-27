@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/formatters.dart';
 import '../models/vehicle.dart';
 import '../providers.dart';
 import '../widgets/vehicle_type_selector.dart';
@@ -30,6 +31,12 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
   DateTime? _originalCreatedAt;
   int? _originalMileage;
   DateTime? _originalMileageUpdatedAt;
+
+  final _vinController = TextEditingController();
+  final _soatController = TextEditingController();
+  final _rtmController = TextEditingController();
+  DateTime? _soatDate;
+  DateTime? _rtmDate;
 
   bool get _isEditing => widget.vehicleId != null;
 
@@ -61,6 +68,15 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
       _plateController.text = vehicle.plate ?? '';
       _colorController.text = vehicle.color ?? '';
       _mileageController.text = vehicle.currentMileage?.toString() ?? '';
+      _vinController.text = vehicle.vin ?? '';
+      _soatDate = vehicle.soatExpiresAt;
+      _soatController.text = vehicle.soatExpiresAt != null
+          ? formatDisplayDate(vehicle.soatExpiresAt!)
+          : '';
+      _rtmDate = vehicle.rtmExpiresAt;
+      _rtmController.text = vehicle.rtmExpiresAt != null
+          ? formatDisplayDate(vehicle.rtmExpiresAt!)
+          : '';
       setState(() {
         _type = vehicle.type;
         _isDefault = vehicle.isDefault;
@@ -80,6 +96,9 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
     _plateController.dispose();
     _colorController.dispose();
     _mileageController.dispose();
+    _vinController.dispose();
+    _soatController.dispose();
+    _rtmController.dispose();
     super.dispose();
   }
 
@@ -123,6 +142,11 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
           ? (newMileage == _originalMileage ? _originalMileageUpdatedAt : now)
           : null,
       isDefault: _isDefault,
+      vin: _vinController.text.trim().isEmpty
+          ? null
+          : _vinController.text.trim(),
+      soatExpiresAt: _soatDate,
+      rtmExpiresAt: _rtmDate,
       createdAt: _originalCreatedAt ?? now,
       updatedAt: now,
     );
@@ -240,6 +264,82 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                   labelText: 'Color',
                   prefixIcon: Icon(Icons.palette_outlined),
                 ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Documentos',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _vinController,
+                decoration: const InputDecoration(
+                  labelText: 'VIN / Número de serie',
+                  hintText: '17 caracteres alfanuméricos',
+                  prefixIcon: Icon(Icons.numbers),
+                ),
+                textCapitalization: TextCapitalization.characters,
+                maxLength: 17,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return null;
+                  if (v.trim().length != 17) {
+                    return 'El VIN debe tener 17 caracteres';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _soatController,
+                readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: 'Vencimiento SOAT',
+                  hintText: 'Selecciona la fecha de vencimiento',
+                  prefixIcon: Icon(Icons.health_and_safety_outlined),
+                ),
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: _soatDate ?? DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
+                    helpText: 'Vencimiento SOAT',
+                  );
+                  if (date != null) {
+                    setState(() {
+                      _soatDate = date;
+                      _soatController.text = formatDisplayDate(date);
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _rtmController,
+                readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: 'Vencimiento revisión técnico-mecánica',
+                  hintText: 'Selecciona la fecha de vencimiento',
+                  prefixIcon: Icon(Icons.engineering_outlined),
+                ),
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: _rtmDate ?? DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
+                    helpText: 'Vencimiento RTM',
+                  );
+                  if (date != null) {
+                    setState(() {
+                      _rtmDate = date;
+                      _rtmController.text = formatDisplayDate(date);
+                    });
+                  }
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 final _dateFormat = DateFormat('yyyy-MM-dd');
@@ -23,4 +24,26 @@ String formatMileage(int? mileage) {
     return '${NumberFormat('#,###').format(mileage)} km';
   }
   return '$mileage km';
+}
+
+String formatDaysRemaining(DateTime? date) {
+  if (date == null) return '';
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final target = DateTime(date.year, date.month, date.day);
+  final diff = target.difference(today).inDays;
+  if (diff > 0) return 'Vence en $diff días';
+  if (diff == 0) return 'Vence hoy';
+  return 'Vencido hace ${-diff} días';
+}
+
+Color expiryColor(DateTime? date) {
+  if (date == null) return Colors.grey;
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final target = DateTime(date.year, date.month, date.day);
+  final diff = target.difference(today).inDays;
+  if (diff < 0) return Colors.red;
+  if (diff <= 30) return Colors.orange;
+  return Colors.green;
 }

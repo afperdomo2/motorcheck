@@ -32,6 +32,9 @@ mixin _$Vehicle {
   String? get imagePath => throw _privateConstructorUsedError;
   int? get currentMileage => throw _privateConstructorUsedError;
   DateTime? get mileageUpdatedAt => throw _privateConstructorUsedError;
+  String? get vin => throw _privateConstructorUsedError;
+  DateTime? get soatExpiresAt => throw _privateConstructorUsedError;
+  DateTime? get rtmExpiresAt => throw _privateConstructorUsedError;
   bool get isDefault => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
@@ -62,6 +65,9 @@ abstract class $VehicleCopyWith<$Res> {
     String? imagePath,
     int? currentMileage,
     DateTime? mileageUpdatedAt,
+    String? vin,
+    DateTime? soatExpiresAt,
+    DateTime? rtmExpiresAt,
     bool isDefault,
     DateTime createdAt,
     DateTime updatedAt,
@@ -94,6 +100,9 @@ class _$VehicleCopyWithImpl<$Res, $Val extends Vehicle>
     Object? imagePath = freezed,
     Object? currentMileage = freezed,
     Object? mileageUpdatedAt = freezed,
+    Object? vin = freezed,
+    Object? soatExpiresAt = freezed,
+    Object? rtmExpiresAt = freezed,
     Object? isDefault = null,
     Object? createdAt = null,
     Object? updatedAt = null,
@@ -144,6 +153,18 @@ class _$VehicleCopyWithImpl<$Res, $Val extends Vehicle>
                 ? _value.mileageUpdatedAt
                 : mileageUpdatedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime?,
+            vin: freezed == vin
+                ? _value.vin
+                : vin // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            soatExpiresAt: freezed == soatExpiresAt
+                ? _value.soatExpiresAt
+                : soatExpiresAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            rtmExpiresAt: freezed == rtmExpiresAt
+                ? _value.rtmExpiresAt
+                : rtmExpiresAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
             isDefault: null == isDefault
                 ? _value.isDefault
                 : isDefault // ignore: cast_nullable_to_non_nullable
@@ -182,6 +203,9 @@ abstract class _$$VehicleImplCopyWith<$Res> implements $VehicleCopyWith<$Res> {
     String? imagePath,
     int? currentMileage,
     DateTime? mileageUpdatedAt,
+    String? vin,
+    DateTime? soatExpiresAt,
+    DateTime? rtmExpiresAt,
     bool isDefault,
     DateTime createdAt,
     DateTime updatedAt,
@@ -213,6 +237,9 @@ class __$$VehicleImplCopyWithImpl<$Res>
     Object? imagePath = freezed,
     Object? currentMileage = freezed,
     Object? mileageUpdatedAt = freezed,
+    Object? vin = freezed,
+    Object? soatExpiresAt = freezed,
+    Object? rtmExpiresAt = freezed,
     Object? isDefault = null,
     Object? createdAt = null,
     Object? updatedAt = null,
@@ -263,6 +290,18 @@ class __$$VehicleImplCopyWithImpl<$Res>
             ? _value.mileageUpdatedAt
             : mileageUpdatedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime?,
+        vin: freezed == vin
+            ? _value.vin
+            : vin // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        soatExpiresAt: freezed == soatExpiresAt
+            ? _value.soatExpiresAt
+            : soatExpiresAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        rtmExpiresAt: freezed == rtmExpiresAt
+            ? _value.rtmExpiresAt
+            : rtmExpiresAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
         isDefault: null == isDefault
             ? _value.isDefault
             : isDefault // ignore: cast_nullable_to_non_nullable
@@ -295,6 +334,9 @@ class _$VehicleImpl implements _Vehicle {
     this.imagePath,
     this.currentMileage,
     this.mileageUpdatedAt,
+    this.vin,
+    this.soatExpiresAt,
+    this.rtmExpiresAt,
     this.isDefault = false,
     required this.createdAt,
     required this.updatedAt,
@@ -327,6 +369,12 @@ class _$VehicleImpl implements _Vehicle {
   @override
   final DateTime? mileageUpdatedAt;
   @override
+  final String? vin;
+  @override
+  final DateTime? soatExpiresAt;
+  @override
+  final DateTime? rtmExpiresAt;
+  @override
   @JsonKey()
   final bool isDefault;
   @override
@@ -336,7 +384,7 @@ class _$VehicleImpl implements _Vehicle {
 
   @override
   String toString() {
-    return 'Vehicle(id: $id, name: $name, type: $type, brand: $brand, model: $model, year: $year, plate: $plate, color: $color, imagePath: $imagePath, currentMileage: $currentMileage, mileageUpdatedAt: $mileageUpdatedAt, isDefault: $isDefault, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Vehicle(id: $id, name: $name, type: $type, brand: $brand, model: $model, year: $year, plate: $plate, color: $color, imagePath: $imagePath, currentMileage: $currentMileage, mileageUpdatedAt: $mileageUpdatedAt, vin: $vin, soatExpiresAt: $soatExpiresAt, rtmExpiresAt: $rtmExpiresAt, isDefault: $isDefault, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -358,6 +406,11 @@ class _$VehicleImpl implements _Vehicle {
                 other.currentMileage == currentMileage) &&
             (identical(other.mileageUpdatedAt, mileageUpdatedAt) ||
                 other.mileageUpdatedAt == mileageUpdatedAt) &&
+            (identical(other.vin, vin) || other.vin == vin) &&
+            (identical(other.soatExpiresAt, soatExpiresAt) ||
+                other.soatExpiresAt == soatExpiresAt) &&
+            (identical(other.rtmExpiresAt, rtmExpiresAt) ||
+                other.rtmExpiresAt == rtmExpiresAt) &&
             (identical(other.isDefault, isDefault) ||
                 other.isDefault == isDefault) &&
             (identical(other.createdAt, createdAt) ||
@@ -381,6 +434,9 @@ class _$VehicleImpl implements _Vehicle {
     imagePath,
     currentMileage,
     mileageUpdatedAt,
+    vin,
+    soatExpiresAt,
+    rtmExpiresAt,
     isDefault,
     createdAt,
     updatedAt,
@@ -413,6 +469,9 @@ abstract class _Vehicle implements Vehicle {
     final String? imagePath,
     final int? currentMileage,
     final DateTime? mileageUpdatedAt,
+    final String? vin,
+    final DateTime? soatExpiresAt,
+    final DateTime? rtmExpiresAt,
     final bool isDefault,
     required final DateTime createdAt,
     required final DateTime updatedAt,
@@ -442,6 +501,12 @@ abstract class _Vehicle implements Vehicle {
   int? get currentMileage;
   @override
   DateTime? get mileageUpdatedAt;
+  @override
+  String? get vin;
+  @override
+  DateTime? get soatExpiresAt;
+  @override
+  DateTime? get rtmExpiresAt;
   @override
   bool get isDefault;
   @override

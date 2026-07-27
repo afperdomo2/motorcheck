@@ -76,6 +76,13 @@ class VehicleRepository {
     'mileage_updated_at': v.mileageUpdatedAt != null
         ? formatDateTime(v.mileageUpdatedAt!)
         : null,
+    'vin': v.vin,
+    'soat_expires_at': v.soatExpiresAt != null
+        ? formatDateTime(v.soatExpiresAt!)
+        : null,
+    'rtm_expires_at': v.rtmExpiresAt != null
+        ? formatDateTime(v.rtmExpiresAt!)
+        : null,
     'is_default': v.isDefault ? 1 : 0,
     'created_at': formatDateTime(v.createdAt),
     'updated_at': formatDateTime(v.updatedAt),
@@ -94,6 +101,13 @@ class VehicleRepository {
     currentMileage: m['current_mileage'] as int?,
     mileageUpdatedAt: m['mileage_updated_at'] != null
         ? parseDateTime(m['mileage_updated_at'] as String)
+        : null,
+    vin: m['vin'] as String?,
+    soatExpiresAt: m['soat_expires_at'] != null
+        ? parseDateTime(m['soat_expires_at'] as String)
+        : null,
+    rtmExpiresAt: m['rtm_expires_at'] != null
+        ? parseDateTime(m['rtm_expires_at'] as String)
         : null,
     isDefault: (m['is_default'] as int?) == 1,
     createdAt: parseDateTime(m['created_at'] as String),
