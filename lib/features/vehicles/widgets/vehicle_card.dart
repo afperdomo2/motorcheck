@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../models/vehicle.dart';
@@ -87,15 +88,27 @@ class VehicleCard extends StatelessWidget {
                   ],
                 ),
               ),
-              GestureDetector(
-                onTap: onSetDefault,
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Icon(
-                    vehicle.isDefault ? Icons.star : Icons.star_border,
-                    color: vehicle.isDefault ? Colors.amber[600] : null,
-                    size: 24,
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    onSetDefault?.call();
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      switchInCurve: Curves.easeOut,
+                      switchOutCurve: Curves.easeIn,
+                      child: Icon(
+                        vehicle.isDefault ? Icons.star : Icons.star_border,
+                        key: ValueKey(vehicle.isDefault),
+                        color: vehicle.isDefault ? Colors.amber[600] : null,
+                        size: 24,
+                      ),
+                    ),
                   ),
                 ),
               ),

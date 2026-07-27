@@ -15,7 +15,7 @@ class VehiclesScreen extends ConsumerWidget {
     final vehiclesAsync = ref.watch(vehiclesNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mis Vehículos')),
+      appBar: AppBar(title: _buildTitle(context, vehiclesAsync)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/vehicles/add'),
         icon: const Icon(Icons.add),
@@ -39,13 +39,17 @@ class VehiclesScreen extends ConsumerWidget {
             );
           }
 
+          final sorted = _sortVehicles(vehicles);
+
           return RefreshIndicator(
             onRefresh: ref.read(vehiclesNotifierProvider.notifier).loadVehicles,
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: vehicles.length,
+              itemCount: sorted.length,
               itemBuilder: (context, index) {
-                final vehicle = vehicles[index];
+                final vehicle = sorted[index];
+                final wasFavorite = vehicle.isDefault;
+
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: VehicleCard(
@@ -55,6 +59,24 @@ class VehiclesScreen extends ConsumerWidget {
                       ref
                           .read(vehiclesNotifierProvider.notifier)
                           .setDefault(vehicle.id!);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              wasFavorite
+                                  ? 'Quitado de favoritos'
+                                  : 'Marcado como favorito',
+                            ),
+                            duration: const Duration(seconds: 1),
+                            behavior: SnackBarBehavior.floating,
+                            margin: const EdgeInsets.only(
+                              bottom: 80,
+                              left: 16,
+                              right: 16,
+                            ),
+                          ),
+                        );
+                      }
                     },
                   ),
                 );
@@ -64,5 +86,37 @@ class VehiclesScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  Widget _buildTitle(
+    BuildContext context,
+    AsyncValue<List<dynamic>> vehiclesAsync,
+  ) {
+    final count = vehiclesAsync.valueOrNull?.length;
+
+    if (count == null) return const Text('Mis Vehículos');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Mis Vehículos'),
+        Text(
+          '$count vehículos',
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<dynamic> _sortVehicles(List<dynamic> vehicles) {
+    final sorted = [...vehicles]
+      ..sort((a, b) {
+        if (a.isDefault && !b.isDefault) return -1;
+        if (!a.isDefault && b.isDefault) return 1;
+        return a.name.compareTo(b.name);
+      });
+    return sorted;
   }
 }

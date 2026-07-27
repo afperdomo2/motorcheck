@@ -100,10 +100,23 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
   }
 
   Future<void> setDefault(int id) async {
+    state.whenData((vehicles) {
+      final updated = vehicles
+          .map((v) => v.copyWith(isDefault: v.id == id))
+          .toList();
+      updated.sort(_compareVehicles);
+      state = AsyncValue.data(updated);
+    });
+
     await _repo.setDefault(id);
-    state = await AsyncValue.guard(() => _repo.getAll());
     ref.invalidate(vehiclesProvider);
     ref.invalidate(defaultVehicleProvider);
+  }
+
+  static int _compareVehicles(Vehicle a, Vehicle b) {
+    if (a.isDefault && !b.isDefault) return -1;
+    if (!a.isDefault && b.isDefault) return 1;
+    return a.name.compareTo(b.name);
   }
 }
 
