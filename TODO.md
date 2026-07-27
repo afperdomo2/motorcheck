@@ -24,7 +24,7 @@
   - Guardar en `image_path` local
   - Mostrar miniatura en detalle
 
-- [ ] **Modo oscuro**
+- [x] **Modo oscuro**
   - Toggle en Configuración
   - `ThemeMode.system / dark / light`
   - Guardar preferencia con `shared_preferences`
@@ -46,7 +46,7 @@
   - Importar desde archivo
   - Útil al cambiar de teléfono
 
-- [ ] **Más campos del vehículo**
+- [x] **Más campos del vehículo**
   - VIN / número de serie
   - Fecha vencimiento SOAT
   - Fecha revisión técnico-mecánica

@@ -26,8 +26,9 @@ test/                           # Espejo de lib/
 ```bash
 flutter test                                    # Todas las pruebas
 flutter test test/features/vehicles/            # Por feature
-flutter test --name "formatea"                  # Por nombre (regex)
+flutter test --name "formatea"                  # Por nombre (regex, busca en todos los archivos)
 flutter test test/features/vehicles/vehicle_test.dart  # Archivo específico
+flutter test --concurrency 1                    # Evitar race conditions en SQLite
 flutter test --coverage                         # Con cobertura
 ```
 
@@ -36,31 +37,35 @@ flutter test --coverage                         # Con cobertura
 1. Los archivos de prueba reflejan la estructura de `lib/` dentro de `test/`
 2. Nombrado: `*_test.dart` coincidiendo con el archivo fuente
 3. Agrupar pruebas por método o comportamiento usando `group()`
-4. Usar `setUp`/`setUpAll` para arreglos comunes
-5. Preferir `mocktail` sobre `mockito` (sin generación de código)
-6. `sqflite_common_ffi` para pruebas de BD en memoria
-7. **NO ejecutar `flutter test` tras cambios en archivos `.md` o documentación**
+4. Descripciones y nombres de test en **español**
+5. **Imports del proyecto en tests**: siempre `package:motorcheck/...` (nunca relativos)
+6. Usar `setUp`/`setUpAll` para arreglos comunes
+7. Preferir `mocktail` sobre `mockito` (sin generación de código)
+8. `sqflite_common_ffi` para pruebas de BD en memoria
+9. Widget tests: envolver en `MaterialApp` + `Scaffold`, usar `tester.pumpWidget()`
+10. **NO ejecutar `flutter test` tras cambios en archivos `.md` o documentación**
 
 ## Ejemplo con Mocktail
 
 ```dart
+import 'package:mocktail/mocktail.dart';
+import 'package:motorcheck/features/vehicles/repository.dart';
+
 class MockVehicleRepository extends Mock implements VehicleRepository {}
 
 void main() {
   late MockVehicleRepository repository;
-  late VehiclesNotifier notifier;
 
   setUp(() {
     repository = MockVehicleRepository();
-    notifier = VehiclesNotifier(repository);
   });
 
-  test('debe cargar la lista de vehículos', () async {
+  test('debe obtener todos los vehículos', () async {
     when(() => repository.getAll()).thenAnswer((_) async => [mockVehicle]);
 
-    await notifier.loadVehicles();
+    final vehicles = await repository.getAll();
 
-    expect(notifier.state, [mockVehicle]);
+    expect(vehicles.length, 1);
     verify(() => repository.getAll()).called(1);
   });
 }
@@ -77,9 +82,15 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  test('debe insertar un vehículo', () async {
+  test('debe crear la tabla vehicles', () async {
     final db = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath);
-    await db.execute(CREATE_TABLE_VEHICLES);
+    await db.execute('CREATE TABLE vehicles (...);');
+
+    final result = await db.rawQuery(
+      'SELECT name FROM sqlite_master WHERE type="table" AND name="vehicles"',
+    );
+    expect(result.length, 1);
+
     await db.close();
   });
 }
@@ -91,3 +102,8 @@ void main() {
 - Providers: >80% (transiciones de estado)
 - Widgets: >60% (casos felices + estados vacío/error)
 - Utils/Formateadores: 100%
+
+---
+
+> **Nota para agentes**: este documento es referenciado por `AGENTS.md`.
+> Si modificas este archivo, verifica que AGENTS.md siga siendo consistente.
