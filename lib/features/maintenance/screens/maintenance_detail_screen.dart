@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/error_state.dart';
@@ -21,10 +22,33 @@ class MaintenanceDetailScreen extends ConsumerWidget {
     final maintenanceAsync = ref.watch(maintenanceByIdProvider(maintenanceId));
     final itemsAsync = ref.watch(maintenanceItemsProvider(maintenanceId));
     final workshopsAsync = ref.watch(workshopsProvider);
+    final vehicleMap = ref.watch(vehicleNamesProvider).valueOrNull ?? {};
+
+    final maintenance = maintenanceAsync.valueOrNull;
+    final vehicle = maintenance != null
+        ? vehicleMap[maintenance.vehicleId]
+        : null;
+    final title = maintenance != null
+        ? formatDisplayDate(maintenance.date)
+        : 'Detalle';
+    final subtitle = vehicle?.name;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalle'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title),
+            if (subtitle != null)
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
@@ -60,22 +84,27 @@ class MaintenanceDetailScreen extends ConsumerWidget {
             data: (items) {
               final workshops = workshopsAsync.valueOrNull ?? [];
               final workshop = _findWorkshop(workshops, maintenance.workshopId);
+              final vehicle = vehicleMap[maintenance.vehicleId];
 
               return ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  _DetailCard(
+                  _InfoCard(
                     maintenance: maintenance,
-                    workshopName: workshop?.name,
+                    vehicle: vehicle,
+                    workshop: workshop,
                   ),
-                  const SizedBox(height: 16),
-                  if (items.isNotEmpty) ...[
-                    Text(
-                      'Items (${items.length})',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    ...items.map((item) => _ItemTile(item: item)),
+                  if (maintenance.maintenanceCost > 0 ||
+                      maintenance.totalPartsCost > 0) ...[
+                    const SizedBox(height: 12),
+                    _CostCard(maintenance: maintenance),
+                  ],
+                  const SizedBox(height: 12),
+                  _ItemsCard(items: items),
+                  if (maintenance.notes != null &&
+                      maintenance.notes!.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _NotesCard(notes: maintenance.notes!),
                   ],
                 ],
               );
@@ -114,15 +143,31 @@ class MaintenanceDetailScreen extends ConsumerWidget {
   }
 }
 
-class _DetailCard extends StatelessWidget {
-  final Maintenance maintenance;
-  final String? workshopName;
+IconData _vehicleTypeIcon(String type) {
+  return switch (type) {
+    'motorcycle' => Icons.motorcycle,
+    'bike' => Icons.pedal_bike,
+    'truck' => Icons.local_shipping,
+    _ => Icons.directions_car,
+  };
+}
 
-  const _DetailCard({required this.maintenance, this.workshopName});
+class _InfoCard extends StatelessWidget {
+  final Maintenance maintenance;
+  final dynamic vehicle;
+  final Workshop? workshop;
+
+  const _InfoCard({
+    required this.maintenance,
+    required this.vehicle,
+    this.workshop,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final total = maintenance.maintenanceCost + maintenance.totalPartsCost;
+    final vehicleName = vehicle?.name ?? 'Vehículo';
+    final vehicleType = vehicle?.type as String? ?? 'other';
+    final typeColor = AppColors.forVehicleType(vehicleType);
 
     return Card(
       child: Padding(
@@ -130,9 +175,17 @@ class _DetailCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Mantenimiento',
-              style: Theme.of(context).textTheme.headlineSmall,
+            Row(
+              children: [
+                Icon(_vehicleTypeIcon(vehicleType), color: typeColor, size: 24),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    vehicleName,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             _DetailRow(
@@ -148,47 +201,209 @@ class _DetailCard extends StatelessWidget {
                 value: formatMileage(maintenance.mileage),
               ),
             ],
-            if (workshopName != null) ...[
+            if (workshop != null) ...[
               const SizedBox(height: 8),
               _DetailRow(
                 icon: Icons.handyman,
                 label: 'Taller',
-                value: workshopName!,
+                value:
+                    workshop!.location != null && workshop!.location!.isNotEmpty
+                    ? '${workshop!.name} · ${workshop!.location}'
+                    : workshop!.name,
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CostCard extends StatelessWidget {
+  final Maintenance maintenance;
+
+  const _CostCard({required this.maintenance});
+
+  @override
+  Widget build(BuildContext context) {
+    final total = maintenance.maintenanceCost + maintenance.totalPartsCost;
+    final theme = Theme.of(context);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Text(
+              formatCurrency(total),
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+            Text('Total', style: theme.textTheme.labelSmall),
             if (maintenance.maintenanceCost > 0) ...[
-              const SizedBox(height: 8),
-              _DetailRow(
-                icon: Icons.attach_money,
-                label: 'Precio',
-                value: formatCurrency(maintenance.maintenanceCost),
+              const Divider(height: 24),
+              Row(
+                children: [
+                  const Icon(Icons.construction, size: 18),
+                  const SizedBox(width: 8),
+                  Text('Mano de obra', style: theme.textTheme.bodyMedium),
+                  const Spacer(),
+                  Text(
+                    formatCurrency(maintenance.maintenanceCost),
+                    style: theme.textTheme.bodyLarge,
+                  ),
+                ],
               ),
             ],
             if (maintenance.totalPartsCost > 0) ...[
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.only(left: 40),
-                child: Text(
-                  'Repuestos: ${formatCurrency(maintenance.totalPartsCost)}',
-                  style: Theme.of(context).textTheme.bodyMedium,
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  const Icon(Icons.inventory_2, size: 18),
+                  const SizedBox(width: 8),
+                  Text('Repuestos', style: theme.textTheme.bodyMedium),
+                  const Spacer(),
+                  Text(
+                    formatCurrency(maintenance.totalPartsCost),
+                    style: theme.textTheme.bodyLarge,
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ItemsCard extends StatelessWidget {
+  final List<MaintenanceItem> items;
+
+  const _ItemsCard({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final totalParts = items.fold<double>(0, (s, i) => s + i.partsCost);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Items (${items.length})',
+                  style: theme.textTheme.titleSmall,
+                ),
+                const Spacer(),
+                if (totalParts > 0)
+                  Text(
+                    formatCurrency(totalParts),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+            if (items.isEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Sin items registrados',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.onSurfaceVariant,
                 ),
               ),
+            ] else ...[
+              const Divider(height: 20),
+              ...items.map((item) => _ItemTile(item: item)),
             ],
-            if (total > 0) ...[
-              const SizedBox(height: 8),
-              _DetailRow(
-                icon: Icons.summarize,
-                label: 'Total',
-                value: formatCurrency(total),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ItemTile extends StatelessWidget {
+  final MaintenanceItem item;
+
+  const _ItemTile({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasNote = item.notes != null && item.notes!.isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: hasNote
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
+        children: [
+          Icon(
+            MaintenanceCategories.icon(item.category),
+            size: 22,
+            color: AppColors.onSurfaceVariant,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  MaintenanceCategories.label(item.category),
+                  style: theme.textTheme.bodyMedium,
+                ),
+                if (hasNote)
+                  Text(
+                    item.notes!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
+            ),
+          ),
+          if (item.partsCost > 0)
+            Text(
+              formatCurrency(item.partsCost),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
               ),
-            ],
-            if (maintenance.notes != null && maintenance.notes!.isNotEmpty) ...[
-              const Divider(height: 24),
-              Text(
-                maintenance.notes!,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-            ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NotesCard extends StatelessWidget {
+  final String notes;
+
+  const _NotesCard({required this.notes});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.note_alt_outlined, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(notes, style: Theme.of(context).textTheme.bodyMedium),
+            ),
           ],
         ),
       ),
@@ -218,50 +433,6 @@ class _DetailRow extends StatelessWidget {
           child: Text(value, style: Theme.of(context).textTheme.bodyLarge),
         ),
       ],
-    );
-  }
-}
-
-class _ItemTile extends StatelessWidget {
-  final MaintenanceItem item;
-
-  const _ItemTile({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Icon(MaintenanceCategories.icon(item.category), size: 24),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    MaintenanceCategories.label(item.category),
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  if (item.notes != null && item.notes!.isNotEmpty)
-                    Text(
-                      item.notes!,
-                      style: Theme.of(context).textTheme.bodySmall,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
-              ),
-            ),
-            if (item.partsCost > 0)
-              Text(
-                formatCurrency(item.partsCost),
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-          ],
-        ),
-      ),
     );
   }
 }

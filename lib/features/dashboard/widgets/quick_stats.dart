@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../providers.dart';
@@ -16,20 +17,24 @@ class QuickStats extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.garage,
-                    size: 40,
-                    color: AppColors.primary.withValues(alpha: 0.7),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${summary.totalVehicles} vehículo${summary.totalVehicles == 1 ? '' : 's'}',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ],
+            InkWell(
+              onTap: () => context.go('/vehicles'),
+              borderRadius: BorderRadius.circular(8),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.garage,
+                      size: 40,
+                      color: AppColors.primary.withValues(alpha: 0.7),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${summary.totalVehicles} vehículo${summary.totalVehicles == 1 ? '' : 's'}',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ],
+                ),
               ),
             ),
             const Divider(height: 32),
@@ -39,6 +44,7 @@ class QuickStats extends StatelessWidget {
                   label: 'Mantenimientos',
                   value: '${summary.totalMaintenances}',
                   icon: Icons.build,
+                  onTap: () => context.go('/maintenance'),
                 ),
                 _StatItem(
                   label: 'Total gastado',
@@ -70,16 +76,18 @@ class _StatItem extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
+  final VoidCallback? onTap;
 
   const _StatItem({
     required this.label,
     required this.value,
     required this.icon,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    final content = Expanded(
       child: Column(
         children: [
           Icon(icon, size: 28, color: AppColors.primary),
@@ -93,6 +101,14 @@ class _StatItem extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    if (onTap == null) return content;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: content,
     );
   }
 }
