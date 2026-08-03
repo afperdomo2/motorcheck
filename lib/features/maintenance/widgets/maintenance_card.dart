@@ -42,10 +42,8 @@ class MaintenanceCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(context, theme, total),
-              if (workshopName != null) ...[
-                const SizedBox(height: 4),
-                _buildWorkshop(context, theme),
-              ],
+              if (workshopName != null || maintenance.mileage != null)
+                _buildSubHeader(context, theme),
               if (items.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 const Divider(height: 1),
@@ -71,36 +69,25 @@ class MaintenanceCard extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, ThemeData theme, double total) {
-    final parts = <Widget>[];
-
-    if (maintenance.mileage != null) {
-      parts.add(
-        Text(
-          formatMileage(maintenance.mileage),
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
-      parts.add(Text(' · ', style: TextStyle(color: theme.disabledColor)));
-    }
-
-    parts.add(
-      Text(
-        formatShortDate(maintenance.date),
-        style: theme.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Expanded(child: Row(children: parts)),
+        if (maintenance.mileage != null)
+          Expanded(
+            child: Text(
+              formatMileage(maintenance.mileage),
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          )
+        else
+          const Expanded(child: SizedBox.shrink()),
         if (total > 0)
           Text(
             formatCurrency(total),
-            style: theme.textTheme.labelLarge?.copyWith(
+            style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -108,16 +95,28 @@ class MaintenanceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildWorkshop(BuildContext context, ThemeData theme) {
-    return Row(
-      children: [
-        Icon(Icons.handyman, size: 14, color: theme.disabledColor),
-        const SizedBox(width: 4),
+  Widget _buildSubHeader(BuildContext context, ThemeData theme) {
+    final parts = <Widget>[];
+
+    parts.add(
+      Text(
+        formatShortDate(maintenance.date),
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+
+    if (workshopName != null) {
+      parts.add(Text(' · ', style: TextStyle(color: theme.disabledColor)));
+      parts.add(Icon(Icons.handyman, size: 12, color: theme.disabledColor));
+      parts.add(const SizedBox(width: 3));
+      parts.add(
         Flexible(
           child: Text(
             workshopLocation != null && workshopLocation!.isNotEmpty
-                ? 'Taller: $workshopName · $workshopLocation'
-                : 'Taller: $workshopName',
+                ? '$workshopName · $workshopLocation'
+                : workshopName!,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -125,7 +124,12 @@ class MaintenanceCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-      ],
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Row(children: parts),
     );
   }
 
