@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/utils/formatters.dart';
 import '../vehicles/providers.dart';
 import '../maintenance/providers.dart';
 import '../maintenance/models/maintenance.dart';
@@ -8,43 +9,46 @@ final dashboardSummaryProvider = FutureProvider<DashboardSummary?>((ref) async {
   if (vehicles.isEmpty) return null;
 
   final repository = ref.read(maintenanceRepositoryProvider);
-
   final allMaintenances = await repository.getAll();
 
   final totalMaintenances = allMaintenances.length;
 
-  final totalSpent = allMaintenances.fold<double>(
-    0,
-    (sum, m) => sum + m.maintenanceCost + m.totalPartsCost,
-  );
+  final now = DateTime.now();
+  final currentMonth = now.month;
+  final currentYear = now.year;
+  final currentMonthSpent = allMaintenances
+      .where(
+        (m) => m.date.month == currentMonth && m.date.year == currentYear,
+      )
+      .fold<double>(0, (sum, m) => sum + m.maintenanceCost + m.totalPartsCost);
+
+  final currentMonthLabel = formatMonthYear(now);
 
   final sorted = List<Maintenance>.from(allMaintenances)
     ..sort((a, b) => b.date.compareTo(a.date));
-
-  final lastMaintenance = sorted.isNotEmpty ? sorted.first : null;
   final recentMaintenances = sorted.take(5).toList();
 
   return DashboardSummary(
     totalVehicles: vehicles.length,
     totalMaintenances: totalMaintenances,
-    lastMaintenance: lastMaintenance,
     recentMaintenances: recentMaintenances,
-    totalSpent: totalSpent,
+    currentMonthSpent: currentMonthSpent,
+    currentMonthLabel: currentMonthLabel,
   );
 });
 
 class DashboardSummary {
   final int totalVehicles;
   final int totalMaintenances;
-  final Maintenance? lastMaintenance;
   final List<Maintenance> recentMaintenances;
-  final double totalSpent;
+  final double currentMonthSpent;
+  final String currentMonthLabel;
 
   const DashboardSummary({
     required this.totalVehicles,
     required this.totalMaintenances,
-    this.lastMaintenance,
     this.recentMaintenances = const [],
-    required this.totalSpent,
+    required this.currentMonthSpent,
+    required this.currentMonthLabel,
   });
 }

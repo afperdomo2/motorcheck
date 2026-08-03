@@ -13,6 +13,9 @@ String formatDisplayDate(DateTime date) => _displayDateFormat.format(date);
 
 String formatShortDate(DateTime date) => _shortDateFormat.format(date);
 
+String formatMonthYear(DateTime date) =>
+    DateFormat('MMMM', 'es').format(date);
+
 String formatCurrency(double amount) => _currencyFormat.format(amount);
 
 String formatDateTime(DateTime dateTime) => _dateTimeFormat.format(dateTime);

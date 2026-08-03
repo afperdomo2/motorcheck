@@ -295,25 +295,35 @@ class _ExpiryRow extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: Theme.of(context).disabledColor),
-          const SizedBox(width: 8),
-          Text('$label: ', style: Theme.of(context).textTheme.bodyMedium),
-          Flexible(
-            child: Text(
-              formatDisplayDate(date),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+          Row(
+            children: [
+              Icon(icon, size: 20, color: Theme.of(context).disabledColor),
+              const SizedBox(width: 8),
+              Text('$label: ', style: Theme.of(context).textTheme.bodyMedium),
+              Flexible(
+                child: Text(
+                  formatDisplayDate(date),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
+          Padding(
+            padding: const EdgeInsets.only(left: 28, top: 4),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                daysText,
+                style: TextStyle(fontSize: 12, color: color),
+              ),
             ),
-            child: Text(daysText, style: TextStyle(fontSize: 12, color: color)),
           ),
         ],
       ),

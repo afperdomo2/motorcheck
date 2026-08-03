@@ -47,24 +47,12 @@ class QuickStats extends StatelessWidget {
                   onTap: () => context.go('/maintenance'),
                 ),
                 _StatItem(
-                  label: 'Total gastado',
-                  value: formatCurrency(summary.totalSpent),
+                  label: 'Total ${summary.currentMonthLabel}',
+                  value: formatCurrency(summary.currentMonthSpent),
                   icon: Icons.payments,
                 ),
               ],
             ),
-            if (summary.lastMaintenance != null) ...[
-              const Divider(height: 32),
-              Text(
-                'Último mantenimiento',
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                formatDisplayDate(summary.lastMaintenance!.date),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
           ],
         ),
       ),
