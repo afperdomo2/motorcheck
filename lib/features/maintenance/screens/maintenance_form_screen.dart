@@ -289,7 +289,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                           labelText: 'Fecha *',
                           prefixIcon: Icon(Icons.calendar_today),
                         ),
-                        child: Text(formatDisplayDate(_date)),
+                        child: Text(formatShortDate(_date)),
                       ),
                     ),
                   ),

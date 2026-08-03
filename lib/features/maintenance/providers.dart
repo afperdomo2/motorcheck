@@ -49,6 +49,7 @@ class MaintenancesNotifier extends Notifier<AsyncValue<List<Maintenance>>> {
 
   Future<void> _load() async {
     state = await AsyncValue.guard(() => _repo.getAll());
+    ref.invalidate(workshopItemsProvider);
   }
 
   Future<void> loadMaintenances() => _load();
@@ -59,6 +60,7 @@ class MaintenancesNotifier extends Notifier<AsyncValue<List<Maintenance>>> {
       await _repo.insert(maintenance, items);
       return _repo.getAll();
     });
+    ref.invalidate(workshopItemsProvider);
   }
 
   Future<void> update(
@@ -70,6 +72,7 @@ class MaintenancesNotifier extends Notifier<AsyncValue<List<Maintenance>>> {
       await _repo.update(maintenance, items);
       return _repo.getAll();
     });
+    ref.invalidate(workshopItemsProvider);
   }
 
   Future<void> remove(int id) async {
@@ -78,6 +81,7 @@ class MaintenancesNotifier extends Notifier<AsyncValue<List<Maintenance>>> {
       await _repo.delete(id);
       return _repo.getAll();
     });
+    ref.invalidate(workshopItemsProvider);
   }
 }
 

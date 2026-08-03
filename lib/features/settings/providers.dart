@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../maintenance/models/workshop.dart';
+import '../maintenance/providers.dart' as maint;
 import 'models/maintenance_category.dart';
 import 'repository.dart';
 
@@ -23,6 +24,7 @@ class WorkshopsNotifier extends Notifier<AsyncValue<List<Workshop>>> {
 
   Future<void> _load() async {
     state = await AsyncValue.guard(() => _repo.getAll());
+    ref.invalidate(maint.workshopsProvider);
   }
 
   Future<void> loadWorkshops() => _load();
@@ -33,6 +35,7 @@ class WorkshopsNotifier extends Notifier<AsyncValue<List<Workshop>>> {
       await _repo.insert(name, location: location);
       return _repo.getAll();
     });
+    ref.invalidate(maint.workshopsProvider);
   }
 
   Future<void> update(Workshop workshop) async {
@@ -41,6 +44,7 @@ class WorkshopsNotifier extends Notifier<AsyncValue<List<Workshop>>> {
       await _repo.update(workshop);
       return _repo.getAll();
     });
+    ref.invalidate(maint.workshopsProvider);
   }
 
   Future<void> remove(int id) async {
@@ -49,6 +53,7 @@ class WorkshopsNotifier extends Notifier<AsyncValue<List<Workshop>>> {
       await _repo.delete(id);
       return _repo.getAll();
     });
+    ref.invalidate(maint.workshopsProvider);
   }
 }
 
