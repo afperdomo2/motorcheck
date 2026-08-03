@@ -17,9 +17,7 @@ final dashboardSummaryProvider = FutureProvider<DashboardSummary?>((ref) async {
   final currentMonth = now.month;
   final currentYear = now.year;
   final currentMonthSpent = allMaintenances
-      .where(
-        (m) => m.date.month == currentMonth && m.date.year == currentYear,
-      )
+      .where((m) => m.date.month == currentMonth && m.date.year == currentYear)
       .fold<double>(0, (sum, m) => sum + m.maintenanceCost + m.totalPartsCost);
 
   final currentMonthLabel = formatMonthYear(now);

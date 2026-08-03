@@ -339,7 +339,8 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<int?>(
-                          initialValue: workshops.any((w) => w.id == _workshopId)
+                          initialValue:
+                              workshops.any((w) => w.id == _workshopId)
                               ? _workshopId
                               : null,
                           decoration: const InputDecoration(

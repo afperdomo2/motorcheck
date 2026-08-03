@@ -13,6 +13,7 @@ import '../models/maintenance.dart';
 import '../models/workshop.dart';
 import '../providers.dart';
 import '../widgets/timeline_tile.dart';
+import '../widgets/maintenance_card.dart';
 
 class MaintenanceListScreen extends ConsumerStatefulWidget {
   const MaintenanceListScreen({super.key});
@@ -24,6 +25,7 @@ class MaintenanceListScreen extends ConsumerStatefulWidget {
 
 class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
   int? _selectedVehicleId;
+  bool _showCompactView = false;
 
   IconData _vehicleIcon(String type) => switch (type) {
     'motorcycle' => Icons.motorcycle,
@@ -42,6 +44,12 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
       appBar: AppBar(
         title: const Text('Mantenimientos'),
         actions: [
+          IconButton(
+            icon: Icon(_showCompactView ? Icons.timeline : Icons.view_agenda),
+            tooltip: _showCompactView ? 'Vista timeline' : 'Vista compacta',
+            onPressed: () =>
+                setState(() => _showCompactView = !_showCompactView),
+          ),
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () => context.push('/maintenance/search'),
@@ -73,7 +81,9 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
                   return _buildEmptyState(vehicles);
                 }
 
-                return _buildTimeline(filtered, vehicles);
+                return _showCompactView
+                    ? _buildCardList(filtered)
+                    : _buildTimeline(filtered, vehicles);
               },
             ),
           ),
@@ -157,6 +167,49 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
           }
 
           return const SizedBox.shrink();
+        },
+      ),
+    );
+  }
+
+  Widget _buildCardList(List<Maintenance> maintenances) {
+    final workshopsAsync = ref.watch(workshopsProvider);
+    final workshops = workshopsAsync.valueOrNull ?? [];
+    final maintenanceIds = maintenances.map((m) => m.id!).toList()..sort();
+    final itemsAsync = ref.watch(
+      workshopItemsProvider(maintenanceIds.join(',')),
+    );
+    final itemsByMaintenance = itemsAsync.valueOrNull ?? {};
+    final categoriesAsync = ref.watch(maintenanceCategoriesProvider);
+    final categoryMap = <String, MaintenanceCategory>{
+      for (final c
+          in (categoriesAsync.valueOrNull ?? []).cast<MaintenanceCategory>())
+        c.key: c,
+    };
+
+    final sorted = List<Maintenance>.from(maintenances)
+      ..sort((a, b) => b.date.compareTo(a.date));
+
+    return RefreshIndicator(
+      onRefresh: ref
+          .read(maintenancesNotifierProvider.notifier)
+          .loadMaintenances,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        itemCount: sorted.length,
+        itemBuilder: (context, index) {
+          final maintenance = sorted[index];
+          final workshop = _findWorkshop(workshops, maintenance.workshopId);
+          final items = itemsByMaintenance[maintenance.id] ?? [];
+
+          return MaintenanceCard(
+            maintenance: maintenance,
+            items: items,
+            workshopName: workshop?.name,
+            workshopLocation: workshop?.location,
+            categoryMap: categoryMap,
+            onTap: () => context.push('/maintenance/${maintenance.id}'),
+          );
         },
       ),
     );
