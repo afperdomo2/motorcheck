@@ -180,7 +180,7 @@ El borrado es hard-delete, pero el repositorio verifica que la categoría no est
 
 ## Versión de Base de Datos
 
-Versión actual: **8**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
+Versión actual: **9**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
 - v2: agregó `current_mileage`
 - v3: agregó `workshops` + `maintenance_cost` + `workshop_id` en maintenances
 - v4: reestructuró `maintenance_items` (renombró columnas)
@@ -188,6 +188,7 @@ Versión actual: **8**. Migraciones incrementales vía `onUpgrade` en `DatabaseH
 - v6: agregó `mileage_updated_at`
 - v7: agregó `vin`, `soat_expires_at`, `rtm_expires_at`
 - v8: agregó `maintenance_categories` + seed + remapeo de keys antiguas (`engine` → `car_engine`, etc.)
+- v9: agregó `last_selected_at` a vehicles (para recordar último vehículo seleccionado en mantenimientos)
 
 ---
 

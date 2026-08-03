@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
-import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../settings/providers.dart';
 import '../../settings/models/maintenance_category.dart';
 import '../../vehicles/providers.dart';
@@ -23,8 +22,6 @@ class MaintenanceListScreen extends ConsumerStatefulWidget {
 }
 
 class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
-  int? _selectedVehicleId;
-
   IconData _vehicleIcon(String type) => switch (type) {
     'motorcycle' => Icons.motorcycle,
     'bike' => Icons.pedal_bike,
@@ -36,6 +33,7 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
   @override
   Widget build(BuildContext context) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
+    final selectedVehicleId = ref.watch(selectedVehicleIdProvider);
     final maintenancesAsync = ref.watch(maintenancesNotifierProvider);
 
     return Scaffold(
@@ -48,11 +46,14 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _addMaintenance(context),
-        tooltip: 'Agregar mantenimiento',
-        child: const Icon(Icons.build),
-      ),
+      floatingActionButton: selectedVehicleId != null
+          ? FloatingActionButton(
+              onPressed: () =>
+                  context.push('/maintenance/add?vehicleId=$selectedVehicleId'),
+              tooltip: 'Agregar mantenimiento',
+              child: const Icon(Icons.build),
+            )
+          : null,
       body: Column(
         children: [
           _buildFilterBar(context),
@@ -66,11 +67,33 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
                     .loadMaintenances(),
               ),
               data: (maintenances) {
-                final filtered = _applyFilters(maintenances);
+                final filtered = maintenances
+                    .where((m) => m.vehicleId == selectedVehicleId)
+                    .toList();
                 final vehicles = vehiclesAsync.valueOrNull ?? [];
 
+                if (vehicles.isEmpty) {
+                  return const EmptyState(
+                    icon: Icons.directions_car,
+                    title: 'No hay vehículos',
+                    subtitle: 'Agrega un vehículo primero',
+                  );
+                }
+
+                if (selectedVehicleId == null) {
+                  return const EmptyState(
+                    icon: Icons.touch_app,
+                    title: 'Selecciona un vehículo',
+                    subtitle: 'Elige un vehículo para ver sus mantenimientos',
+                  );
+                }
+
                 if (filtered.isEmpty) {
-                  return _buildEmptyState(vehicles);
+                  return const EmptyState(
+                    icon: Icons.build,
+                    title: 'Sin mantenimientos',
+                    subtitle: 'Registra el primer mantenimiento',
+                  );
                 }
 
                 return _buildCardList(filtered);
@@ -128,7 +151,9 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
   Widget _buildFilterBar(BuildContext context) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
     final vehicles = vehiclesAsync.valueOrNull ?? [];
-    if (vehicles.length <= 1) return const SizedBox.shrink();
+    if (vehicles.isEmpty) return const SizedBox.shrink();
+
+    final selectedVehicleId = ref.watch(selectedVehicleIdProvider);
 
     final sorted = List<Vehicle>.from(vehicles)
       ..sort((a, b) {
@@ -147,26 +172,19 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: [
-            _chip(
-              label: 'Todos',
-              icon: Icons.filter_list,
-              selected: _selectedVehicleId == null,
-              onSelected: (_) => setState(() => _selectedVehicleId = null),
-            ),
-            const SizedBox(width: 6),
-            ...sorted.map((v) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: _chip(
-                  label: v.name,
-                  icon: _vehicleIcon(v.type),
-                  selected: _selectedVehicleId == v.id,
-                  onSelected: (_) => setState(() => _selectedVehicleId = v.id),
-                ),
-              );
-            }),
-          ],
+          children: sorted.map((v) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: _chip(
+                label: v.name,
+                icon: _vehicleIcon(v.type),
+                selected: selectedVehicleId == v.id,
+                onSelected: (_) => ref
+                    .read(vehiclesNotifierProvider.notifier)
+                    .selectVehicle(v.id!),
+              ),
+            );
+          }).toList(),
         ),
       ),
     );
@@ -189,62 +207,11 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
     );
   }
 
-  List<Maintenance> _applyFilters(List<Maintenance> maintenances) {
-    if (_selectedVehicleId == null) return maintenances;
-    return maintenances
-        .where((m) => m.vehicleId == _selectedVehicleId)
-        .toList();
-  }
-
-  Widget _buildEmptyState(List<Vehicle> vehicles) {
-    final hasFilters = _selectedVehicleId != null;
-    if (vehicles.isEmpty) {
-      return const EmptyState(
-        icon: Icons.build,
-        title: 'No hay vehículos',
-        subtitle: 'Agrega un vehículo primero',
-      );
-    }
-    if (hasFilters) {
-      return EmptyState(
-        icon: Icons.filter_list,
-        title: 'Sin resultados',
-        subtitle: 'Intenta con otros filtros',
-        onAction: () => setState(() {
-          _selectedVehicleId = null;
-        }),
-        actionLabel: 'Limpiar filtros',
-      );
-    }
-    return const EmptyState(
-      icon: Icons.build,
-      title: 'Sin mantenimientos',
-      subtitle: 'Registra el primer mantenimiento',
-    );
-  }
-
   Workshop? _findWorkshop(List<Workshop> workshops, int? workshopId) {
     if (workshopId == null) return null;
     for (final w in workshops) {
       if (w.id == workshopId) return w;
     }
     return null;
-  }
-
-  Future<void> _addMaintenance(BuildContext context) async {
-    final vehicles = ref.read(vehiclesProvider).valueOrNull ?? [];
-    if (vehicles.isEmpty) return;
-
-    if (vehicles.length == 1) {
-      if (context.mounted) {
-        context.push('/maintenance/add?vehicleId=${vehicles.first.id}');
-      }
-      return;
-    }
-
-    final selected = await VehicleSelectorSheet.show(context);
-    if (selected != null && context.mounted) {
-      context.push('/maintenance/add?vehicleId=${selected.id}');
-    }
   }
 }

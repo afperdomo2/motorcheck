@@ -62,6 +62,28 @@ class VehicleRepository {
     );
   }
 
+  Future<void> markLastSelected(int id) async {
+    final db = await _db.database;
+    await db.update(
+      'vehicles',
+      {'last_selected_at': _now},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int?> getLastSelectedId() async {
+    final db = await _db.database;
+    final maps = await db.query(
+      'vehicles',
+      columns: ['id'],
+      orderBy: 'last_selected_at DESC',
+      limit: 1,
+    );
+    if (maps.isEmpty) return null;
+    return maps.first['id'] as int?;
+  }
+
   Map<String, dynamic> _toMap(Vehicle v) => {
     if (v.id != null) 'id': v.id,
     'name': v.name,

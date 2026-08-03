@@ -27,7 +27,7 @@ class DatabaseHelper {
 
     return openDatabase(
       path,
-      version: 8,
+      version: 9,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: (db) async {
@@ -103,6 +103,9 @@ class DatabaseHelper {
       await db.execute(Tables.createMaintenanceCategories);
       await _seedDefaultCategories(db);
       await _migrateCategoryKeys(db);
+    }
+    if (oldVersion < 9) {
+      await db.execute('ALTER TABLE vehicles ADD COLUMN last_selected_at TEXT');
     }
   }
 

@@ -42,10 +42,10 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
       final selectedId = ref.read(selectedVehicleIdProvider);
       if (vehicles.isNotEmpty &&
           (selectedId == null || !vehicles.any((v) => v.id == selectedId))) {
-        final defaultVehicle = await _repo.getDefault();
-        final id = defaultVehicle?.id ?? vehicles.first.id;
-        if (id != null) {
-          ref.read(selectedVehicleIdProvider.notifier).state = id;
+        final lastSelectedId = await _repo.getLastSelectedId();
+        if (lastSelectedId != null &&
+            vehicles.any((v) => v.id == lastSelectedId)) {
+          ref.read(selectedVehicleIdProvider.notifier).state = lastSelectedId;
         }
       }
       return vehicles;
@@ -117,6 +117,11 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
     if (a.isDefault && !b.isDefault) return -1;
     if (!a.isDefault && b.isDefault) return 1;
     return a.name.compareTo(b.name);
+  }
+
+  Future<void> selectVehicle(int id) async {
+    await _repo.markLastSelected(id);
+    ref.read(selectedVehicleIdProvider.notifier).state = id;
   }
 }
 
