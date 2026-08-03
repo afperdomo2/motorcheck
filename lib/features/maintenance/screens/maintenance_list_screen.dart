@@ -12,7 +12,6 @@ import '../../vehicles/models/vehicle.dart';
 import '../models/maintenance.dart';
 import '../models/workshop.dart';
 import '../providers.dart';
-import '../widgets/timeline_tile.dart';
 import '../widgets/maintenance_card.dart';
 
 class MaintenanceListScreen extends ConsumerStatefulWidget {
@@ -25,7 +24,6 @@ class MaintenanceListScreen extends ConsumerStatefulWidget {
 
 class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
   int? _selectedVehicleId;
-  bool _showCompactView = false;
 
   IconData _vehicleIcon(String type) => switch (type) {
     'motorcycle' => Icons.motorcycle,
@@ -44,12 +42,6 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
       appBar: AppBar(
         title: const Text('Mantenimientos'),
         actions: [
-          IconButton(
-            icon: Icon(_showCompactView ? Icons.timeline : Icons.view_agenda),
-            tooltip: _showCompactView ? 'Vista timeline' : 'Vista compacta',
-            onPressed: () =>
-                setState(() => _showCompactView = !_showCompactView),
-          ),
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () => context.push('/maintenance/search'),
@@ -81,93 +73,11 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
                   return _buildEmptyState(vehicles);
                 }
 
-                return _showCompactView
-                    ? _buildCardList(filtered)
-                    : _buildTimeline(filtered, vehicles);
+                return _buildCardList(filtered);
               },
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTimeline(
-    List<Maintenance> maintenances,
-    List<Vehicle> vehicles,
-  ) {
-    final workshopsAsync = ref.watch(workshopsProvider);
-    final workshops = workshopsAsync.valueOrNull ?? [];
-    final maintenanceIds = maintenances.map((m) => m.id!).toList()..sort();
-    final itemsAsync = ref.watch(
-      workshopItemsProvider(maintenanceIds.join(',')),
-    );
-    final itemsByMaintenance = itemsAsync.valueOrNull ?? {};
-    final categoriesAsync = ref.watch(maintenanceCategoriesProvider);
-    final categoryMap = <String, MaintenanceCategory>{
-      for (final c
-          in (categoriesAsync.valueOrNull ?? []).cast<MaintenanceCategory>())
-        c.key: c,
-    };
-
-    final groups = <DateTime, List<Maintenance>>{};
-    for (final m in maintenances) {
-      final key = DateTime(m.date.year, m.date.month, m.date.day);
-      groups.putIfAbsent(key, () => []).add(m);
-    }
-    final sortedGroups = groups.entries.toList()
-      ..sort((a, b) => b.key.compareTo(a.key));
-
-    final flatItems = <dynamic>[];
-    for (final group in sortedGroups) {
-      flatItems.add(group.key);
-      flatItems.addAll(group.value);
-    }
-
-    return RefreshIndicator(
-      onRefresh: ref
-          .read(maintenancesNotifierProvider.notifier)
-          .loadMaintenances,
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: flatItems.length,
-        itemBuilder: (context, index) {
-          final item = flatItems[index];
-
-          if (item is DateTime) {
-            final nextItem = index + 1 < flatItems.length
-                ? flatItems[index + 1]
-                : null;
-            final isLastGroup = nextItem is DateTime || nextItem == null;
-            return _DateHeader(date: item, hasLine: !isLastGroup);
-          }
-
-          if (item is Maintenance) {
-            final nextItem = index + 1 < flatItems.length
-                ? flatItems[index + 1]
-                : null;
-            final isLastInGroup = nextItem is DateTime || nextItem == null;
-
-            final vehicle = _findVehicle(vehicles, item.vehicleId);
-            final workshop = _findWorkshop(workshops, item.workshopId);
-            final items = itemsByMaintenance[item.id] ?? [];
-
-            return TimelineTile(
-              maintenance: item,
-              items: items,
-              vehicleName: vehicle?.name,
-              vehicleType: vehicle?.type,
-              workshopName: workshop?.name,
-              workshopLocation: workshop?.location,
-              showConnector: true,
-              isLastInGroup: isLastInGroup,
-              categoryMap: categoryMap,
-              onTap: () => context.push('/maintenance/${item.id}'),
-            );
-          }
-
-          return const SizedBox.shrink();
-        },
       ),
     );
   }
@@ -313,13 +223,6 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
     );
   }
 
-  Vehicle? _findVehicle(List<Vehicle> vehicles, int vehicleId) {
-    for (final v in vehicles) {
-      if (v.id == vehicleId) return v;
-    }
-    return null;
-  }
-
   Workshop? _findWorkshop(List<Workshop> workshops, int? workshopId) {
     if (workshopId == null) return null;
     for (final w in workshops) {
@@ -343,91 +246,5 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
     if (selected != null && context.mounted) {
       context.push('/maintenance/add?vehicleId=${selected.id}');
     }
-  }
-}
-
-class _DateHeader extends StatelessWidget {
-  final DateTime date;
-  final bool hasLine;
-
-  const _DateHeader({required this.date, required this.hasLine});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
-    final months = [
-      '',
-      'Ene',
-      'Feb',
-      'Mar',
-      'Abr',
-      'May',
-      'Jun',
-      'Jul',
-      'Ago',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dic',
-    ];
-
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 28,
-            child: Column(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      date.day.toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                if (hasLine)
-                  Expanded(
-                    child: Container(
-                      width: 2,
-                      color: color.withValues(alpha: 0.3),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: RichText(
-                text: TextSpan(
-                  style: Theme.of(context).textTheme.titleSmall,
-                  children: [
-                    TextSpan(
-                      text: '${date.day} ',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    TextSpan(text: months[date.month]),
-                    TextSpan(text: ' ${date.year}'),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
