@@ -5,6 +5,8 @@ import '../../../core/utils/formatters.dart';
 import '../../maintenance/categories.dart';
 import '../../maintenance/models/maintenance.dart';
 import '../../maintenance/providers.dart';
+import '../../settings/models/maintenance_category.dart';
+import '../../settings/providers.dart';
 import '../../vehicles/models/vehicle.dart';
 import '../../vehicles/providers.dart';
 import '../providers.dart';
@@ -43,6 +45,12 @@ class RecentActivity extends ConsumerWidget {
     final itemsByMaintenance = itemsAsync.valueOrNull ?? {};
     final vehiclesAsync = ref.watch(vehiclesProvider);
     final vehicles = vehiclesAsync.valueOrNull ?? [];
+    final categoriesAsync = ref.watch(maintenanceCategoriesProvider);
+    final categoryMap = <String, MaintenanceCategory>{
+      for (final c
+          in (categoriesAsync.valueOrNull ?? []).cast<MaintenanceCategory>())
+        c.key: c,
+    };
 
     return Card(
       child: Padding(
@@ -103,7 +111,12 @@ class RecentActivity extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      _buildSecondLine(context, items, maintenance),
+                      _buildSecondLine(
+                        context,
+                        items,
+                        maintenance,
+                        categoryMap,
+                      ),
                     ],
                   ),
                 ),
@@ -119,6 +132,7 @@ class RecentActivity extends ConsumerWidget {
     BuildContext context,
     List items,
     Maintenance maintenance,
+    Map<String, MaintenanceCategory> categoryMap,
   ) {
     final hasItems = items.isNotEmpty;
     final hasMileage = maintenance.mileage != null;
@@ -138,7 +152,10 @@ class RecentActivity extends ConsumerWidget {
 
       parts.addAll(
         visible.map((key) {
-          final cat = MaintenanceCategories.byKey(key.toString());
+          final cat = categoryMap[key.toString()];
+          final icon = cat != null
+              ? MaintenanceCategories.iconByName(cat.iconName)
+              : Icons.build;
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
             decoration: BoxDecoration(
@@ -148,10 +165,10 @@ class RecentActivity extends ConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(cat?.icon ?? Icons.build, size: 10),
+                Icon(icon, size: 10),
                 const SizedBox(width: 2),
                 Text(
-                  cat?.label ?? key.toString(),
+                  cat?.name ?? key.toString(),
                   style: const TextStyle(fontSize: 9),
                 ),
               ],

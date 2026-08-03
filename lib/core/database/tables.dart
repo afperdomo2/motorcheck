@@ -60,4 +60,16 @@ CREATE TABLE maintenance_items (
   FOREIGN KEY (maintenance_id) REFERENCES maintenances(id) ON DELETE CASCADE
 )
 ''';
+
+  static const createMaintenanceCategories = '''
+CREATE TABLE maintenance_categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  key TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  icon_name TEXT NOT NULL DEFAULT 'build',
+  vehicle_type TEXT NOT NULL,
+  sort_order INTEGER DEFAULT 0,
+  created_at TEXT NOT NULL
+)
+''';
 }

@@ -11,80 +11,40 @@ class CategoryOption {
 class MaintenanceCategories {
   MaintenanceCategories._();
 
-  static const car = [
-    CategoryOption('engine', 'Motor', Icons.construction),
-    CategoryOption('oil', 'Aceite', Icons.oil_barrel),
-    CategoryOption('brakes', 'Frenos', Icons.disc_full),
-    CategoryOption('transmission', 'Transmisión', Icons.settings),
-    CategoryOption('suspension', 'Suspensión', Icons.tire_repair),
-    CategoryOption('tires', 'Llantas', Icons.circle),
-    CategoryOption('filters', 'Filtros', Icons.filter_alt),
-    CategoryOption('battery', 'Batería', Icons.battery_charging_full),
-    CategoryOption('ac', 'Aire Acond.', Icons.ac_unit),
-    CategoryOption('electrical', 'Eléctrico', Icons.electrical_services),
-    CategoryOption('general', 'General', Icons.build),
-  ];
-
-  static const motorcycle = [
-    CategoryOption('engine', 'Motor', Icons.construction),
-    CategoryOption('oil', 'Aceite', Icons.oil_barrel),
-    CategoryOption('chain', 'Cadena', Icons.link),
-    CategoryOption('brakes', 'Frenos', Icons.disc_full),
-    CategoryOption('tires', 'Llantas', Icons.circle),
-    CategoryOption('filters', 'Filtros', Icons.filter_alt),
-    CategoryOption('battery', 'Batería', Icons.battery_charging_full),
-    CategoryOption('suspension', 'Suspensión', Icons.tire_repair),
-    CategoryOption('general', 'General', Icons.build),
-  ];
-
-  static const bike = [
-    CategoryOption('brakes', 'Frenos', Icons.disc_full),
-    CategoryOption('tires', 'Llantas', Icons.circle),
-    CategoryOption('chain', 'Cadena', Icons.link),
-    CategoryOption('transmission', 'Transmisión', Icons.settings),
-    CategoryOption('suspension', 'Suspensión', Icons.tire_repair),
-    CategoryOption('general', 'General', Icons.build),
-  ];
-
-  static const truck = [
-    CategoryOption('engine', 'Motor', Icons.construction),
-    CategoryOption('oil', 'Aceite', Icons.oil_barrel),
-    CategoryOption('brakes', 'Frenos', Icons.disc_full),
-    CategoryOption('transmission', 'Transmisión', Icons.settings),
-    CategoryOption('suspension', 'Suspensión', Icons.tire_repair),
-    CategoryOption('tires', 'Llantas', Icons.circle),
-    CategoryOption('filters', 'Filtros', Icons.filter_alt),
-    CategoryOption('battery', 'Batería', Icons.battery_charging_full),
-    CategoryOption('ac', 'Aire Acond.', Icons.ac_unit),
-    CategoryOption('electrical', 'Eléctrico', Icons.electrical_services),
-    CategoryOption('general', 'General', Icons.build),
-  ];
-
-  static const other = [CategoryOption('general', 'General', Icons.build)];
-
-  static const Map<String, List<CategoryOption>> _map = {
-    'car': car,
-    'motorcycle': motorcycle,
-    'bike': bike,
-    'truck': truck,
-    'other': other,
+  static const _iconMap = {
+    'build': Icons.build,
+    'construction': Icons.construction,
+    'oil_barrel': Icons.oil_barrel,
+    'disc_full': Icons.disc_full,
+    'settings': Icons.settings,
+    'tire_repair': Icons.tire_repair,
+    'circle': Icons.circle,
+    'filter_alt': Icons.filter_alt,
+    'battery_charging_full': Icons.battery_charging_full,
+    'ac_unit': Icons.ac_unit,
+    'electrical_services': Icons.electrical_services,
+    'link': Icons.link,
+    'water_drop': Icons.water_drop,
+    'local_gas_station': Icons.local_gas_station,
+    'directions_car': Icons.directions_car,
+    'cleaning_services': Icons.cleaning_services,
+    'cable': Icons.cable,
+    'handyman': Icons.handyman,
+    'brightness_high': Icons.brightness_high,
+    'sensors': Icons.sensors,
+    'air': Icons.air,
+    'radio': Icons.radio,
+    'camera': Icons.camera,
+    'visibility': Icons.visibility,
+    'speed': Icons.speed,
+    'bolt': Icons.bolt,
+    'palette': Icons.palette,
+    'security': Icons.security,
+    'star': Icons.star,
   };
 
-  static final Set<CategoryOption> all = _map.values
-      .expand((list) => list)
-      .toSet();
+  static IconData iconByName(String iconName) =>
+      _iconMap[iconName] ?? Icons.build;
 
-  static List<CategoryOption> forVehicleType(String type) =>
-      _map[type] ?? other;
-
-  static CategoryOption? byKey(String key) {
-    for (final cat in all) {
-      if (cat.key == key) return cat;
-    }
-    return null;
-  }
-
-  static String label(String key) => byKey(key)?.label ?? key;
-
-  static IconData icon(String key) => byKey(key)?.icon ?? Icons.build;
+  static Map<String, IconData> get iconMap => Map.unmodifiable(_iconMap);
 }

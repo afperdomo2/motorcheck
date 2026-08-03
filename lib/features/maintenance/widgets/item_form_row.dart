@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../categories.dart';
 import '../models/maintenance_item.dart';
+import '../../settings/models/maintenance_category.dart';
 
 class ItemFormRow extends StatelessWidget {
   final MaintenanceItem item;
@@ -8,7 +9,7 @@ class ItemFormRow extends StatelessWidget {
   final VoidCallback onRemove;
   final bool canRemove;
   final ValueChanged<MaintenanceItem> onChanged;
-  final String vehicleType;
+  final List<MaintenanceCategory> categories;
 
   const ItemFormRow({
     super.key,
@@ -17,13 +18,11 @@ class ItemFormRow extends StatelessWidget {
     required this.onRemove,
     required this.canRemove,
     required this.onChanged,
-    required this.vehicleType,
+    required this.categories,
   });
 
   @override
   Widget build(BuildContext context) {
-    final categories = MaintenanceCategories.forVehicleType(vehicleType);
-
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -49,7 +48,7 @@ class ItemFormRow extends StatelessWidget {
             DropdownButtonFormField<String>(
               initialValue: categories.any((c) => c.key == item.category)
                   ? item.category
-                  : 'general',
+                  : null,
               decoration: const InputDecoration(
                 labelText: 'Categoría',
                 prefixIcon: Icon(Icons.category),
@@ -60,9 +59,12 @@ class ItemFormRow extends StatelessWidget {
                       value: c.key,
                       child: Row(
                         children: [
-                          Icon(c.icon, size: 20),
+                          Icon(
+                            MaintenanceCategories.iconByName(c.iconName),
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
-                          Text(c.label),
+                          Text(c.name),
                         ],
                       ),
                     ),

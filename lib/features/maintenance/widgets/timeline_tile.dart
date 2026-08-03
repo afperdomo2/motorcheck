@@ -3,6 +3,7 @@ import '../../../core/utils/formatters.dart';
 import '../categories.dart';
 import '../models/maintenance.dart';
 import '../models/maintenance_item.dart';
+import '../../settings/models/maintenance_category.dart';
 
 IconData _vehicleIcon(String? type) => switch (type) {
   'motorcycle' => Icons.motorcycle,
@@ -22,6 +23,7 @@ class TimelineTile extends StatelessWidget {
   final List<MaintenanceItem> items;
   final bool showConnector;
   final bool isLastInGroup;
+  final Map<String, MaintenanceCategory> categoryMap;
 
   const TimelineTile({
     super.key,
@@ -34,6 +36,7 @@ class TimelineTile extends StatelessWidget {
     this.items = const [],
     this.showConnector = true,
     this.isLastInGroup = false,
+    this.categoryMap = const {},
   });
 
   @override
@@ -152,7 +155,10 @@ class TimelineTile extends StatelessWidget {
       runSpacing: 4,
       children: [
         ...visible.map((key) {
-          final cat = MaintenanceCategories.byKey(key);
+          final cat = categoryMap[key];
+          final icon = cat != null
+              ? MaintenanceCategories.iconByName(cat.iconName)
+              : Icons.build;
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
@@ -162,9 +168,9 @@ class TimelineTile extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(cat?.icon ?? Icons.build, size: 12),
+                Icon(icon, size: 12),
                 const SizedBox(width: 3),
-                Text(cat?.label ?? key, style: const TextStyle(fontSize: 10)),
+                Text(cat?.name ?? key, style: const TextStyle(fontSize: 10)),
               ],
             ),
           );

@@ -11,6 +11,8 @@ import '../features/maintenance/screens/maintenance_search_screen.dart';
 import '../features/settings/screens/settings_screen.dart';
 import '../features/settings/screens/workshops_screen.dart';
 import '../features/settings/screens/workshop_form_screen.dart';
+import '../features/settings/screens/categories_screen.dart';
+import '../features/settings/screens/category_form_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -113,6 +115,28 @@ final appRouter = GoRouter(
                           state.pathParameters['id'] ?? '',
                         );
                         return WorkshopFormScreen(workshopId: id);
+                      },
+                    ),
+                  ],
+                ),
+                GoRoute(
+                  path: 'categories',
+                  builder: (context, state) => const CategoriesScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'add',
+                      builder: (context, state) {
+                        final type = state.uri.queryParameters['type'] ?? 'car';
+                        return CategoryFormScreen(vehicleType: type);
+                      },
+                    ),
+                    GoRoute(
+                      path: ':id/edit',
+                      builder: (context, state) {
+                        final id = int.tryParse(
+                          state.pathParameters['id'] ?? '',
+                        );
+                        return CategoryFormScreen(categoryId: id);
                       },
                     ),
                   ],

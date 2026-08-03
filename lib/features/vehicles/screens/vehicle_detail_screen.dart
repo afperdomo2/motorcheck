@@ -214,11 +214,7 @@ class _InfoCard extends StatelessWidget {
                 value: formatMileage(vehicle.currentMileage),
               ),
             if (vehicle.vin != null)
-              _InfoRow(
-                icon: Icons.numbers,
-                label: 'VIN',
-                value: vehicle.vin!,
-              ),
+              _InfoRow(icon: Icons.numbers, label: 'VIN', value: vehicle.vin!),
             if (vehicle.soatExpiresAt != null)
               _ExpiryRow(
                 icon: Icons.health_and_safety_outlined,
@@ -317,10 +313,7 @@ class _ExpiryRow extends StatelessWidget {
               color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(
-              daysText,
-              style: TextStyle(fontSize: 12, color: color),
-            ),
+            child: Text(daysText, style: TextStyle(fontSize: 12, color: color)),
           ),
         ],
       ),

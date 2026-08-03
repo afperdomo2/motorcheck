@@ -27,7 +27,7 @@ lib/
 │   ├── vehicles/            # CRUD vehículos + selección default
 │   ├── maintenance/         # CRUD mantenimientos + items + categorías
 │   ├── dashboard/           # Resumen + alertas vencimiento
-│   └── settings/            # Tema (system/light/dark) + CRUD talleres
+│   └── settings/            # Tema (system/light/dark) + CRUD talleres + categorías
 ├── shared/                  # Widgets reutilizables (dumb)
 │   └── widgets/
 └── routes/                  # Navegación (4 tabs con StatefulShellRoute)

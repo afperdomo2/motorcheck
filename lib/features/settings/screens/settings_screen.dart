@@ -44,6 +44,14 @@ class SettingsScreen extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/settings/workshops'),
           ),
+          const Divider(height: 32),
+          ListTile(
+            leading: const CircleAvatar(child: Icon(Icons.category)),
+            title: const Text('Categorías'),
+            subtitle: const Text('Categorías de mantenimiento'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/categories'),
+          ),
         ],
       ),
     );

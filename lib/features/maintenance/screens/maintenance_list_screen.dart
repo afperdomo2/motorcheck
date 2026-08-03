@@ -5,6 +5,8 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/vehicle_selector_sheet.dart';
+import '../../settings/providers.dart';
+import '../../settings/models/maintenance_category.dart';
 import '../../vehicles/providers.dart';
 import '../../vehicles/models/vehicle.dart';
 import '../models/maintenance.dart';
@@ -91,6 +93,12 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
       workshopItemsProvider(maintenanceIds.join(',')),
     );
     final itemsByMaintenance = itemsAsync.valueOrNull ?? {};
+    final categoriesAsync = ref.watch(maintenanceCategoriesProvider);
+    final categoryMap = <String, MaintenanceCategory>{
+      for (final c
+          in (categoriesAsync.valueOrNull ?? []).cast<MaintenanceCategory>())
+        c.key: c,
+    };
 
     final groups = <DateTime, List<Maintenance>>{};
     for (final m in maintenances) {
@@ -143,6 +151,7 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
               workshopLocation: workshop?.location,
               showConnector: true,
               isLastInGroup: isLastInGroup,
+              categoryMap: categoryMap,
               onTap: () => context.push('/maintenance/${item.id}'),
             );
           }

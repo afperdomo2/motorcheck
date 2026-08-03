@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../vehicles/providers.dart';
 import '../../vehicles/models/vehicle.dart';
-import '../categories.dart';
+import '../../settings/providers.dart';
+import '../../settings/models/maintenance_category.dart';
 import '../models/maintenance.dart';
 import '../models/workshop.dart';
 import '../providers.dart';
@@ -43,6 +44,12 @@ class _MaintenanceSearchScreenState
     final maintenancesAsync = ref.watch(maintenancesProvider);
     final vehicles = ref.watch(vehiclesProvider).valueOrNull ?? [];
     final workshops = ref.watch(workshopsProvider).valueOrNull ?? [];
+    final categoryMap = <String, MaintenanceCategory>{
+      for (final c
+          in (ref.watch(maintenanceCategoriesProvider).valueOrNull ?? [])
+              .cast<MaintenanceCategory>())
+        c.key: c,
+    };
     final vehicleMap = {for (final v in vehicles) v.id!: v};
 
     return Scaffold(
@@ -105,7 +112,12 @@ class _MaintenanceSearchScreenState
                   );
                 }
 
-                return _buildResultsList(filtered, workshops, vehicleMap);
+                return _buildResultsList(
+                  filtered,
+                  workshops,
+                  vehicleMap,
+                  categoryMap,
+                );
               },
             ),
           ),
@@ -262,6 +274,7 @@ class _MaintenanceSearchScreenState
     List<Maintenance> maintenances,
     List<Workshop> workshops,
     Map<int, Vehicle> vehicleMap,
+    Map<String, MaintenanceCategory> categoryMap,
   ) {
     final maintenanceIds = maintenances.map((m) => m.id!).toList()..sort();
     final itemsAsync = ref.watch(
@@ -324,7 +337,7 @@ class _MaintenanceSearchScreenState
                     Expanded(
                       child: Text(
                         categoryKeys
-                            .map((k) => MaintenanceCategories.label(k))
+                            .map((k) => categoryMap[k]?.name ?? k)
                             .join(', '),
                         style: Theme.of(context).textTheme.labelSmall,
                         maxLines: 1,

@@ -260,6 +260,11 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
   Widget build(BuildContext context) {
     final workshopsAsync = ref.watch(workshopsProvider);
     final vehicleType = _vehicle?.type ?? 'other';
+    final categoriesAsync = ref.watch(maintenanceCategoriesProvider);
+    final categories = categoriesAsync.valueOrNull ?? [];
+    final vehicleCategories = categories
+        .where((c) => c.vehicleType == vehicleType)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -334,7 +339,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<int?>(
-                          value: workshops.any((w) => w.id == _workshopId)
+                          initialValue: workshops.any((w) => w.id == _workshopId)
                               ? _workshopId
                               : null,
                           decoration: const InputDecoration(
@@ -413,7 +418,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                     item: entry.value,
                     index: entry.key,
                     canRemove: true,
-                    vehicleType: vehicleType,
+                    categories: vehicleCategories,
                     onRemove: () => _removeItem(entry.key),
                     onChanged: (updated) => _updateItem(entry.key, updated),
                   ),

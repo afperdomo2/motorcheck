@@ -19,30 +19,30 @@ class ExpiryAlerts extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.warning_amber_rounded,
-                  color: Colors.orange,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Documentos por vencer',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ...alerts,
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.orange,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Documentos por vencer',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...alerts,
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -169,9 +169,7 @@ class _AlertItem extends StatelessWidget {
                     ),
                     Text(
                       formatDisplayDate(date),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),
                     ),

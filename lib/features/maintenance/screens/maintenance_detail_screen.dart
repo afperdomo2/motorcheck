@@ -6,6 +6,8 @@ import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
+import '../../settings/models/maintenance_category.dart';
+import '../../settings/providers.dart';
 import '../categories.dart';
 import '../models/maintenance.dart';
 import '../models/maintenance_item.dart';
@@ -22,7 +24,13 @@ class MaintenanceDetailScreen extends ConsumerWidget {
     final maintenanceAsync = ref.watch(maintenanceByIdProvider(maintenanceId));
     final itemsAsync = ref.watch(maintenanceItemsProvider(maintenanceId));
     final workshopsAsync = ref.watch(workshopsProvider);
+    final categoriesAsync = ref.watch(maintenanceCategoriesProvider);
     final vehicleMap = ref.watch(vehicleNamesProvider).valueOrNull ?? {};
+    final categoryMap = <String, MaintenanceCategory>{
+      for (final c
+          in (categoriesAsync.valueOrNull ?? []).cast<MaintenanceCategory>())
+        c.key: c,
+    };
 
     final maintenance = maintenanceAsync.valueOrNull;
     final vehicle = maintenance != null
@@ -100,7 +108,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                     _CostCard(maintenance: maintenance),
                   ],
                   const SizedBox(height: 12),
-                  _ItemsCard(items: items),
+                  _ItemsCard(items: items, categoryMap: categoryMap),
                   if (maintenance.notes != null &&
                       maintenance.notes!.isNotEmpty) ...[
                     const SizedBox(height: 12),
@@ -281,8 +289,9 @@ class _CostCard extends StatelessWidget {
 
 class _ItemsCard extends StatelessWidget {
   final List<MaintenanceItem> items;
+  final Map<String, MaintenanceCategory> categoryMap;
 
-  const _ItemsCard({required this.items});
+  const _ItemsCard({required this.items, this.categoryMap = const {}});
 
   @override
   Widget build(BuildContext context) {
@@ -321,7 +330,9 @@ class _ItemsCard extends StatelessWidget {
               ),
             ] else ...[
               const Divider(height: 20),
-              ...items.map((item) => _ItemTile(item: item)),
+              ...items.map(
+                (item) => _ItemTile(item: item, categoryMap: categoryMap),
+              ),
             ],
           ],
         ),
@@ -332,13 +343,18 @@ class _ItemsCard extends StatelessWidget {
 
 class _ItemTile extends StatelessWidget {
   final MaintenanceItem item;
+  final Map<String, MaintenanceCategory> categoryMap;
 
-  const _ItemTile({required this.item});
+  const _ItemTile({required this.item, this.categoryMap = const {}});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final hasNote = item.notes != null && item.notes!.isNotEmpty;
+    final cat = categoryMap[item.category];
+    final icon = cat != null
+        ? MaintenanceCategories.iconByName(cat.iconName)
+        : Icons.build;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -347,18 +363,14 @@ class _ItemTile extends StatelessWidget {
             ? CrossAxisAlignment.start
             : CrossAxisAlignment.center,
         children: [
-          Icon(
-            MaintenanceCategories.icon(item.category),
-            size: 22,
-            color: AppColors.onSurfaceVariant,
-          ),
+          Icon(icon, size: 22, color: AppColors.onSurfaceVariant),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  MaintenanceCategories.label(item.category),
+                  cat?.name ?? item.category,
                   style: theme.textTheme.bodyMedium,
                 ),
                 if (hasNote)
