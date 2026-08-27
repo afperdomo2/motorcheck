@@ -5,9 +5,9 @@ import '../../vehicles/models/vehicle.dart';
 
 class VehicleFicha extends StatelessWidget {
   final Vehicle vehicle;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
-  const VehicleFicha({super.key, required this.vehicle, required this.onTap});
+  const VehicleFicha({super.key, required this.vehicle, this.onTap});
 
   IconData get _typeIcon => switch (vehicle.type) {
     'car' => Icons.directions_car,
@@ -25,7 +25,7 @@ class VehicleFicha extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         child: Row(
           children: [
             CircleAvatar(
@@ -121,7 +121,8 @@ class VehicleFicha extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.expand_more, color: theme.disabledColor),
+            if (onTap != null)
+              Icon(Icons.expand_more, color: theme.disabledColor),
           ],
         ),
       ),
