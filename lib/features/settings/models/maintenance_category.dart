@@ -12,6 +12,8 @@ class MaintenanceCategory with _$MaintenanceCategory {
     @Default('build') String iconName,
     required String vehicleType,
     @Default(0) int sortOrder,
+    int? intervalKm,
+    int? warningKm,
     required DateTime createdAt,
   }) = _MaintenanceCategory;
 

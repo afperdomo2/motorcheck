@@ -123,6 +123,8 @@ class MaintenanceCategoryRepository {
       'icon_name': category.iconName,
       'vehicle_type': category.vehicleType,
       'sort_order': (maxOrder ?? 0) + 1,
+      'interval_km': category.intervalKm,
+      'warning_km': category.warningKm,
       'created_at': formatDateTime(category.createdAt),
     });
   }
@@ -150,6 +152,8 @@ class MaintenanceCategoryRepository {
         'name': category.name,
         'icon_name': category.iconName,
         'sort_order': category.sortOrder,
+        'interval_km': category.intervalKm,
+        'warning_km': category.warningKm,
       },
       where: 'id = ?',
       whereArgs: [category.id],
@@ -193,6 +197,8 @@ class MaintenanceCategoryRepository {
         iconName: m['icon_name'] as String? ?? 'build',
         vehicleType: m['vehicle_type'] as String,
         sortOrder: m['sort_order'] as int? ?? 0,
+        intervalKm: m['interval_km'] as int?,
+        warningKm: m['warning_km'] as int?,
         createdAt: parseDateTime(m['created_at'] as String),
       );
 }

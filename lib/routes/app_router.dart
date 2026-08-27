@@ -4,6 +4,7 @@ import '../features/dashboard/screens/dashboard_screen.dart';
 import '../features/vehicles/screens/vehicles_screen.dart';
 import '../features/vehicles/screens/vehicle_detail_screen.dart';
 import '../features/vehicles/screens/vehicle_form_screen.dart';
+import '../features/vehicles/screens/upcoming_maintenance_screen.dart';
 import '../features/maintenance/screens/maintenance_list_screen.dart';
 import '../features/maintenance/screens/maintenance_form_screen.dart';
 import '../features/maintenance/screens/maintenance_detail_screen.dart';
@@ -88,6 +89,13 @@ final appRouter = GoRouter(
                   builder: (context, state) {
                     final id = int.tryParse(state.pathParameters['id'] ?? '');
                     return VehicleFormScreen(vehicleId: id);
+                  },
+                ),
+                GoRoute(
+                  path: ':id/upcoming',
+                  builder: (context, state) {
+                    final id = int.parse(state.pathParameters['id']!);
+                    return UpcomingMaintenanceScreen(vehicleId: id);
                   },
                 ),
               ],

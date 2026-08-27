@@ -164,6 +164,8 @@ almacena la `key` de la tabla como FK lógico (ej: `car_engine`, `motorcycle_oil
 | icon_name | TEXT | NOT NULL DEFAULT 'build' (nombre de Material Icon) |
 | vehicle_type | TEXT | NOT NULL (car / motorcycle / bike / truck / other) |
 | sort_order | INTEGER | DEFAULT 0 |
+| interval_km | INTEGER | NULL (km recomendados entre mantenimientos) |
+| warning_km | INTEGER | NULL (avisar cuando falten X km) |
 | created_at | TEXT | NOT NULL (ISO 8601) |
 
 ### Seed Inicial (43 categorías por defecto)
@@ -180,7 +182,7 @@ El borrado es hard-delete, pero el repositorio verifica que la categoría no est
 
 ## Versión de Base de Datos
 
-Versión actual: **9**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
+Versión actual: **12**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
 - v2: agregó `current_mileage`
 - v3: agregó `workshops` + `maintenance_cost` + `workshop_id` en maintenances
 - v4: reestructuró `maintenance_items` (renombró columnas)
@@ -188,7 +190,10 @@ Versión actual: **9**. Migraciones incrementales vía `onUpgrade` en `DatabaseH
 - v6: agregó `mileage_updated_at`
 - v7: agregó `vin`, `soat_expires_at`, `rtm_expires_at`
 - v8: agregó `maintenance_categories` + seed + remapeo de keys antiguas (`engine` → `car_engine`, etc.)
-- v9: agregó `last_selected_at` a vehicles (para recordar último vehículo seleccionado en mantenimientos)
+- v9: agregó `last_selected_at` a vehicles
+- v10: agregó `interval_km` y `warning_km` a maintenance_categories
+- v11: refuerzo de columnas `interval_km` / `warning_km` con verificación PRAGMA
+- v12: refuerzo de columna `last_selected_at` en vehicles con verificación PRAGMA
 
 ---
 

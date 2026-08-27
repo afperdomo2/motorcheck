@@ -105,6 +105,8 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _sortOrderController;
+  late final TextEditingController _intervalKmController;
+  late final TextEditingController _warningKmController;
   String _selectedIcon = 'build';
   String _selectedVehicleType = 'car';
   bool _isLoading = false;
@@ -116,6 +118,8 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     super.initState();
     _nameController = TextEditingController();
     _sortOrderController = TextEditingController();
+    _intervalKmController = TextEditingController();
+    _warningKmController = TextEditingController();
 
     if (widget.vehicleType != null) {
       _selectedVehicleType = widget.vehicleType!;
@@ -133,6 +137,12 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     if (cat != null && mounted) {
       _nameController.text = cat.name;
       _sortOrderController.text = cat.sortOrder.toString();
+      _intervalKmController.text = cat.intervalKm != null
+          ? cat.intervalKm.toString()
+          : '';
+      _warningKmController.text = cat.warningKm != null
+          ? cat.warningKm.toString()
+          : '';
       setState(() {
         _selectedIcon = cat.iconName;
         _selectedVehicleType = cat.vehicleType;
@@ -144,6 +154,8 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
   void dispose() {
     _nameController.dispose();
     _sortOrderController.dispose();
+    _intervalKmController.dispose();
+    _warningKmController.dispose();
     super.dispose();
   }
 
@@ -154,6 +166,8 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     if (name.isEmpty) return;
 
     final sortOrder = int.tryParse(_sortOrderController.text.trim()) ?? 0;
+    final intervalKm = int.tryParse(_intervalKmController.text.trim());
+    final warningKm = int.tryParse(_warningKmController.text.trim());
     final key = '${_selectedVehicleType}_${_slugify(name)}';
 
     setState(() => _isLoading = true);
@@ -169,6 +183,8 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
           iconName: _selectedIcon,
           vehicleType: _selectedVehicleType,
           sortOrder: sortOrder,
+          intervalKm: intervalKm,
+          warningKm: warningKm,
           createdAt: DateTime.now(),
         );
         await notifier.update(category);
@@ -179,6 +195,8 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
           iconName: _selectedIcon,
           vehicleType: _selectedVehicleType,
           sortOrder: sortOrder,
+          intervalKm: intervalKm,
+          warningKm: warningKm,
           createdAt: DateTime.now(),
         );
         await notifier.add(category);
@@ -280,6 +298,26 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                   labelText: 'Orden',
                   hintText: 'Número de orden (0 primero)',
                   prefixIcon: Icon(Icons.format_list_numbered),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _intervalKmController,
+                decoration: const InputDecoration(
+                  labelText: 'Frecuencia (km)',
+                  hintText: 'Ej: 2500',
+                  prefixIcon: Icon(Icons.speed),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _warningKmController,
+                decoration: const InputDecoration(
+                  labelText: 'Aviso (km antes)',
+                  hintText: 'Ej: 200',
+                  prefixIcon: Icon(Icons.notifications_outlined),
                 ),
                 keyboardType: TextInputType.number,
               ),

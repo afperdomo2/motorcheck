@@ -151,6 +151,27 @@ class MaintenanceRepository {
     return maps.map(_itemFromMap).toList();
   }
 
+  Future<({int? mileage, DateTime? date})> getLastMileageByCategory(
+    int vehicleId,
+    String categoryKey,
+  ) async {
+    final db = await _db.database;
+    final maps = await db.rawQuery(
+      'SELECT m.mileage, m.date '
+      'FROM maintenances m '
+      'JOIN maintenance_items i ON i.maintenance_id = m.id '
+      'WHERE m.vehicle_id = ? AND i.category = ? AND m.mileage IS NOT NULL '
+      'ORDER BY m.date DESC LIMIT 1',
+      [vehicleId, categoryKey],
+    );
+    if (maps.isEmpty) return (mileage: null, date: null);
+    final row = maps.first;
+    return (
+      mileage: row['mileage'] as int?,
+      date: row['date'] != null ? parseDate(row['date'] as String) : null,
+    );
+  }
+
   Future<void> _insertItems(
     DatabaseExecutor db,
     int maintenanceId,

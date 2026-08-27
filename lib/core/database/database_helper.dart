@@ -27,13 +27,42 @@ class DatabaseHelper {
 
     return openDatabase(
       path,
-      version: 9,
+      version: 12,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
+      onOpen: _ensureSchemaIntegrity,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
     );
+  }
+
+  Future<void> _ensureSchemaIntegrity(Database db) async {
+    final vehicleColumns = await db.rawQuery("PRAGMA table_info('vehicles')");
+    final hasLastSelected = vehicleColumns.any(
+      (c) => c['name'] == 'last_selected_at',
+    );
+    if (!hasLastSelected) {
+      await db.execute(
+        'ALTER TABLE vehicles ADD COLUMN last_selected_at TEXT',
+      );
+    }
+
+    final catColumns = await db.rawQuery(
+      "PRAGMA table_info('maintenance_categories')",
+    );
+    final hasInterval = catColumns.any((c) => c['name'] == 'interval_km');
+    if (!hasInterval) {
+      await db.execute(
+        'ALTER TABLE maintenance_categories ADD COLUMN interval_km INTEGER',
+      );
+    }
+    final hasWarning = catColumns.any((c) => c['name'] == 'warning_km');
+    if (!hasWarning) {
+      await db.execute(
+        'ALTER TABLE maintenance_categories ADD COLUMN warning_km INTEGER',
+      );
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -100,12 +129,52 @@ class DatabaseHelper {
       await db.execute('ALTER TABLE vehicles ADD COLUMN rtm_expires_at TEXT');
     }
     if (oldVersion < 8) {
-      await db.execute(Tables.createMaintenanceCategories);
+      await db.execute(
+        Tables.createMaintenanceCategories.replaceFirst(
+          'CREATE TABLE',
+          'CREATE TABLE IF NOT EXISTS',
+        ),
+      );
       await _seedDefaultCategories(db);
       await _migrateCategoryKeys(db);
     }
     if (oldVersion < 9) {
       await db.execute('ALTER TABLE vehicles ADD COLUMN last_selected_at TEXT');
+    }
+    if (oldVersion < 10) {
+      await db.execute(
+        'ALTER TABLE maintenance_categories ADD COLUMN interval_km INTEGER',
+      );
+      await db.execute(
+        'ALTER TABLE maintenance_categories ADD COLUMN warning_km INTEGER',
+      );
+    }
+    if (oldVersion < 11) {
+      final columns = await db.rawQuery(
+        "PRAGMA table_info('maintenance_categories')",
+      );
+      final hasInterval = columns.any((c) => c['name'] == 'interval_km');
+      if (!hasInterval) {
+        await db.execute(
+          'ALTER TABLE maintenance_categories ADD COLUMN interval_km INTEGER',
+        );
+        await db.execute(
+          'ALTER TABLE maintenance_categories ADD COLUMN warning_km INTEGER',
+        );
+      }
+    }
+    if (oldVersion < 12) {
+      final vehicleColumns = await db.rawQuery(
+        "PRAGMA table_info('vehicles')",
+      );
+      final hasLastSelected = vehicleColumns.any(
+        (c) => c['name'] == 'last_selected_at',
+      );
+      if (!hasLastSelected) {
+        await db.execute(
+          'ALTER TABLE vehicles ADD COLUMN last_selected_at TEXT',
+        );
+      }
     }
   }
 
@@ -380,7 +449,10 @@ class DatabaseHelper {
       },
     ];
     for (final row in defaults) {
-      await db.insert('maintenance_categories', {...row, 'created_at': now});
+      await db.insert('maintenance_categories', {
+        ...row,
+        'created_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
   }
 

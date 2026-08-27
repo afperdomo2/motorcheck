@@ -15,6 +15,8 @@ _$MaintenanceCategoryImpl _$$MaintenanceCategoryImplFromJson(
   iconName: json['iconName'] as String? ?? 'build',
   vehicleType: json['vehicleType'] as String,
   sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
+  intervalKm: (json['intervalKm'] as num?)?.toInt(),
+  warningKm: (json['warningKm'] as num?)?.toInt(),
   createdAt: DateTime.parse(json['createdAt'] as String),
 );
 
@@ -27,5 +29,7 @@ Map<String, dynamic> _$$MaintenanceCategoryImplToJson(
   'iconName': instance.iconName,
   'vehicleType': instance.vehicleType,
   'sortOrder': instance.sortOrder,
+  'intervalKm': instance.intervalKm,
+  'warningKm': instance.warningKm,
   'createdAt': instance.createdAt.toIso8601String(),
 };

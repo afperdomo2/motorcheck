@@ -4,12 +4,13 @@ import '../vehicles/providers.dart';
 import '../maintenance/providers.dart';
 import '../maintenance/models/maintenance.dart';
 
-final dashboardSummaryProvider = FutureProvider<DashboardSummary?>((ref) async {
+final dashboardSummaryProvider = FutureProvider<DashboardSummary>((ref) async {
   final vehicles = await ref.read(vehicleRepositoryProvider).getAll();
-  if (vehicles.isEmpty) return null;
-
   final repository = ref.read(maintenanceRepositoryProvider);
-  final allMaintenances = await repository.getAll();
+
+  final allMaintenances = vehicles.isNotEmpty
+      ? await repository.getAll()
+      : <Maintenance>[];
 
   final totalMaintenances = allMaintenances.length;
 

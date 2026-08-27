@@ -69,21 +69,37 @@ class VehicleDetailScreen extends ConsumerWidget {
 
           final typeColor = AppColors.forVehicleType(vehicle.type);
 
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _VehicleHeader(vehicle: vehicle, typeColor: typeColor),
-              const SizedBox(height: 16),
-              _InfoCard(vehicle: vehicle),
-              const SizedBox(height: 16),
-              summaryAsync.when(
-                loading: () => const LoadingIndicator(),
-                error: (err, _) => const SizedBox.shrink(),
-                data: (summary) => _MaintenanceSummaryCard(summary: summary),
-              ),
-              const SizedBox(height: 16),
-              _MetadataCard(vehicle: vehicle),
-            ],
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(selectedVehicleProvider(vehicleId));
+              ref.invalidate(vehicleMaintenanceSummaryProvider(vehicleId));
+              ref.invalidate(upcomingMaintenanceProvider(vehicleId));
+              await Future.wait([
+                ref.read(selectedVehicleProvider(vehicleId).future),
+                ref.read(vehicleMaintenanceSummaryProvider(vehicleId).future),
+                ref.read(upcomingMaintenanceProvider(vehicleId).future),
+              ]);
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              children: [
+                _VehicleHeader(vehicle: vehicle, typeColor: typeColor),
+                const SizedBox(height: 16),
+                _InfoCard(vehicle: vehicle),
+                const SizedBox(height: 16),
+                summaryAsync.when(
+                  loading: () => const LoadingIndicator(),
+                  error: (err, _) => const SizedBox.shrink(),
+                  data: (summary) => _MaintenanceSummaryCard(
+                    summary: summary,
+                    vehicleId: vehicleId,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _MetadataCard(vehicle: vehicle),
+              ],
+            ),
           );
         },
       ),
@@ -333,8 +349,12 @@ class _ExpiryRow extends StatelessWidget {
 
 class _MaintenanceSummaryCard extends StatelessWidget {
   final ({int count, double totalCost, DateTime? lastDate}) summary;
+  final int vehicleId;
 
-  const _MaintenanceSummaryCard({required this.summary});
+  const _MaintenanceSummaryCard({
+    required this.summary,
+    required this.vehicleId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -342,14 +362,29 @@ class _MaintenanceSummaryCard extends StatelessWidget {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.build_outlined,
-                color: Theme.of(context).disabledColor,
+              Row(
+                children: [
+                  Icon(
+                    Icons.build_outlined,
+                    color: Theme.of(context).disabledColor,
+                  ),
+                  const SizedBox(width: 12),
+                  const Text('Sin mantenimientos registrados'),
+                ],
               ),
-              const SizedBox(width: 12),
-              const Text('Sin mantenimientos registrados'),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () =>
+                      context.push('/vehicles/$vehicleId/upcoming'),
+                  icon: const Icon(Icons.schedule, size: 16),
+                  label: const Text('Próximos mantenimientos'),
+                ),
+              ),
             ],
           ),
         ),
@@ -384,6 +419,15 @@ class _MaintenanceSummaryCard extends StatelessWidget {
                 label: 'Total gastado',
                 value: formatCurrency(summary.totalCost),
               ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () => context.push('/vehicles/$vehicleId/upcoming'),
+                icon: const Icon(Icons.schedule, size: 16),
+                label: const Text('Próximos mantenimientos'),
+              ),
+            ),
           ],
         ),
       ),

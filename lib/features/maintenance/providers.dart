@@ -1,5 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/utils/formatters.dart';
 import '../settings/providers.dart';
+import '../settings/models/maintenance_category.dart';
 import '../vehicles/providers.dart';
 import '../vehicles/models/vehicle.dart';
 import 'models/maintenance.dart';
@@ -117,5 +120,104 @@ final workshopItemsProvider =
       for (final item in items) {
         result.putIfAbsent(item.maintenanceId, () => []).add(item);
       }
+      return result;
+    });
+
+class UpcomingMaintenance {
+  final MaintenanceCategory category;
+  final int? lastMileage;
+  final int? lastDate;
+  final int? remainingKm;
+  final bool isOverdue;
+  final bool isWarning;
+
+  const UpcomingMaintenance({
+    required this.category,
+    this.lastMileage,
+    this.lastDate,
+    this.remainingKm,
+    this.isOverdue = false,
+    this.isWarning = false,
+  });
+
+  Color statusColor() {
+    if (category.intervalKm == null) return Colors.grey;
+    if (isOverdue) return Colors.red;
+    if (isWarning) return Colors.orange;
+    return Colors.green;
+  }
+
+  String statusLabel() {
+    if (category.intervalKm == null) return 'Sin frecuencia';
+    if (lastMileage == null) return 'Sin registro previo';
+    if (isOverdue) {
+      return remainingKm != null ? 'Vencido ${-remainingKm!} km' : 'Vencido';
+    }
+    if (remainingKm != null) return 'En $remainingKm km';
+    return '';
+  }
+
+  String? lastDateFormatted() {
+    if (lastDate == null) return null;
+    return formatDate(DateTime.fromMillisecondsSinceEpoch(lastDate!));
+  }
+}
+
+final upcomingMaintenanceProvider =
+    FutureProvider.family<List<UpcomingMaintenance>, int>((
+      ref,
+      vehicleId,
+    ) async {
+      final vehicleRepo = ref.read(vehicleRepositoryProvider);
+      final vehicle = await vehicleRepo.getById(vehicleId);
+      if (vehicle == null || vehicle.currentMileage == null) return [];
+
+      final currentMileage = vehicle.currentMileage!;
+
+      final catRepo = ref.read(maintenanceCategoryRepositoryProvider);
+      final categories = await catRepo.getByVehicleType(vehicle.type);
+
+      final maintRepo = ref.read(maintenanceRepositoryProvider);
+      final result = <UpcomingMaintenance>[];
+
+      for (final cat in categories) {
+        if (cat.intervalKm == null) {
+          result.add(UpcomingMaintenance(category: cat));
+          continue;
+        }
+
+        final last = await maintRepo.getLastMileageByCategory(
+          vehicleId,
+          cat.key,
+        );
+
+        if (last.mileage == null) {
+          result.add(
+            UpcomingMaintenance(
+              category: cat,
+              lastDate: last.date?.millisecondsSinceEpoch,
+            ),
+          );
+          continue;
+        }
+
+        final nextServiceKm = last.mileage! + cat.intervalKm!;
+        final remainingKm = nextServiceKm - currentMileage;
+        final warningKm = cat.warningKm ?? 0;
+        final isOverdue = remainingKm <= 0;
+        final isWarning = !isOverdue && remainingKm <= warningKm;
+
+        result.add(
+          UpcomingMaintenance(
+            category: cat,
+            lastMileage: last.mileage,
+            lastDate: last.date?.millisecondsSinceEpoch,
+            remainingKm: remainingKm,
+            isOverdue: isOverdue,
+            isWarning: isWarning,
+          ),
+        );
+      }
+
       return result;
     });

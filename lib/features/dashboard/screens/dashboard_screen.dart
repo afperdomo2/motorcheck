@@ -46,10 +46,6 @@ class DashboardScreen extends ConsumerWidget {
               onRetry: () => ref.invalidate(dashboardSummaryProvider),
             ),
             data: (summary) {
-              if (summary == null) {
-                return const EmptyState(icon: Icons.error, title: 'Sin datos');
-              }
-
               return RefreshIndicator(
                 onRefresh: () async {
                   ref.invalidate(dashboardSummaryProvider);

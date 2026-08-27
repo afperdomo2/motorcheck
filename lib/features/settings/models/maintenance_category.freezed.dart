@@ -27,6 +27,8 @@ mixin _$MaintenanceCategory {
   String get iconName => throw _privateConstructorUsedError;
   String get vehicleType => throw _privateConstructorUsedError;
   int get sortOrder => throw _privateConstructorUsedError;
+  int? get intervalKm => throw _privateConstructorUsedError;
+  int? get warningKm => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this MaintenanceCategory to a JSON map.
@@ -53,6 +55,8 @@ abstract class $MaintenanceCategoryCopyWith<$Res> {
     String iconName,
     String vehicleType,
     int sortOrder,
+    int? intervalKm,
+    int? warningKm,
     DateTime createdAt,
   });
 }
@@ -78,6 +82,8 @@ class _$MaintenanceCategoryCopyWithImpl<$Res, $Val extends MaintenanceCategory>
     Object? iconName = null,
     Object? vehicleType = null,
     Object? sortOrder = null,
+    Object? intervalKm = freezed,
+    Object? warningKm = freezed,
     Object? createdAt = null,
   }) {
     return _then(
@@ -106,6 +112,14 @@ class _$MaintenanceCategoryCopyWithImpl<$Res, $Val extends MaintenanceCategory>
                 ? _value.sortOrder
                 : sortOrder // ignore: cast_nullable_to_non_nullable
                       as int,
+            intervalKm: freezed == intervalKm
+                ? _value.intervalKm
+                : intervalKm // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            warningKm: freezed == warningKm
+                ? _value.warningKm
+                : warningKm // ignore: cast_nullable_to_non_nullable
+                      as int?,
             createdAt: null == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -132,6 +146,8 @@ abstract class _$$MaintenanceCategoryImplCopyWith<$Res>
     String iconName,
     String vehicleType,
     int sortOrder,
+    int? intervalKm,
+    int? warningKm,
     DateTime createdAt,
   });
 }
@@ -156,6 +172,8 @@ class __$$MaintenanceCategoryImplCopyWithImpl<$Res>
     Object? iconName = null,
     Object? vehicleType = null,
     Object? sortOrder = null,
+    Object? intervalKm = freezed,
+    Object? warningKm = freezed,
     Object? createdAt = null,
   }) {
     return _then(
@@ -184,6 +202,14 @@ class __$$MaintenanceCategoryImplCopyWithImpl<$Res>
             ? _value.sortOrder
             : sortOrder // ignore: cast_nullable_to_non_nullable
                   as int,
+        intervalKm: freezed == intervalKm
+            ? _value.intervalKm
+            : intervalKm // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        warningKm: freezed == warningKm
+            ? _value.warningKm
+            : warningKm // ignore: cast_nullable_to_non_nullable
+                  as int?,
         createdAt: null == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -203,6 +229,8 @@ class _$MaintenanceCategoryImpl implements _MaintenanceCategory {
     this.iconName = 'build',
     required this.vehicleType,
     this.sortOrder = 0,
+    this.intervalKm,
+    this.warningKm,
     required this.createdAt,
   });
 
@@ -224,11 +252,15 @@ class _$MaintenanceCategoryImpl implements _MaintenanceCategory {
   @JsonKey()
   final int sortOrder;
   @override
+  final int? intervalKm;
+  @override
+  final int? warningKm;
+  @override
   final DateTime createdAt;
 
   @override
   String toString() {
-    return 'MaintenanceCategory(id: $id, key: $key, name: $name, iconName: $iconName, vehicleType: $vehicleType, sortOrder: $sortOrder, createdAt: $createdAt)';
+    return 'MaintenanceCategory(id: $id, key: $key, name: $name, iconName: $iconName, vehicleType: $vehicleType, sortOrder: $sortOrder, intervalKm: $intervalKm, warningKm: $warningKm, createdAt: $createdAt)';
   }
 
   @override
@@ -245,6 +277,10 @@ class _$MaintenanceCategoryImpl implements _MaintenanceCategory {
                 other.vehicleType == vehicleType) &&
             (identical(other.sortOrder, sortOrder) ||
                 other.sortOrder == sortOrder) &&
+            (identical(other.intervalKm, intervalKm) ||
+                other.intervalKm == intervalKm) &&
+            (identical(other.warningKm, warningKm) ||
+                other.warningKm == warningKm) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt));
   }
@@ -259,6 +295,8 @@ class _$MaintenanceCategoryImpl implements _MaintenanceCategory {
     iconName,
     vehicleType,
     sortOrder,
+    intervalKm,
+    warningKm,
     createdAt,
   );
 
@@ -287,6 +325,8 @@ abstract class _MaintenanceCategory implements MaintenanceCategory {
     final String iconName,
     required final String vehicleType,
     final int sortOrder,
+    final int? intervalKm,
+    final int? warningKm,
     required final DateTime createdAt,
   }) = _$MaintenanceCategoryImpl;
 
@@ -305,6 +345,10 @@ abstract class _MaintenanceCategory implements MaintenanceCategory {
   String get vehicleType;
   @override
   int get sortOrder;
+  @override
+  int? get intervalKm;
+  @override
+  int? get warningKm;
   @override
   DateTime get createdAt;
 
