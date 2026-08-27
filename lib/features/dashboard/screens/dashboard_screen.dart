@@ -7,6 +7,7 @@ import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../vehicles/providers.dart';
 import '../providers.dart';
+import '../widgets/favorite_vehicle_card.dart';
 import '../widgets/quick_stats.dart';
 import '../widgets/expiry_alerts.dart';
 
@@ -53,6 +54,7 @@ class DashboardScreen extends ConsumerWidget {
                 child: ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
+                    const FavoriteVehicleCard(),
                     QuickStats(summary: summary),
                     const ExpiryAlerts(),
                   ],
