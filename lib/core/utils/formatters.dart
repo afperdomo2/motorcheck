@@ -15,6 +15,11 @@ String formatShortDate(DateTime date) => _shortDateFormat.format(date);
 
 String formatMonthYear(DateTime date) => DateFormat('MMMM', 'es').format(date);
 
+String formatMonthYearLong(DateTime date) {
+  final s = DateFormat('MMMM yyyy', 'es').format(date);
+  return s[0].toUpperCase() + s.substring(1);
+}
+
 String formatCurrency(double amount) => _currencyFormat.format(amount);
 
 String formatDateTime(DateTime dateTime) => _dateTimeFormat.format(dateTime);

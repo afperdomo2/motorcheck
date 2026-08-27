@@ -161,11 +161,28 @@ class _CategoryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final icon = _iconMap[category.iconName] ?? Icons.build;
+    final intervalKm = category.intervalKm;
 
     return Card(
       child: ListTile(
         leading: CircleAvatar(child: Icon(icon, size: 20)),
         title: Text(category.name),
+        subtitle: intervalKm != null
+            ? Row(
+                children: [
+                  Icon(
+                    Icons.timer_outlined,
+                    size: 14,
+                    color: Theme.of(context).disabledColor,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Cada $intervalKm km',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              )
+            : null,
         trailing: PopupMenuButton<String>(
           onSelected: (value) {
             if (value == 'edit') onEdit();

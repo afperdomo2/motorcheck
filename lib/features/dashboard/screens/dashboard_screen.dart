@@ -8,7 +8,6 @@ import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../vehicles/providers.dart';
 import '../providers.dart';
 import '../widgets/quick_stats.dart';
-import '../widgets/recent_activity.dart';
 import '../widgets/expiry_alerts.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -56,7 +55,6 @@ class DashboardScreen extends ConsumerWidget {
                   children: [
                     QuickStats(summary: summary),
                     const ExpiryAlerts(),
-                    RecentActivity(summary: summary),
                   ],
                 ),
               );

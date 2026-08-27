@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../../core/utils/formatters.dart';
 import '../../settings/providers.dart';
 import '../../settings/models/maintenance_category.dart';
 import '../../vehicles/providers.dart';
@@ -120,8 +121,7 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
         c.key: c,
     };
 
-    final sorted = List<Maintenance>.from(maintenances)
-      ..sort((a, b) => b.date.compareTo(a.date));
+    final flat = _buildGroupedItems(maintenances);
 
     return RefreshIndicator(
       onRefresh: ref
@@ -129,9 +129,15 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
           .loadMaintenances,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: sorted.length,
+        itemCount: flat.length,
         itemBuilder: (context, index) {
-          final maintenance = sorted[index];
+          final item = flat[index];
+
+          if (item is _MonthHeader) {
+            return item;
+          }
+
+          final maintenance = item as Maintenance;
           final workshop = _findWorkshop(workshops, maintenance.workshopId);
           final items = itemsByMaintenance[maintenance.id] ?? [];
 
@@ -146,6 +152,41 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
         },
       ),
     );
+  }
+
+  List<Object> _buildGroupedItems(List<Maintenance> maintenances) {
+    final groups = <(int, int), List<Maintenance>>{};
+    for (final m in maintenances) {
+      final key = (m.date.year, m.date.month);
+      groups.putIfAbsent(key, () => []).add(m);
+    }
+
+    final monthKeys = groups.keys.toList()
+      ..sort((a, b) {
+        final da = DateTime(a.$1, a.$2);
+        final db = DateTime(b.$1, b.$2);
+        return db.compareTo(da);
+      });
+
+    final flat = <Object>[];
+    for (final key in monthKeys) {
+      final items = groups[key]!..sort(_compareMileageThenDate);
+      flat.add(_MonthHeader(year: key.$1, month: key.$2));
+      flat.addAll(items);
+    }
+    return flat;
+  }
+
+  int _compareMileageThenDate(Maintenance a, Maintenance b) {
+    final aKm = a.mileage;
+    final bKm = b.mileage;
+    if (aKm != null && bKm != null) {
+      if (aKm != bKm) return bKm.compareTo(aKm);
+      return b.date.compareTo(a.date);
+    }
+    if (aKm != null) return -1;
+    if (bKm != null) return 1;
+    return b.date.compareTo(a.date);
   }
 
   Widget _buildFilterBar(BuildContext context) {
@@ -213,5 +254,42 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
       if (w.id == workshopId) return w;
     }
     return null;
+  }
+}
+
+class _MonthHeader extends StatelessWidget {
+  final int year;
+  final int month;
+
+  const _MonthHeader({required this.year, required this.month});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final label = formatMonthYearLong(DateTime(year, month));
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16, bottom: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 6,
+            height: 18,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(3),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
