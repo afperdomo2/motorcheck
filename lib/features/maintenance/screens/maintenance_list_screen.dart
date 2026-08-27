@@ -5,6 +5,7 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../settings/providers.dart';
 import '../../settings/models/maintenance_category.dart';
 import '../../vehicles/providers.dart';
@@ -13,6 +14,7 @@ import '../models/maintenance.dart';
 import '../models/workshop.dart';
 import '../providers.dart';
 import '../widgets/maintenance_card.dart';
+import '../widgets/vehicle_ficha.dart';
 
 class MaintenanceListScreen extends ConsumerStatefulWidget {
   const MaintenanceListScreen({super.key});
@@ -57,7 +59,7 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
           : null,
       body: Column(
         children: [
-          _buildFilterBar(context),
+          _buildVehicleSelector(context),
           Expanded(
             child: maintenancesAsync.when(
               loading: () => const LoadingIndicator(),
@@ -189,12 +191,65 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
     return b.date.compareTo(a.date);
   }
 
-  Widget _buildFilterBar(BuildContext context) {
+  Widget _buildVehicleSelector(BuildContext context) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
     final vehicles = vehiclesAsync.valueOrNull ?? [];
     if (vehicles.isEmpty) return const SizedBox.shrink();
 
     final selectedVehicleId = ref.watch(selectedVehicleIdProvider);
+
+    Vehicle? selectedVehicle;
+    for (final v in vehicles) {
+      if (v.id == selectedVehicleId) {
+        selectedVehicle = v;
+        break;
+      }
+    }
+
+    final theme = Theme.of(context);
+
+    if (selectedVehicle == null) {
+      return InkWell(
+        onTap: () => _showVehicleSheet(context, vehicles),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.12,
+                ),
+                child: Icon(
+                  Icons.directions_car,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Selecciona un vehículo',
+                  style: theme.textTheme.titleMedium,
+                ),
+              ),
+              Icon(Icons.expand_more, color: theme.disabledColor),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return VehicleFicha(
+      vehicle: selectedVehicle,
+      onTap: () => _showVehicleSheet(context, vehicles),
+    );
+  }
+
+  Future<void> _showVehicleSheet(
+    BuildContext context,
+    List<Vehicle> vehicles,
+  ) async {
+    final selectedVehicleId = ref.read(selectedVehicleIdProvider);
 
     final sorted = List<Vehicle>.from(vehicles)
       ..sort((a, b) {
@@ -203,49 +258,67 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
         return a.name.compareTo(b.name);
       });
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 0.5),
-        ),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: sorted.map((v) {
-            return Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: _chip(
-                label: v.name,
-                icon: _vehicleIcon(v.type),
-                selected: selectedVehicleId == v.id,
-                onSelected: (_) => ref
-                    .read(vehiclesNotifierProvider.notifier)
-                    .selectVehicle(v.id!),
+    final result = await showModalBottomSheet<Vehicle>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Text(
+                  'Selecciona un vehículo',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            );
-          }).toList(),
-        ),
-      ),
+              const SizedBox(height: 4),
+              ...sorted.map((v) {
+                final isSelected = v.id == selectedVehicleId;
+                final typeColor = AppColors.forVehicleType(v.type);
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: typeColor.withValues(alpha: 0.15),
+                    child: Icon(_vehicleIcon(v.type), color: typeColor),
+                  ),
+                  title: Text(v.name),
+                  subtitle: _vehicleSubtitle(v) != null
+                      ? Text(_vehicleSubtitle(v)!)
+                      : null,
+                  trailing: isSelected
+                      ? Icon(
+                          Icons.check_circle,
+                          color: Theme.of(context).colorScheme.primary,
+                        )
+                      : null,
+                  onTap: () => Navigator.of(context).pop(v),
+                );
+              }),
+            ],
+          ),
+        );
+      },
     );
+
+    if (result != null) {
+      await ref
+          .read(vehiclesNotifierProvider.notifier)
+          .selectVehicle(result.id!);
+    }
   }
 
-  Widget _chip({
-    required String label,
-    required IconData icon,
-    required bool selected,
-    required ValueChanged<bool> onSelected,
-  }) {
-    return FilterChip(
-      avatar: Icon(icon, size: 16),
-      label: Text(label),
-      selected: selected,
-      onSelected: onSelected,
-      visualDensity: VisualDensity.compact,
-      labelStyle: const TextStyle(fontSize: 12),
-      showCheckmark: false,
-    );
+  String? _vehicleSubtitle(Vehicle v) {
+    final parts = <String>[];
+    if (v.plate != null) parts.add(v.plate!);
+    if (v.currentMileage != null) parts.add(formatMileage(v.currentMileage));
+    if (parts.isEmpty) return null;
+    return parts.join(' · ');
   }
 
   Workshop? _findWorkshop(List<Workshop> workshops, int? workshopId) {
