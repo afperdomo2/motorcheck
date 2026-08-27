@@ -20,6 +20,11 @@ String formatMonthYearLong(DateTime date) {
   return s[0].toUpperCase() + s.substring(1);
 }
 
+String formatWeekdayDay(DateTime date) {
+  final s = DateFormat('EEEE d', 'es').format(date);
+  return s[0].toUpperCase() + s.substring(1);
+}
+
 String formatCurrency(double amount) => _currencyFormat.format(amount);
 
 String formatDateTime(DateTime dateTime) => _dateTimeFormat.format(dateTime);
