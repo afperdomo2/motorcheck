@@ -163,6 +163,15 @@ class UpcomingMaintenance {
   }
 }
 
+final maintenanceCategoryHistoryProvider =
+    FutureProvider.family<
+      List<CategoryHistoryEntry>,
+      ({int vehicleId, String category})
+    >((ref, args) async {
+      final repository = ref.watch(maintenanceRepositoryProvider);
+      return repository.getCategoryHistory(args.vehicleId, args.category);
+    });
+
 final upcomingMaintenanceProvider =
     FutureProvider.family<List<UpcomingMaintenance>, int>((
       ref,

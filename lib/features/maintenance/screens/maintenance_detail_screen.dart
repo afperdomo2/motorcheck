@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/category_history_sheet.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../settings/models/maintenance_category.dart';
 import '../../settings/providers.dart';
+import '../../vehicles/models/vehicle.dart';
 import '../categories.dart';
 import '../models/maintenance.dart';
 import '../models/maintenance_item.dart';
@@ -108,7 +110,18 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                     _CostCard(maintenance: maintenance),
                   ],
                   const SizedBox(height: 12),
-                  _ItemsCard(items: items, categoryMap: categoryMap),
+                  _ItemsCard(
+                    items: items,
+                    categoryMap: categoryMap,
+                    onItemTap: (item) => _openCategoryHistory(
+                      context,
+                      ref,
+                      maintenance,
+                      item,
+                      categoryMap[item.category],
+                      vehicle,
+                    ),
+                  ),
                   if (maintenance.notes != null &&
                       maintenance.notes!.isNotEmpty) ...[
                     const SizedBox(height: 12),
@@ -129,6 +142,33 @@ class MaintenanceDetailScreen extends ConsumerWidget {
       if (w.id == workshopId) return w;
     }
     return null;
+  }
+
+  void _openCategoryHistory(
+    BuildContext context,
+    WidgetRef ref,
+    Maintenance maintenance,
+    MaintenanceItem item,
+    MaintenanceCategory? category,
+    Vehicle? vehicle,
+  ) {
+    if (vehicle == null || vehicle.id == null) return;
+    final cat =
+        category ??
+        MaintenanceCategory(
+          key: item.category,
+          name: item.category,
+          vehicleType: vehicle.type,
+          createdAt: maintenance.createdAt,
+        );
+    ref.invalidate(upcomingMaintenanceProvider(vehicle.id!));
+    ref.invalidate(
+      maintenanceCategoryHistoryProvider((
+        vehicleId: vehicle.id!,
+        category: item.category,
+      )),
+    );
+    CategoryHistorySheet.show(context, vehicle: vehicle, category: cat);
   }
 
   Future<void> _deleteMaintenance(
@@ -290,8 +330,13 @@ class _CostCard extends StatelessWidget {
 class _ItemsCard extends StatelessWidget {
   final List<MaintenanceItem> items;
   final Map<String, MaintenanceCategory> categoryMap;
+  final void Function(MaintenanceItem item) onItemTap;
 
-  const _ItemsCard({required this.items, this.categoryMap = const {}});
+  const _ItemsCard({
+    required this.items,
+    this.categoryMap = const {},
+    required this.onItemTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -331,7 +376,11 @@ class _ItemsCard extends StatelessWidget {
             ] else ...[
               const Divider(height: 20),
               ...items.map(
-                (item) => _ItemTile(item: item, categoryMap: categoryMap),
+                (item) => _ItemTile(
+                  item: item,
+                  categoryMap: categoryMap,
+                  onTap: () => onItemTap(item),
+                ),
               ),
             ],
           ],
@@ -344,8 +393,13 @@ class _ItemsCard extends StatelessWidget {
 class _ItemTile extends StatelessWidget {
   final MaintenanceItem item;
   final Map<String, MaintenanceCategory> categoryMap;
+  final VoidCallback onTap;
 
-  const _ItemTile({required this.item, this.categoryMap = const {}});
+  const _ItemTile({
+    required this.item,
+    this.categoryMap = const {},
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -356,43 +410,53 @@ class _ItemTile extends StatelessWidget {
         ? MaintenanceCategories.iconByName(cat.iconName)
         : Icons.build;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: hasNote
-            ? CrossAxisAlignment.start
-            : CrossAxisAlignment.center,
-        children: [
-          Icon(icon, size: 22, color: AppColors.onSurfaceVariant),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  cat?.name ?? item.category,
-                  style: theme.textTheme.bodyMedium,
-                ),
-                if (hasNote)
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          crossAxisAlignment: hasNote
+              ? CrossAxisAlignment.start
+              : CrossAxisAlignment.center,
+          children: [
+            Icon(icon, size: 22, color: AppColors.onSurfaceVariant),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    item.notes!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    cat?.name ?? item.category,
+                    style: theme.textTheme.bodyMedium,
                   ),
-              ],
-            ),
-          ),
-          if (item.partsCost > 0)
-            Text(
-              formatCurrency(item.partsCost),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+                  if (hasNote)
+                    Text(
+                      item.notes!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
               ),
             ),
-        ],
+            if (item.partsCost > 0)
+              Text(
+                formatCurrency(item.partsCost),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            const SizedBox(width: 4),
+            const Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: AppColors.onSurfaceVariant,
+            ),
+          ],
+        ),
       ),
     );
   }

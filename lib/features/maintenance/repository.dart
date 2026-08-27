@@ -4,6 +4,14 @@ import '../../core/utils/formatters.dart';
 import 'models/maintenance.dart';
 import 'models/maintenance_item.dart';
 
+typedef CategoryHistoryEntry = ({
+  DateTime date,
+  int? mileage,
+  double partsCost,
+  String? notes,
+  String? maintenanceNotes,
+});
+
 class MaintenanceRepository {
   final DatabaseHelper _db = DatabaseHelper.instance;
 
@@ -170,6 +178,33 @@ class MaintenanceRepository {
       mileage: row['mileage'] as int?,
       date: row['date'] != null ? parseDate(row['date'] as String) : null,
     );
+  }
+
+  Future<List<CategoryHistoryEntry>> getCategoryHistory(
+    int vehicleId,
+    String categoryKey,
+  ) async {
+    final db = await _db.database;
+    final maps = await db.rawQuery(
+      'SELECT m.date, m.mileage, i.parts_cost, i.notes, '
+      'm.notes AS maintenance_notes '
+      'FROM maintenance_items i '
+      'JOIN maintenances m ON m.id = i.maintenance_id '
+      'WHERE m.vehicle_id = ? AND i.category = ? '
+      'ORDER BY m.date DESC, m.id DESC',
+      [vehicleId, categoryKey],
+    );
+    return maps
+        .map(
+          (row) => (
+            date: parseDate(row['date'] as String),
+            mileage: row['mileage'] as int?,
+            partsCost: (row['parts_cost'] as num?)?.toDouble() ?? 0,
+            notes: row['notes'] as String?,
+            maintenanceNotes: row['maintenance_notes'] as String?,
+          ),
+        )
+        .toList();
   }
 
   Future<void> _insertItems(
