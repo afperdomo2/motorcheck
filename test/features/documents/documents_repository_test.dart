@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:motorcheck/core/database/database_helper.dart';
 import 'package:motorcheck/features/documents/models/vehicle_document.dart';
+import 'package:motorcheck/features/documents/providers.dart';
 import 'package:motorcheck/features/documents/repository.dart';
 import 'package:motorcheck/features/vehicles/models/vehicle.dart';
 import 'package:motorcheck/features/vehicles/repository.dart';
@@ -67,5 +69,54 @@ void main() {
 
     await vehicleRepo.delete(vehicleId);
     expect(await repo.getByVehicleId(vehicleId), isEmpty);
+  });
+
+  test('syncVehicleDates inserta, actualiza y elimina SOAT/RTM', () async {
+    final vehicleRepo = VehicleRepository();
+    final repo = DocumentsRepository();
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final vehicleId = await vehicleRepo.insert(
+      Vehicle(
+        name: 'Sincronización documentos',
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+      ),
+    );
+    addTearDown(() => vehicleRepo.delete(vehicleId));
+
+    final notifier = container.read(documentsNotifierProvider.notifier);
+
+    await notifier.syncVehicleDates(
+      vehicleId,
+      soat: DateTime(2027, 1, 15),
+      rtm: DateTime(2027, 6, 30),
+    );
+
+    var documents = await repo.getByVehicleId(vehicleId);
+    expect(documents, hasLength(2));
+    expect(
+      documents.singleWhere((d) => d.type == 'soat').expiresAt,
+      DateTime(2027, 1, 15),
+    );
+
+    await notifier.syncVehicleDates(
+      vehicleId,
+      soat: DateTime(2027, 2, 20),
+      rtm: DateTime(2027, 6, 30),
+    );
+
+    documents = await repo.getByVehicleId(vehicleId);
+    expect(
+      documents.singleWhere((d) => d.type == 'soat').expiresAt,
+      DateTime(2027, 2, 20),
+    );
+
+    await notifier.syncVehicleDates(vehicleId, soat: DateTime(2027, 2, 20));
+
+    documents = await repo.getByVehicleId(vehicleId);
+    expect(documents.where((d) => d.type == 'rtm'), isEmpty);
+    expect(documents.where((d) => d.type == 'soat'), hasLength(1));
   });
 }

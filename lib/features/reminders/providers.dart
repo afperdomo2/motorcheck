@@ -154,11 +154,6 @@ int _compareReminders(Reminder a, Reminder b) {
   return kmA.compareTo(kmB);
 }
 
-final remindersAttentionCountProvider = FutureProvider<int>((ref) async {
-  final reminders = await ref.watch(remindersProvider.future);
-  return reminders.where((r) => r.severity != ReminderSeverity.info).length;
-});
-
 final vehicleRemindersProvider = FutureProvider.family<List<Reminder>, int>((
   ref,
   vehicleId,

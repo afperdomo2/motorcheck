@@ -188,10 +188,15 @@ class _DocumentChips extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final documents =
         ref.watch(vehicleDocumentsProvider(vehicleId)).valueOrNull ?? [];
-    if (documents.isEmpty) return const SizedBox.shrink();
-
-    final visible = [...documents]
-      ..sort((a, b) => a.expiresAt.compareTo(b.expiresAt));
+    final visible =
+        documents
+            .where(
+              (document) =>
+                  dateStatus(document.expiresAt).level != ExpiryLevel.ok,
+            )
+            .toList()
+          ..sort((a, b) => a.expiresAt.compareTo(b.expiresAt));
+    if (visible.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.sm),

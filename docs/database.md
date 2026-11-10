@@ -110,6 +110,10 @@ nullable para documentos del conductor.
 | created_at | TEXT | NOT NULL (ISO 8601) |
 | updated_at | TEXT | NOT NULL (ISO 8601) |
 
+El formulario de vehículo sincroniza SOAT y RTM con esta tabla mediante
+`DocumentsNotifier.syncVehicleDates`: inserta, actualiza o elimina el documento
+correspondiente. La UI de vehículos no lee las columnas legacy.
+
 ### vehicle_restrictions
 
 Regla semanal de pico y placa por vehículo.

@@ -168,7 +168,9 @@ se calcula con **lo que ocurra primero** entre kilometraje y fecha.
 
 La fuente de verdad de SOAT, RTM, impuesto, seguro y licencia es `documents`.
 Las columnas `vehicles.soat_expires_at` y `rtm_expires_at` se conservan solo por
-compatibilidad y se migraron a `documents` en la v14.
+compatibilidad y se migraron a `documents` en la v14. El formulario de vehículo
+sincroniza sus fechas con `documents`; el selector de Mantenimientos no muestra
+esos documentos, solo identidad, placa y kilometraje.
 
 ## Tests
 

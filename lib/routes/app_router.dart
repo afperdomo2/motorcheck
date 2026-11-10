@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/notifications/notification_sync.dart';
-import '../features/reminders/providers.dart';
 import '../features/vehicles/providers.dart';
 import '../features/dashboard/screens/dashboard_screen.dart';
 import '../features/vehicles/screens/vehicles_screen.dart';
@@ -257,8 +256,6 @@ class AppShell extends ConsumerWidget {
     // Inicializa la selección de vehículo al arrancar, sin depender de que el
     // usuario visite la pestaña de vehículos.
     ref.watch(vehiclesNotifierProvider);
-    final attentionCount =
-        ref.watch(remindersAttentionCountProvider).valueOrNull ?? 0;
 
     return NotificationSync(
       child: Scaffold(
@@ -292,29 +289,23 @@ class AppShell extends ConsumerWidget {
                 initialLocation: index == navigationShell.currentIndex,
               );
             },
-            destinations: [
-              const NavigationDestination(
+            destinations: const [
+              NavigationDestination(
                 icon: Icon(Icons.dashboard_outlined),
                 selectedIcon: Icon(Icons.dashboard),
                 label: 'Inicio',
               ),
               NavigationDestination(
-                icon: _NavBadge(
-                  icon: Icons.build_outlined,
-                  count: attentionCount,
-                ),
-                selectedIcon: _NavBadge(
-                  icon: Icons.build,
-                  count: attentionCount,
-                ),
+                icon: Icon(Icons.build_outlined),
+                selectedIcon: Icon(Icons.build),
                 label: 'Mantenimientos',
               ),
-              const NavigationDestination(
+              NavigationDestination(
                 icon: Icon(Icons.directions_car_outlined),
                 selectedIcon: Icon(Icons.directions_car),
                 label: 'Vehículos',
               ),
-              const NavigationDestination(
+              NavigationDestination(
                 icon: Icon(Icons.tune),
                 selectedIcon: Icon(Icons.tune),
                 label: 'Ajustes',
@@ -324,19 +315,5 @@ class AppShell extends ConsumerWidget {
         ),
       ),
     );
-  }
-}
-
-class _NavBadge extends StatelessWidget {
-  final IconData icon;
-  final int count;
-
-  const _NavBadge({required this.icon, required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    if (count <= 0) return Icon(icon);
-
-    return Badge(label: Text(count > 9 ? '9+' : '$count'), child: Icon(icon));
   }
 }

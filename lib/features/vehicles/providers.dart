@@ -82,9 +82,9 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
     return vehicles.first.id;
   }
 
-  Future<void> add(Vehicle vehicle) async {
+  Future<int> add(Vehicle vehicle) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    try {
       final id = await _repo.insert(vehicle);
       final vehicles = await _repo.getAll();
       if (vehicles.length == 1) {
@@ -93,11 +93,15 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
       if (vehicle.isDefault) {
         await _repo.setDefault(id);
       }
-      return vehicles;
-    });
-    ref.invalidate(vehiclesProvider);
-    ref.invalidate(defaultVehicleProvider);
-    ref.invalidate(selectedVehicleProvider);
+      state = AsyncValue.data(vehicles);
+      ref.invalidate(vehiclesProvider);
+      ref.invalidate(defaultVehicleProvider);
+      ref.invalidate(selectedVehicleProvider);
+      return id;
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
   }
 
   Future<void> update(Vehicle vehicle) async {

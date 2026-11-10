@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/utils/date_status.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../shared/widgets/status_chip.dart';
 import '../../../shared/widgets/vehicle_avatar.dart';
 import '../../vehicles/models/vehicle.dart';
 
@@ -74,20 +72,6 @@ class VehicleFicha extends StatelessWidget {
                         ),
                     ],
                   ),
-                  if (vehicle.soatExpiresAt != null ||
-                      vehicle.rtmExpiresAt != null) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    Wrap(
-                      spacing: AppSpacing.xs,
-                      runSpacing: AppSpacing.xs,
-                      children: [
-                        if (vehicle.soatExpiresAt != null)
-                          _statusPill('SOAT', vehicle.soatExpiresAt!),
-                        if (vehicle.rtmExpiresAt != null)
-                          _statusPill('RTM', vehicle.rtmExpiresAt!),
-                      ],
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -99,20 +83,6 @@ class VehicleFicha extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _statusPill(String label, DateTime date) {
-    final status = dateStatus(date);
-    final appStatus = switch (status.level) {
-      ExpiryLevel.danger => AppStatus.danger,
-      ExpiryLevel.warning => AppStatus.warning,
-      ExpiryLevel.ok => AppStatus.ok,
-    };
-    return StatusChip(
-      status: appStatus,
-      label: '$label · ${status.shortLabel}',
-      icon: Icons.shield_outlined,
     );
   }
 }

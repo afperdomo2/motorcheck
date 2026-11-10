@@ -11,6 +11,7 @@ import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/date_field.dart';
 import '../../../shared/widgets/form_section.dart';
 import '../../../shared/widgets/sticky_bottom_bar.dart';
+import '../../documents/providers.dart';
 import '../../maintenance/providers.dart';
 import '../models/vehicle.dart';
 import '../providers.dart';
@@ -74,7 +75,17 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
     final maxMaintenanceMileage = await ref
         .read(maintenanceRepositoryProvider)
         .getMaxMileageByVehicle(widget.vehicleId!);
+    final documents = await ref
+        .read(documentsRepositoryProvider)
+        .getByVehicleId(widget.vehicleId!);
     if (!mounted) return;
+
+    DateTime? documentDate(String type) {
+      for (final document in documents) {
+        if (document.type == type) return document.expiresAt;
+      }
+      return null;
+    }
 
     _nameController.text = vehicle.name;
     _brandController.text = vehicle.brand ?? '';
@@ -84,8 +95,8 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
     _colorController.text = vehicle.color ?? '';
     _mileageController.text = vehicle.currentMileage?.toString() ?? '';
     _vinController.text = vehicle.vin ?? '';
-    _soatDate = vehicle.soatExpiresAt;
-    _rtmDate = vehicle.rtmExpiresAt;
+    _soatDate = documentDate('soat') ?? vehicle.soatExpiresAt;
+    _rtmDate = documentDate('rtm') ?? vehicle.rtmExpiresAt;
     setState(() {
       _type = vehicle.type;
       _isDefault = vehicle.isDefault;
@@ -168,11 +179,16 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
     final notifier = ref.read(vehiclesNotifierProvider.notifier);
 
     try {
+      final vehicleId = _isEditing
+          ? widget.vehicleId!
+          : await notifier.add(vehicle);
+
       if (_isEditing) {
         await notifier.update(vehicle);
-      } else {
-        await notifier.add(vehicle);
       }
+      await ref
+          .read(documentsNotifierProvider.notifier)
+          .syncVehicleDates(vehicleId, soat: _soatDate, rtm: _rtmDate);
 
       if (!mounted) return;
       setState(() {

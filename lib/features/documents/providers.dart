@@ -53,6 +53,80 @@ class DocumentsNotifier extends Notifier<AsyncValue<void>> {
     _invalidate(vehicleId);
   }
 
+  /// Mantiene SOAT y RTM alineados con la tabla `documents`, que es la fuente
+  /// de verdad. Se usa al guardar el vehículo desde su formulario.
+  Future<void> syncVehicleDates(
+    int vehicleId, {
+    DateTime? soat,
+    DateTime? rtm,
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      final existing = await _repo.getByVehicleId(vehicleId);
+      await _syncType(
+        vehicleId: vehicleId,
+        type: 'soat',
+        name: 'SOAT',
+        date: soat,
+        existing: existing,
+      );
+      await _syncType(
+        vehicleId: vehicleId,
+        type: 'rtm',
+        name: 'Tecnomecánica',
+        date: rtm,
+        existing: existing,
+      );
+      state = const AsyncValue.data(null);
+      _invalidate(vehicleId);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  Future<void> _syncType({
+    required int vehicleId,
+    required String type,
+    required String name,
+    required DateTime? date,
+    required List<VehicleDocument> existing,
+  }) async {
+    VehicleDocument? current;
+    for (final document in existing) {
+      if (document.type == type) {
+        current = document;
+        break;
+      }
+    }
+
+    if (date == null) {
+      // No se elimina un documento con adjuntos o notas desde el formulario
+      // del vehículo; eso se hace desde la pantalla de Documentos.
+      final id = current?.id;
+      if (id != null && current!.filePath == null && current.notes == null) {
+        await _repo.delete(id);
+      }
+      return;
+    }
+
+    final now = DateTime.now();
+    if (current == null) {
+      await _repo.insert(
+        VehicleDocument(
+          vehicleId: vehicleId,
+          type: type,
+          name: name,
+          expiresAt: date,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+    } else {
+      await _repo.update(current.copyWith(expiresAt: date, updatedAt: now));
+    }
+  }
+
   void _invalidate(int? vehicleId) {
     ref.invalidate(allDocumentsProvider);
     ref.invalidate(globalDocumentsProvider);
