@@ -54,101 +54,100 @@ class _ItemFormRowState extends State<ItemFormRow> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Ítem ${widget.index + 1}',
-                    style: theme.textTheme.titleSmall,
-                  ),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Ítem ${widget.index + 1}',
+                  style: theme.textTheme.titleSmall,
                 ),
-                if (widget.canRemove)
-                  IconButton(
-                    onPressed: widget.onRemove,
-                    tooltip: 'Quitar ítem',
-                    icon: const Icon(Icons.close, size: 20),
-                  ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            DropdownButtonFormField<String>(
-              isExpanded: true,
-              initialValue:
-                  widget.categories.any((c) => c.key == widget.item.category)
-                  ? widget.item.category
-                  : null,
-              decoration: const InputDecoration(
-                labelText: 'Categoría',
-                prefixIcon: Icon(Icons.category_outlined),
               ),
-              items: widget.categories
-                  .map(
-                    (c) => DropdownMenuItem(
-                      value: c.key,
-                      child: Row(
-                        children: [
-                          Icon(
-                            MaintenanceCategories.iconByName(c.iconName),
-                            size: 20,
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Flexible(
-                            child: Text(
-                              c.name,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
+              if (widget.canRemove)
+                IconButton(
+                  onPressed: widget.onRemove,
+                  tooltip: 'Quitar ítem',
+                  icon: const Icon(Icons.close, size: 20),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          DropdownButtonFormField<String>(
+            isExpanded: true,
+            initialValue:
+                widget.categories.any((c) => c.key == widget.item.category)
+                ? widget.item.category
+                : null,
+            decoration: const InputDecoration(
+              labelText: 'Categoría',
+              prefixIcon: Icon(Icons.category_outlined),
+            ),
+            items: widget.categories
+                .map(
+                  (c) => DropdownMenuItem(
+                    value: c.key,
+                    child: Row(
+                      children: [
+                        Icon(
+                          MaintenanceCategories.iconByName(c.iconName),
+                          size: 20,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Flexible(
+                          child: Text(c.name, overflow: TextOverflow.ellipsis),
+                        ),
+                      ],
                     ),
-                  )
-                  .toList(),
-              onChanged: (value) => widget.onChanged(
-                widget.item.copyWith(category: value ?? 'general'),
+                  ),
+                )
+                .toList(),
+            onChanged: (value) => widget.onChanged(
+              widget.item.copyWith(category: value ?? 'general'),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextFormField(
+            controller: _costController,
+            decoration: InputDecoration(
+              labelText: 'Repuestos',
+              prefixIcon: const Icon(Icons.attach_money),
+              suffixText: 'COP',
+              helperText: widget.item.partsCost > 0
+                  ? formatCurrency(widget.item.partsCost)
+                  : null,
+            ),
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            onChanged: (value) => widget.onChanged(
+              widget.item.copyWith(partsCost: double.tryParse(value) ?? 0),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextFormField(
+            controller: _notesController,
+            decoration: const InputDecoration(
+              labelText: 'Nota del ítem',
+              prefixIcon: Icon(Icons.note_alt_outlined),
+              hintText: 'Ej: Compré el filtro original',
+            ),
+            maxLines: 2,
+            textCapitalization: TextCapitalization.sentences,
+            onChanged: (value) => widget.onChanged(
+              widget.item.copyWith(
+                notes: value.trim().isEmpty ? null : value.trim(),
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _costController,
-              decoration: InputDecoration(
-                labelText: 'Repuestos',
-                prefixIcon: const Icon(Icons.attach_money),
-                suffixText: 'COP',
-                helperText: widget.item.partsCost > 0
-                    ? formatCurrency(widget.item.partsCost)
-                    : null,
-              ),
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              onChanged: (value) => widget.onChanged(
-                widget.item.copyWith(partsCost: double.tryParse(value) ?? 0),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _notesController,
-              decoration: const InputDecoration(
-                labelText: 'Nota del ítem',
-                prefixIcon: Icon(Icons.note_alt_outlined),
-                hintText: 'Ej: Compré el filtro original',
-              ),
-              maxLines: 2,
-              textCapitalization: TextCapitalization.sentences,
-              onChanged: (value) => widget.onChanged(
-                widget.item.copyWith(
-                  notes: value.trim().isEmpty ? null : value.trim(),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -18,18 +18,7 @@ class VehiclesScreen extends ConsumerWidget {
     final vehiclesAsync = ref.watch(vehiclesNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Vehículos'),
-            Text(
-              _countLabel(vehiclesAsync.valueOrNull?.length),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-      ),
+      appBar: AppBar(title: const Text('Vehículos')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/vehicles/add'),
         icon: const Icon(Icons.add),
@@ -65,9 +54,19 @@ class VehiclesScreen extends ConsumerWidget {
                 AppSpacing.lg,
                 AppSpacing.xxxl * 2,
               ),
-              itemCount: sorted.length,
+              itemCount: sorted.length + 1,
               itemBuilder: (context, index) {
-                final vehicle = sorted[index];
+                if (index == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: Text(
+                      _countLabel(vehicles.length),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  );
+                }
+
+                final vehicle = sorted[index - 1];
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.sm),

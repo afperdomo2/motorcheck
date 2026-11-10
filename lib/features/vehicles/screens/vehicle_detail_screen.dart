@@ -293,6 +293,7 @@ class _InfoCard extends StatelessWidget {
                 vehicle.rtmExpiresAt == null &&
                 vehicle.currentMileage == null)
               const EmptyState(
+                compact: true,
                 icon: Icons.info_outline,
                 title: 'Sin información adicional',
                 subtitle: 'Edita el vehículo para agregar más detalles',

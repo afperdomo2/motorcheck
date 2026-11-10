@@ -111,6 +111,8 @@ void main() {
 - `vehicles_notifier_test.dart`: `setDefault`/`clearDefault` y refresco de
   `selectedVehicleProvider` tras actualizar el vehículo.
 - `category_repository_test.dart`: clave estable, orden y duplicados.
+- `maintenance_search_screen_test.dart`: búsqueda por categoría, estado sin
+  resultados y ausencia de overflow a 360×640 con text scale 2.0.
 
 ---
 

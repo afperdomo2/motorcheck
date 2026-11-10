@@ -176,7 +176,21 @@ class AppShell extends ConsumerWidget {
         ref.watch(maintenanceAttentionCountProvider).valueOrNull ?? 0;
 
     return Scaffold(
-      body: navigationShell,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth <= 720) return navigationShell;
+          return Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: 720,
+                minHeight: constraints.maxHeight,
+              ),
+              child: navigationShell,
+            ),
+          );
+        },
+      ),
       bottomNavigationBar: DecoratedBox(
         decoration: BoxDecoration(
           border: Border(

@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/date_field.dart';
 import '../../../shared/widgets/form_section.dart';
 import '../../../shared/widgets/sticky_bottom_bar.dart';
+import '../../maintenance/providers.dart';
 import '../models/vehicle.dart';
 import '../providers.dart';
 import '../widgets/vehicle_type_selector.dart';
@@ -38,6 +41,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
   DateTime? _originalCreatedAt;
   int? _originalMileage;
   DateTime? _originalMileageUpdatedAt;
+  int? _maxMaintenanceMileage;
 
   final _vinController = TextEditingController();
   DateTime? _soatDate;
@@ -65,26 +69,38 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
     final vehicle = await ref
         .read(vehicleRepositoryProvider)
         .getById(widget.vehicleId!);
-    if (vehicle != null && mounted) {
-      _nameController.text = vehicle.name;
-      _brandController.text = vehicle.brand ?? '';
-      _modelController.text = vehicle.model ?? '';
-      _yearController.text = vehicle.year?.toString() ?? '';
-      _plateController.text = vehicle.plate ?? '';
-      _colorController.text = vehicle.color ?? '';
-      _mileageController.text = vehicle.currentMileage?.toString() ?? '';
-      _vinController.text = vehicle.vin ?? '';
-      _soatDate = vehicle.soatExpiresAt;
-      _rtmDate = vehicle.rtmExpiresAt;
-      setState(() {
-        _type = vehicle.type;
-        _isDefault = vehicle.isDefault;
-        _originalCreatedAt = vehicle.createdAt;
-        _originalMileage = vehicle.currentMileage;
-        _originalMileageUpdatedAt = vehicle.mileageUpdatedAt;
-        _dirty = false;
-      });
-    }
+    if (vehicle == null || !mounted) return;
+
+    final maxMaintenanceMileage = await ref
+        .read(maintenanceRepositoryProvider)
+        .getMaxMileageByVehicle(widget.vehicleId!);
+    if (!mounted) return;
+
+    _nameController.text = vehicle.name;
+    _brandController.text = vehicle.brand ?? '';
+    _modelController.text = vehicle.model ?? '';
+    _yearController.text = vehicle.year?.toString() ?? '';
+    _plateController.text = vehicle.plate ?? '';
+    _colorController.text = vehicle.color ?? '';
+    _mileageController.text = vehicle.currentMileage?.toString() ?? '';
+    _vinController.text = vehicle.vin ?? '';
+    _soatDate = vehicle.soatExpiresAt;
+    _rtmDate = vehicle.rtmExpiresAt;
+    setState(() {
+      _type = vehicle.type;
+      _isDefault = vehicle.isDefault;
+      _originalCreatedAt = vehicle.createdAt;
+      _originalMileage = vehicle.currentMileage;
+      _originalMileageUpdatedAt = vehicle.mileageUpdatedAt;
+      _maxMaintenanceMileage = maxMaintenanceMileage;
+      _dirty = false;
+    });
+  }
+
+  bool get _mileageBelowMax {
+    final km = int.tryParse(_mileageController.text.trim());
+    final max = _maxMaintenanceMileage;
+    return km != null && max != null && km < max;
   }
 
   @override
@@ -228,6 +244,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final semantic = AppSemanticColors.of(context);
     return PopScope(
       canPop: !_dirty && !_isLoading,
       onPopInvokedWithResult: (didPop, result) {
@@ -414,6 +431,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                               inputFormatters: [
                                 FilteringTextInputFormatter.digitsOnly,
                               ],
+                              onChanged: (_) => setState(() {}),
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) return null;
                                 final km = int.tryParse(v.trim());
@@ -423,6 +441,32 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                                 return null;
                               },
                             ),
+                            if (_mileageBelowMax) ...[
+                              const SizedBox(height: AppSpacing.xs),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.warning_amber_rounded,
+                                    size: 14,
+                                    color: semantic.warning,
+                                  ),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  Expanded(
+                                    child: Text(
+                                      'Es menor al último mantenimiento '
+                                      'registrado '
+                                      '(${formatMileage(_maxMaintenanceMileage)}). '
+                                      'Verifica el dato.',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(color: semantic.warning),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                             const SizedBox(height: AppSpacing.sm),
                             SwitchListTile(
                               title: const Text('Vehículo por defecto'),

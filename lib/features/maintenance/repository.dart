@@ -128,6 +128,16 @@ class MaintenanceRepository {
     return (result.first['count'] as int?) ?? 0;
   }
 
+  Future<int?> getMaxMileageByVehicle(int vehicleId) async {
+    final db = await _db.database;
+    final result = await db.rawQuery(
+      'SELECT MAX(mileage) AS max_mileage FROM maintenances '
+      'WHERE vehicle_id = ?',
+      [vehicleId],
+    );
+    return result.first['max_mileage'] as int?;
+  }
+
   Future<({int count, double totalCost, DateTime? lastDate})>
   getMaintenanceSummary(int vehicleId) async {
     final db = await _db.database;

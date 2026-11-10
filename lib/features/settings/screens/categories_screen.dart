@@ -5,7 +5,6 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
-import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../maintenance/categories.dart';
@@ -41,14 +40,6 @@ class CategoriesScreen extends ConsumerWidget {
               .loadCategories(),
         ),
         data: (categories) {
-          if (categories.isEmpty) {
-            return const EmptyState(
-              icon: Icons.category,
-              title: 'Sin categorías',
-              subtitle: 'No hay categorías registradas',
-            );
-          }
-
           final grouped = _groupByVehicleType(categories);
 
           return RefreshIndicator(
@@ -64,13 +55,21 @@ class CategoriesScreen extends ConsumerWidget {
                 AppSpacing.xxl,
               ),
               children: [
-                for (final type in _vehicleTypeOrder)
-                  if (grouped.containsKey(type)) ...[
-                    _SectionHeader(
-                      title: _vehicleTypeLabels[type] ?? type,
-                      onAdd: () =>
-                          context.push('/settings/categories/add?type=$type'),
-                    ),
+                for (final type in _vehicleTypeOrder) ...[
+                  _SectionHeader(
+                    title: _vehicleTypeLabels[type] ?? type,
+                    onAdd: () =>
+                        context.push('/settings/categories/add?type=$type'),
+                  ),
+                  if (grouped[type] == null || grouped[type]!.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: Text(
+                        'Sin categorías',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    )
+                  else
                     ...grouped[type]!.map(
                       (cat) => Padding(
                         padding: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -83,7 +82,7 @@ class CategoriesScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                  ],
+                ],
               ],
             ),
           );
@@ -158,9 +157,8 @@ class _SectionHeader extends StatelessWidget {
           const Spacer(),
           IconButton(
             onPressed: onAdd,
-            icon: const Icon(Icons.add_circle_outline, size: 22),
+            icon: const Icon(Icons.add_circle_outline, size: 24),
             tooltip: 'Agregar categoría',
-            visualDensity: VisualDensity.compact,
           ),
         ],
       ),

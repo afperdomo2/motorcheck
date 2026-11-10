@@ -389,25 +389,24 @@ class _MaintenanceSearchScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 2),
-                  Row(
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.xs,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
-                        formatDisplayDate(maintenance.date),
+                        formatShortDate(maintenance.date),
                         style: Theme.of(context).textTheme.labelSmall,
                       ),
-                      if (categoryKeys.isNotEmpty) ...[
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          child: Text(
-                            categoryKeys
-                                .map((k) => categoryMap[k]?.name ?? k)
-                                .join(', '),
-                            style: Theme.of(context).textTheme.labelSmall,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                      if (categoryKeys.isNotEmpty)
+                        Text(
+                          categoryKeys
+                              .map((k) => categoryMap[k]?.name ?? k)
+                              .join(', '),
+                          style: Theme.of(context).textTheme.labelSmall,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ],
                     ],
                   ),
                   if (workshop != null) ...[

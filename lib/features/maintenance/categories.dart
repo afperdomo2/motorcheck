@@ -43,8 +43,43 @@ class MaintenanceCategories {
     'star': Icons.star,
   };
 
+  static const _iconLabels = {
+    'build': 'Herramienta',
+    'construction': 'Construcción',
+    'oil_barrel': 'Aceite',
+    'disc_full': 'Frenos',
+    'settings': 'Ajustes',
+    'tire_repair': 'Llantas',
+    'circle': 'Rueda',
+    'filter_alt': 'Filtro',
+    'battery_charging_full': 'Batería',
+    'ac_unit': 'Aire acondicionado',
+    'electrical_services': 'Eléctrico',
+    'link': 'Cadena',
+    'water_drop': 'Agua',
+    'local_gas_station': 'Combustible',
+    'directions_car': 'Carrocería',
+    'cleaning_services': 'Limpieza',
+    'cable': 'Cable',
+    'handyman': 'Herramienta manual',
+    'brightness_high': 'Luces',
+    'sensors': 'Sensores',
+    'air': 'Aire',
+    'radio': 'Radio',
+    'camera': 'Cámara',
+    'visibility': 'Visibilidad',
+    'speed': 'Velocidad',
+    'bolt': 'Tornillería',
+    'palette': 'Pintura',
+    'security': 'Seguridad',
+    'star': 'Favorito',
+  };
+
   static IconData iconByName(String iconName) =>
       _iconMap[iconName] ?? Icons.build;
+
+  static String labelByName(String iconName) =>
+      _iconLabels[iconName] ?? 'Ícono';
 
   static Map<String, IconData> get iconMap => Map.unmodifiable(_iconMap);
 }

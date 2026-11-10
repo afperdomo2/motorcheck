@@ -33,34 +33,41 @@ class SettingsScreen extends ConsumerWidget {
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  SizedBox(
-                    width: double.infinity,
-                    child: SegmentedButton<ThemeMode>(
-                      segments: const [
-                        ButtonSegment(
-                          value: ThemeMode.system,
-                          label: Text('Sistema'),
-                          icon: Icon(Icons.brightness_auto_outlined),
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.sm,
+                    children: [
+                      ChoiceChip(
+                        avatar: const Icon(
+                          Icons.brightness_auto_outlined,
+                          size: 18,
                         ),
-                        ButtonSegment(
-                          value: ThemeMode.light,
-                          label: Text('Claro'),
-                          icon: Icon(Icons.light_mode_outlined),
-                        ),
-                        ButtonSegment(
-                          value: ThemeMode.dark,
-                          label: Text('Oscuro'),
-                          icon: Icon(Icons.dark_mode_outlined),
-                        ),
-                      ],
-                      selected: {currentMode},
-                      showSelectedIcon: false,
-                      onSelectionChanged: (modes) {
-                        ref
+                        label: const Text('Sistema'),
+                        selected: currentMode == ThemeMode.system,
+                        showCheckmark: false,
+                        onSelected: (_) => ref
                             .read(themeModeProvider.notifier)
-                            .setThemeMode(modes.first);
-                      },
-                    ),
+                            .setThemeMode(ThemeMode.system),
+                      ),
+                      ChoiceChip(
+                        avatar: const Icon(Icons.light_mode_outlined, size: 18),
+                        label: const Text('Claro'),
+                        selected: currentMode == ThemeMode.light,
+                        showCheckmark: false,
+                        onSelected: (_) => ref
+                            .read(themeModeProvider.notifier)
+                            .setThemeMode(ThemeMode.light),
+                      ),
+                      ChoiceChip(
+                        avatar: const Icon(Icons.dark_mode_outlined, size: 18),
+                        label: const Text('Oscuro'),
+                        selected: currentMode == ThemeMode.dark,
+                        showCheckmark: false,
+                        onSelected: (_) => ref
+                            .read(themeModeProvider.notifier)
+                            .setThemeMode(ThemeMode.dark),
+                      ),
+                    ],
                   ),
                 ],
               ),

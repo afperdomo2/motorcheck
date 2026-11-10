@@ -193,8 +193,13 @@ Apariencia, catálogos y acerca de, agrupados en cards.
 - Contraste mínimo 4.5:1 en texto y 3:1 en componentes.
 - Targets de 48×48 dp con 8 dp de separación.
 - No se comunica información solo con color.
-- Iconos decorativos con `Semantics` o tooltip cuando son acciones.
-- Soporte de text scale hasta 2.0 sin overflow.
+- Iconos decorativos con `Semantics` o tooltip cuando son acciones. El grid de
+  íconos de categorías usa `Tooltip` + `Semantics` con estado seleccionado.
+- Soporte de text scale hasta 2.0 sin overflow. Los AppBar de dos líneas se
+  reemplazaron por títulos de una línea; las acciones y métricas permiten 2
+  líneas o escalan con `FittedBox`.
+- En escritorio el contenido se centra con un máximo de 720 px; las hojas
+  inferiores usan un máximo de 640 px.
 - Respeto a `MediaQuery.disableAnimations`.
 
 ## 10. Verificación

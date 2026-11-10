@@ -39,29 +39,13 @@ class MaintenanceDetailScreen extends ConsumerWidget {
     };
 
     final maintenance = maintenanceAsync.valueOrNull;
-    final vehicle = maintenance != null
-        ? vehicleMap[maintenance.vehicleId]
-        : null;
     final title = maintenance != null
         ? formatDisplayDate(maintenance.date)
         : 'Detalle';
-    final subtitle = vehicle?.name;
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title),
-            if (subtitle != null)
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-          ],
-        ),
+        title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
           PopupMenuButton<_MaintenanceAction>(
             tooltip: 'Opciones',
@@ -469,48 +453,51 @@ class _ItemTile extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          crossAxisAlignment: hasNote
-              ? CrossAxisAlignment.start
-              : CrossAxisAlignment.center,
-          children: [
-            Icon(icon, size: 22, color: theme.colorScheme.onSurfaceVariant),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    cat?.name ?? item.category,
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                  if (hasNote)
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Row(
+            crossAxisAlignment: hasNote
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.center,
+            children: [
+              Icon(icon, size: 22, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      item.notes!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      cat?.name ?? item.category,
+                      style: theme.textTheme.bodyMedium,
                     ),
-                ],
-              ),
-            ),
-            if (item.partsCost > 0)
-              Text(
-                formatCurrency(item.partsCost),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+                    if (hasNote)
+                      Text(
+                        item.notes!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
                 ),
               ),
-            const SizedBox(width: AppSpacing.xs),
-            Icon(
-              Icons.chevron_right,
-              size: 20,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ],
+              if (item.partsCost > 0)
+                Text(
+                  formatCurrency(item.partsCost),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              const SizedBox(width: AppSpacing.xs),
+              Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
         ),
       ),
     );

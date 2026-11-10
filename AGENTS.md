@@ -67,6 +67,7 @@ pre-commit:
 12. **UI**: todo en español (strings, labels, descripciones de test)
 13. **Sincronización AGENTS.md ↔ docs/**: si modificas un archivo en `docs/`, revisa si la sección correspondiente en AGENTS.md necesita actualizarse. Tras cualquier cambio en modelos, providers, features o arquitectura, verifica que ambos reflejen el estado real del código.
 14. **Kilometraje**: `vehicles.current_mileage` solo sube automáticamente; un mantenimiento con km menor se permite pero no baja el vehículo; la corrección manual se hace desde Editar vehículo
+15. **Responsive**: en escritorio el contenido se centra con máximo 720 px y las hojas con 640 px; probar text scale 1.3 y 2.0 sin overflow
 
 ## Convenciones de Código
 

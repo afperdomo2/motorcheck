@@ -12,6 +12,7 @@ class LoadingIndicator extends StatelessWidget {
     return Center(
       child: Semantics(
         label: message ?? 'Cargando',
+        liveRegion: true,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

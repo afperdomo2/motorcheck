@@ -459,37 +459,52 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
 
   Widget _buildIconGrid() {
     return Wrap(
-      spacing: AppSpacing.xs,
-      runSpacing: AppSpacing.xs,
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
       children: _iconNameOptions.map((iconName) {
         final icon = MaintenanceCategories.iconByName(iconName);
+        final label = MaintenanceCategories.labelByName(iconName);
         final selected = _selectedIcon == iconName;
-        return GestureDetector(
-          onTap: () => setState(() {
-            _selectedIcon = iconName;
-            _dirty = true;
-          }),
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
+        final radius = BorderRadius.circular(8);
+
+        return Tooltip(
+          message: label,
+          child: Semantics(
+            label: label,
+            button: true,
+            selected: selected,
+            child: Material(
               color: selected
                   ? Theme.of(context).colorScheme.primaryContainer
                   : Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(8),
-              border: selected
-                  ? Border.all(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 2,
-                    )
-                  : null,
-            ),
-            child: Icon(
-              icon,
-              color: selected
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-              size: 24,
+              borderRadius: radius,
+              child: InkWell(
+                onTap: () => setState(() {
+                  _selectedIcon = iconName;
+                  _dirty = true;
+                }),
+                borderRadius: radius,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    borderRadius: radius,
+                    border: selected
+                        ? Border.all(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 2,
+                          )
+                        : null,
+                  ),
+                  child: Icon(
+                    icon,
+                    color: selected
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                    size: 24,
+                  ),
+                ),
+              ),
             ),
           ),
         );

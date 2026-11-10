@@ -285,7 +285,7 @@ class _ActionItem extends StatelessWidget {
                   color: theme.colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ],

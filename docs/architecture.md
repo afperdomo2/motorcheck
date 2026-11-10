@@ -107,6 +107,14 @@ predeterminado): resumen, próximos, actividad y estadísticas. Las alertas de
 documentos (SOAT/RTM) siguen siendo globales por seguridad. El badge de
 navegación también cuenta pendientes de todos los vehículos.
 
+### Responsive
+
+- `AppShell` centra el contenido con `maxWidth: 720`; la barra de navegación
+  sigue ocupando todo el ancho.
+- Las hojas (`VehicleSelectorSheet`, `CategoryHistorySheet`) usan
+  `maxWidth: 640` y scroll interno.
+- El buscador tiene una prueba de widget a 360×640 con text scale 2.0.
+
 ## Por Qué No Hay Capa de Dominio
 
 Esta es una app local de un solo usuario. Las operaciones CRUD son consultas simples.

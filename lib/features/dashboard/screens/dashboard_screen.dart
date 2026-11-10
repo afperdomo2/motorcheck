@@ -36,18 +36,7 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_greeting(DateTime.now().hour)),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
+        title: Text(_greeting(DateTime.now().hour)),
         actions: [
           IconButton(
             onPressed: () => _refresh(ref),
@@ -87,6 +76,11 @@ class DashboardScreen extends ConsumerWidget {
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   children: [
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
                     const FavoriteVehicleCard(),
                     const SizedBox(height: AppSpacing.lg),
                     const UpcomingSummary(),

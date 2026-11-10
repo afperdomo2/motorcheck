@@ -87,4 +87,17 @@ void main() {
     expect(find.text('Sin resultados'), findsNothing);
     expect(find.text('Toyota'), findsOneWidget);
   });
+
+  testWidgets('no desborda en 360x640 con texto al 200 %', (tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await pumpScreen(tester);
+
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -30,6 +30,7 @@ class CategoryHistorySheet extends ConsumerWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 640),
       builder: (_) =>
           CategoryHistorySheet(vehicle: vehicle, category: category),
     );
