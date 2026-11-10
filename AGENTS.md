@@ -161,8 +161,16 @@ flutter test --concurrency 1              # SQLite sin race conditions
 | Skill | Cuándo usar |
 |-------|-------------|
 | `flutter-expert` | Widgets, estado, navegación, rendimiento |
-| `flutter-animations` | Animaciones, transiciones |
-| `dart-best-practices` | Convenciones, features del lenguaje |
+| `flutter-apply-architecture-best-practices` | Estructurar/refactorizar features (UI · Lógica · Datos) |
+| `flutter-build-responsive-layout` | Layout adaptable a móvil, tablet y ventana Linux |
+| `flutter-fix-layout-issues` | Overflows y constraints (`RenderFlex overflowed`) |
+| `flutter-animations` | Animaciones y transiciones |
+| `flutter-add-widget-test` | Pruebas de widget (`WidgetTester`) |
+| `flutter-add-integration-test` | Flujos end-to-end con `integration_test` |
+| `dart-best-practices` | Convenciones y features del lenguaje |
+| `dart-add-unit-test` | Pruebas unitarias de lógica |
+| `dart-run-static-analysis` | `dart analyze` y `dart fix --apply` |
+| `find-skills` | Descubrir/instalar nuevos skills desde skills.sh |
 
 **Context7 MCP**: documentación actualizada de librerías (resolver ID → `query-docs`).
 **Dart MCP Server**: `analyze_files`, `pub_dev_search`, `pub`, `lsp`, `dtd`, `flutter_driver_command`.
