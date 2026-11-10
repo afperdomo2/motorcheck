@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../maintenance/models/workshop.dart';
 import '../providers.dart';
 
@@ -90,7 +91,7 @@ class _WorkshopFormScreenState extends ConsumerState<WorkshopFormScreen> {
         title: Text(_isEditing ? 'Editar taller' : 'Nuevo taller'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Form(
           key: _formKey,
           child: Column(
@@ -111,7 +112,7 @@ class _WorkshopFormScreenState extends ConsumerState<WorkshopFormScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               TextFormField(
                 controller: _locationController,
                 decoration: const InputDecoration(
@@ -120,7 +121,7 @@ class _WorkshopFormScreenState extends ConsumerState<WorkshopFormScreen> {
                   prefixIcon: Icon(Icons.location_on_outlined),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppSpacing.xxl),
               SizedBox(
                 height: 48,
                 child: ElevatedButton(

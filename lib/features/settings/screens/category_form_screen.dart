@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../maintenance/categories.dart';
 import '../models/maintenance_category.dart';
 import '../providers.dart';
 
@@ -43,38 +45,6 @@ const _iconNameOptions = [
   'security',
   'star',
 ];
-
-const _iconMap = {
-  'build': Icons.build,
-  'construction': Icons.construction,
-  'oil_barrel': Icons.oil_barrel,
-  'disc_full': Icons.disc_full,
-  'settings': Icons.settings,
-  'tire_repair': Icons.tire_repair,
-  'circle': Icons.circle,
-  'filter_alt': Icons.filter_alt,
-  'battery_charging_full': Icons.battery_charging_full,
-  'ac_unit': Icons.ac_unit,
-  'electrical_services': Icons.electrical_services,
-  'link': Icons.link,
-  'water_drop': Icons.water_drop,
-  'local_gas_station': Icons.local_gas_station,
-  'directions_car': Icons.directions_car,
-  'cleaning_services': Icons.cleaning_services,
-  'cable': Icons.cable,
-  'handyman': Icons.handyman,
-  'brightness_high': Icons.brightness_high,
-  'sensors': Icons.sensors,
-  'air': Icons.air,
-  'radio': Icons.radio,
-  'camera': Icons.camera,
-  'visibility': Icons.visibility,
-  'speed': Icons.speed,
-  'bolt': Icons.bolt,
-  'palette': Icons.palette,
-  'security': Icons.security,
-  'star': Icons.star,
-};
 
 String _slugify(String text) {
   final slug = text
@@ -228,7 +198,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
         title: Text(_isEditing ? 'Editar categoría' : 'Nueva categoría'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Form(
           key: _formKey,
           child: Column(
@@ -249,7 +219,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               if (canEditType)
                 DropdownButtonFormField<String>(
                   initialValue: _selectedVehicleType,
@@ -264,7 +234,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                           child: Row(
                             children: [
                               Icon(o.$3, size: 20),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(o.$2),
                             ],
                           ),
@@ -289,9 +259,8 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                         .$2,
                   ),
                 ),
-                const SizedBox(height: 16),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               TextFormField(
                 controller: _sortOrderController,
                 decoration: const InputDecoration(
@@ -301,7 +270,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                 ),
                 keyboardType: TextInputType.number,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               TextFormField(
                 controller: _intervalKmController,
                 decoration: const InputDecoration(
@@ -311,7 +280,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                 ),
                 keyboardType: TextInputType.number,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               TextFormField(
                 controller: _warningKmController,
                 decoration: const InputDecoration(
@@ -321,11 +290,11 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                 ),
                 keyboardType: TextInputType.number,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.xl),
               Text('Ícono *', style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               _buildIconGrid(),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppSpacing.xxl),
               SizedBox(
                 height: 48,
                 child: ElevatedButton(
@@ -348,10 +317,10 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
 
   Widget _buildIconGrid() {
     return Wrap(
-      spacing: 4,
-      runSpacing: 4,
+      spacing: AppSpacing.xs,
+      runSpacing: AppSpacing.xs,
       children: _iconNameOptions.map((iconName) {
-        final icon = _iconMap[iconName] ?? Icons.build;
+        final icon = MaintenanceCategories.iconByName(iconName);
         final selected = _selectedIcon == iconName;
         return GestureDetector(
           onTap: () => setState(() => _selectedIcon = iconName),

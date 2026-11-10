@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
@@ -62,10 +63,10 @@ class UpcomingMaintenanceView extends ConsumerWidget {
             }
 
             return ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               children: [
                 Card(child: VehicleFicha(vehicle: vehicle)),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 ...programmed.map((item) => _UpcomingCategoryCard(item: item)),
               ],
             );
@@ -95,9 +96,9 @@ class _UpcomingCategoryCard extends StatelessWidget {
     final hasLastMileage = item.lastMileage != null;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -108,7 +109,7 @@ class _UpcomingCategoryCard extends StatelessWidget {
                   size: 20,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
                     item.category.name,
@@ -118,9 +119,9 @@ class _UpcomingCategoryCard extends StatelessWidget {
                 StatusChip(status: status, label: label, icon: Icons.schedule),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             const Divider(height: 1),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Row(
               children: [
                 _MiniInfo(
@@ -128,7 +129,7 @@ class _UpcomingCategoryCard extends StatelessWidget {
                   label: 'Cada',
                   value: '${item.category.intervalKm} km',
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: AppSpacing.lg),
                 _MiniInfo(
                   icon: Icons.notifications_outlined,
                   label: 'Aviso',
@@ -139,7 +140,7 @@ class _UpcomingCategoryCard extends StatelessWidget {
               ],
             ),
             if (hasLastMileage) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.xs),
               Row(
                 children: [
                   Icon(
@@ -147,7 +148,7 @@ class _UpcomingCategoryCard extends StatelessWidget {
                     size: 14,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   Text(
                     'Último: ${formatMileage(item.lastMileage)}',
                     style: Theme.of(context).textTheme.bodySmall,
@@ -183,7 +184,7 @@ class _MiniInfo extends StatelessWidget {
           size: 14,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppSpacing.xs),
         Text('$label: ', style: Theme.of(context).textTheme.bodySmall),
         Text(
           value,

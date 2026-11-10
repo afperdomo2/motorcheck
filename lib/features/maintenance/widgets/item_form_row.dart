@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../categories.dart';
 import '../models/maintenance_item.dart';
 import '../../settings/models/maintenance_category.dart';
@@ -53,9 +54,9 @@ class _ItemFormRowState extends State<ItemFormRow> {
     final theme = Theme.of(context);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -75,7 +76,7 @@ class _ItemFormRowState extends State<ItemFormRow> {
                   ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             DropdownButtonFormField<String>(
               initialValue:
                   widget.categories.any((c) => c.key == widget.item.category)
@@ -95,7 +96,7 @@ class _ItemFormRowState extends State<ItemFormRow> {
                             MaintenanceCategories.iconByName(c.iconName),
                             size: 20,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           Flexible(
                             child: Text(
                               c.name,
@@ -111,7 +112,7 @@ class _ItemFormRowState extends State<ItemFormRow> {
                 widget.item.copyWith(category: value ?? 'general'),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             TextFormField(
               controller: _costController,
               decoration: const InputDecoration(
@@ -125,7 +126,7 @@ class _ItemFormRowState extends State<ItemFormRow> {
                 widget.item.copyWith(partsCost: double.tryParse(value) ?? 0),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             TextFormField(
               controller: _notesController,
               decoration: const InputDecoration(

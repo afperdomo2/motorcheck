@@ -94,6 +94,9 @@ Ningún texto funcional por debajo de 11 px.
 ## 4. Espaciado, radios y elevación
 
 - Grid de 4 pt: `4, 8, 12, 16, 24, 32, 48`.
+- Listas: `AppSpacing.sm` (8) entre cards y `AppSpacing.lg` (16) entre
+  secciones. Las cards no llevan margen propio: la separación la define el
+  contenedor de la lista.
 - Radios: cards 16, inputs/botones 12, pills 999.
 - Elevación 0 en cards, botones y FAB. La jerarquía se logra con superficies
   tonales y bordes.

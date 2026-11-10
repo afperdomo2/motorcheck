@@ -47,7 +47,7 @@ class VehicleDetailScreen extends ConsumerWidget {
                 child: Row(
                   children: [
                     Icon(Icons.edit_outlined, size: 20),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Text('Editar'),
                   ],
                 ),
@@ -61,7 +61,7 @@ class VehicleDetailScreen extends ConsumerWidget {
                       size: 20,
                       color: Theme.of(context).colorScheme.error,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.md),
                     Text(
                       'Eliminar',
                       style: TextStyle(
@@ -170,14 +170,17 @@ class _VehicleHeader extends StatelessWidget {
               ),
             ),
             if (vehicle.isDefault) ...[
-              const SizedBox(width: 6),
+              const SizedBox(width: AppSpacing.sm),
               Icon(Icons.star, color: theme.colorScheme.primary, size: 22),
             ],
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.xs,
+          ),
           decoration: BoxDecoration(
             color: typeColor.withValues(alpha: 0.14),
             borderRadius: BorderRadius.circular(999),
@@ -186,7 +189,7 @@ class _VehicleHeader extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(vehicleTypeIcon(vehicle.type), size: 14, color: typeColor),
-              const SizedBox(width: 5),
+              const SizedBox(width: AppSpacing.xs),
               Text(
                 vehicleTypeLabel(vehicle.type),
                 style: theme.textTheme.labelMedium?.copyWith(color: typeColor),
@@ -208,12 +211,12 @@ class _InfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Información', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             if (vehicle.brand != null)
               _InfoRow(
                 icon: Icons.factory_outlined,
@@ -354,7 +357,10 @@ class _ExpiryRow extends StatelessWidget {
             ],
           ),
           Padding(
-            padding: const EdgeInsets.only(left: 28, top: AppSpacing.xs),
+            padding: const EdgeInsets.only(
+              left: AppSpacing.lg + AppSpacing.md,
+              top: AppSpacing.xs,
+            ),
             child: StatusChip(
               status: status,
               label: _daysLabel(days),
@@ -394,7 +400,7 @@ class _MaintenanceSummaryCard extends StatelessWidget {
     if (summary.count == 0) {
       return Card(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -404,11 +410,11 @@ class _MaintenanceSummaryCard extends StatelessWidget {
                     Icons.build_outlined,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.md),
                   const Text('Sin mantenimientos registrados'),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton.icon(
@@ -426,7 +432,7 @@ class _MaintenanceSummaryCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -434,7 +440,7 @@ class _MaintenanceSummaryCard extends StatelessWidget {
               'Mantenimientos',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             if (summary.lastDate != null)
               _InfoRow(
                 icon: Icons.calendar_today,
@@ -452,7 +458,7 @@ class _MaintenanceSummaryCard extends StatelessWidget {
                 label: 'Total gastado',
                 value: formatCurrency(summary.totalCost),
               ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
@@ -477,7 +483,7 @@ class _MetadataCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: _InfoRow(
           icon: Icons.date_range_outlined,
           label: 'Creado',

@@ -62,7 +62,7 @@ class VehiclesScreen extends ConsumerWidget {
                 AppSpacing.lg,
                 AppSpacing.sm,
                 AppSpacing.lg,
-                AppSpacing.xxl * 2,
+                AppSpacing.xxxl * 2,
               ),
               itemCount: sorted.length,
               itemBuilder: (context, index) {

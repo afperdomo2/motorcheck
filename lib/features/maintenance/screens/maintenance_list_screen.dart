@@ -139,7 +139,7 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
           AppSpacing.lg,
           AppSpacing.sm,
           AppSpacing.lg,
-          AppSpacing.xxl * 2,
+          AppSpacing.xxxl * 2,
         ),
         itemCount: flat.length,
         itemBuilder: (context, index) {

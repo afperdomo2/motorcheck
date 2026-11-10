@@ -55,9 +55,8 @@ class MaintenanceDetailScreen extends ConsumerWidget {
             if (subtitle != null)
               Text(
                 subtitle,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
           ],
@@ -79,7 +78,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                 child: Row(
                   children: [
                     Icon(Icons.edit_outlined, size: 20),
-                    SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Text('Editar'),
                   ],
                 ),
@@ -93,7 +92,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                       size: 20,
                       color: Theme.of(context).colorScheme.error,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.md),
                     Text(
                       'Eliminar',
                       style: TextStyle(
@@ -131,7 +130,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
               final vehicle = vehicleMap[maintenance.vehicleId];
 
               return ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 children: [
                   _InfoCard(
                     maintenance: maintenance,
@@ -140,10 +139,10 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                   ),
                   if (maintenance.maintenanceCost > 0 ||
                       maintenance.totalPartsCost > 0) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.lg),
                     _CostCard(maintenance: maintenance),
                   ],
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.lg),
                   _ItemsCard(
                     items: items,
                     categoryMap: categoryMap,
@@ -158,7 +157,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                   ),
                   if (maintenance.notes != null &&
                       maintenance.notes!.isNotEmpty) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.lg),
                     _NotesCard(notes: maintenance.notes!),
                   ],
                 ],
@@ -274,14 +273,14 @@ class _InfoCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             _DetailRow(
               icon: Icons.calendar_today,
               label: 'Fecha',
               value: formatDisplayDate(maintenance.date),
             ),
             if (maintenance.mileage != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               _DetailRow(
                 icon: Icons.speed,
                 label: 'Kilometraje',
@@ -289,7 +288,7 @@ class _InfoCard extends StatelessWidget {
               ),
             ],
             if (workshop != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               _DetailRow(
                 icon: Icons.handyman,
                 label: 'Taller',
@@ -318,7 +317,7 @@ class _CostCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
             Text(
@@ -330,11 +329,11 @@ class _CostCard extends StatelessWidget {
             ),
             Text('Total', style: theme.textTheme.labelSmall),
             if (maintenance.maintenanceCost > 0) ...[
-              const Divider(height: 24),
+              const Divider(height: AppSpacing.xl),
               Row(
                 children: [
                   const Icon(Icons.construction, size: 18),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Text('Mano de obra', style: theme.textTheme.bodyMedium),
                   const Spacer(),
                   Text(
@@ -345,11 +344,11 @@ class _CostCard extends StatelessWidget {
               ),
             ],
             if (maintenance.totalPartsCost > 0) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
                   const Icon(Icons.inventory_2, size: 18),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Text('Repuestos', style: theme.textTheme.bodyMedium),
                   const Spacer(),
                   Text(
@@ -384,7 +383,7 @@ class _ItemsCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -405,7 +404,7 @@ class _ItemsCard extends StatelessWidget {
               ],
             ),
             if (items.isEmpty) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               Text(
                 'Sin items registrados',
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -460,7 +459,7 @@ class _ItemTile extends StatelessWidget {
               : CrossAxisAlignment.center,
           children: [
             Icon(icon, size: 22, color: theme.colorScheme.onSurfaceVariant),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -488,7 +487,7 @@ class _ItemTile extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             Icon(
               Icons.chevron_right,
               size: 20,
@@ -510,12 +509,12 @@ class _NotesCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Icon(Icons.note_alt_outlined, size: 20),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(notes, style: Theme.of(context).textTheme.bodyMedium),
             ),
@@ -546,7 +545,7 @@ class _DetailRow extends StatelessWidget {
           size: 20,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.sm),
         Text('$label: ', style: Theme.of(context).textTheme.bodyMedium),
         Flexible(
           child: Text(value, style: Theme.of(context).textTheme.bodyLarge),

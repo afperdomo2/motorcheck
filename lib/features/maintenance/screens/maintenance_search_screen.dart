@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
 import '../../vehicles/providers.dart';
 import '../../vehicles/models/vehicle.dart';
@@ -98,7 +99,7 @@ class _MaintenanceSearchScreenState
                           size: 48,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.sm),
                         Text(
                           _query.isEmpty &&
                                   _selectedPeriod == null &&
@@ -131,7 +132,10 @@ class _MaintenanceSearchScreenState
     if (vehicles.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(color: Theme.of(context).dividerColor, width: 0.5),
@@ -145,26 +149,26 @@ class _MaintenanceSearchScreenState
             child: Row(
               children: [
                 _periodChip(context, null, 'Todas'),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppSpacing.sm),
                 _periodChip(context, 'month', 'Este mes'),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppSpacing.sm),
                 _periodChip(context, '3months', '3 meses'),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppSpacing.sm),
                 _periodChip(context, 'year', 'Este año'),
               ],
             ),
           ),
           if (hasVehicles) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.sm),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
                   _vehicleChip(context, null, vehicles),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppSpacing.sm),
                   ...vehicles.map(
                     (v) => Padding(
-                      padding: const EdgeInsets.only(right: 6),
+                      padding: const EdgeInsets.only(right: AppSpacing.sm),
                       child: _vehicleChip(context, v.id, vehicles),
                     ),
                   ),
@@ -283,7 +287,7 @@ class _MaintenanceSearchScreenState
     final itemsByMaintenance = itemsAsync.valueOrNull ?? {};
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       itemCount: maintenances.length,
       itemBuilder: (context, index) {
         final maintenance = maintenances[index];
@@ -304,7 +308,7 @@ class _MaintenanceSearchScreenState
                 size: 18,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   vehicle?.name ?? 'Vehículo',
@@ -333,7 +337,7 @@ class _MaintenanceSearchScreenState
                     style: Theme.of(context).textTheme.labelSmall,
                   ),
                   if (categoryKeys.isNotEmpty) ...[
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
                         categoryKeys
@@ -356,7 +360,7 @@ class _MaintenanceSearchScreenState
                       size: 12,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.xs),
                     Flexible(
                       child: Text(
                         workshop.location != null &&

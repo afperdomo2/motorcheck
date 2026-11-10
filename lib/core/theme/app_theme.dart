@@ -407,6 +407,18 @@ class AppTheme {
           ),
         ),
       ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: scheme.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        labelTextStyle: WidgetStatePropertyAll(
+          textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: AppRadii.mdAll,
+          side: BorderSide(color: scheme.outlineVariant),
+        ),
+      ),
       textSelectionTheme: TextSelectionThemeData(
         cursorColor: scheme.primary,
         selectionColor: scheme.primary.withValues(alpha: 0.25),

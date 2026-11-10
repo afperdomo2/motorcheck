@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
@@ -43,9 +44,16 @@ class WorkshopsScreen extends ConsumerWidget {
             onRefresh: ref
                 .read(workshopsNotifierProvider.notifier)
                 .loadWorkshops,
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                AppSpacing.xxxl * 2,
+              ),
               itemCount: workshops.length,
+              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
               itemBuilder: (context, index) {
                 final w = workshops[index];
                 return Card(
@@ -64,7 +72,7 @@ class WorkshopsScreen extends ConsumerWidget {
                                   context,
                                 ).colorScheme.onSurfaceVariant,
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: AppSpacing.xs),
                               Text(w.location!),
                             ],
                           )
@@ -84,7 +92,7 @@ class WorkshopsScreen extends ConsumerWidget {
                           child: Row(
                             children: [
                               Icon(Icons.edit, size: 20),
-                              SizedBox(width: 8),
+                              SizedBox(width: AppSpacing.sm),
                               Text('Editar'),
                             ],
                           ),
@@ -98,7 +106,7 @@ class WorkshopsScreen extends ConsumerWidget {
                                 size: 20,
                                 color: Theme.of(context).colorScheme.error,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(
                                 'Eliminar',
                                 style: TextStyle(

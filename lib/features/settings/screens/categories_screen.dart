@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../maintenance/categories.dart';
 import '../models/maintenance_category.dart';
 import '../providers.dart';
 import '../repository.dart';
@@ -52,7 +54,13 @@ class CategoriesScreen extends ConsumerWidget {
                 .read(maintenanceCategoriesNotifierProvider.notifier)
                 .loadCategories,
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                AppSpacing.xxl,
+              ),
               children: [
                 for (final type in _vehicleTypeOrder)
                   if (grouped.containsKey(type)) ...[
@@ -62,11 +70,15 @@ class CategoriesScreen extends ConsumerWidget {
                           context.push('/settings/categories/add?type=$type'),
                     ),
                     ...grouped[type]!.map(
-                      (cat) => _CategoryTile(
-                        category: cat,
-                        onEdit: () =>
-                            context.push('/settings/categories/${cat.id}/edit'),
-                        onDelete: () => _confirmDelete(context, ref, cat),
+                      (cat) => Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: _CategoryTile(
+                          category: cat,
+                          onEdit: () => context.push(
+                            '/settings/categories/${cat.id}/edit',
+                          ),
+                          onDelete: () => _confirmDelete(context, ref, cat),
+                        ),
                       ),
                     ),
                   ],
@@ -125,7 +137,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 4),
+      padding: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.sm),
       child: Row(
         children: [
           Text(
@@ -160,7 +172,7 @@ class _CategoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = _iconMap[category.iconName] ?? Icons.build;
+    final icon = MaintenanceCategories.iconByName(category.iconName);
     final intervalKm = category.intervalKm;
 
     return Card(
@@ -175,7 +187,7 @@ class _CategoryTile extends StatelessWidget {
                     size: 14,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   Text(
                     'Cada $intervalKm km',
                     style: Theme.of(context).textTheme.bodySmall,
@@ -194,7 +206,7 @@ class _CategoryTile extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(Icons.edit, size: 20),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppSpacing.sm),
                   Text('Editar'),
                 ],
               ),
@@ -208,7 +220,7 @@ class _CategoryTile extends StatelessWidget {
                     size: 20,
                     color: Theme.of(context).colorScheme.error,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Text(
                     'Eliminar',
                     style: TextStyle(
@@ -225,35 +237,3 @@ class _CategoryTile extends StatelessWidget {
     );
   }
 }
-
-const _iconMap = {
-  'build': Icons.build,
-  'construction': Icons.construction,
-  'oil_barrel': Icons.oil_barrel,
-  'disc_full': Icons.disc_full,
-  'settings': Icons.settings,
-  'tire_repair': Icons.tire_repair,
-  'circle': Icons.circle,
-  'filter_alt': Icons.filter_alt,
-  'battery_charging_full': Icons.battery_charging_full,
-  'ac_unit': Icons.ac_unit,
-  'electrical_services': Icons.electrical_services,
-  'link': Icons.link,
-  'water_drop': Icons.water_drop,
-  'local_gas_station': Icons.local_gas_station,
-  'directions_car': Icons.directions_car,
-  'cleaning_services': Icons.cleaning_services,
-  'cable': Icons.cable,
-  'wrench': Icons.handyman,
-  'brightness_high': Icons.brightness_high,
-  'sensors': Icons.sensors,
-  'air': Icons.air,
-  'radio': Icons.radio,
-  'camera': Icons.camera,
-  'visibility': Icons.visibility,
-  'speed': Icons.speed,
-  'bolt': Icons.bolt,
-  'palette': Icons.palette,
-  'security': Icons.security,
-  'star': Icons.star,
-};
