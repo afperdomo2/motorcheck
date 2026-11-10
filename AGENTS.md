@@ -15,8 +15,16 @@ flutter test test/features/vehicles/          # por feature
 flutter test --name "formatea"                # por nombre (regex)
 flutter test test/core/utils/formatters_test.dart  # archivo específico
 flutter test --concurrency 1                  # SQLite sin race conditions
-flutter test --coverage; flutter run
+flutter test --coverage
+flutter run                                   # dispositivo seleccionado
+flutter run -d linux                          # escritorio Ubuntu (hot reload)
+flutter build linux --release --no-tree-shake-icons
+./scripts/install-linux.sh                    # instalar/actualizar en ~/.local
 ```
+
+> El SDK está instalado en `/home/felipe/Documentos/flutter` y **no** está en el
+> `PATH` del sistema. Si `flutter`/`dart` fallan, usa la ruta absoluta:
+> `/home/felipe/Documentos/flutter/bin/flutter`.
 
 ## Pre-commit (lefthook)
 
@@ -27,6 +35,21 @@ pre-commit:
   analyze: flutter analyze                                  (solo *.dart)
   test:    flutter test                                     (suite completa)
 ```
+
+## Plataformas y Build
+
+| Plataforma | Run | Build | Salida |
+|-----------|-----|-------|--------|
+| Android | `flutter run -d <device>` | `flutter build apk --release` | `build/app/outputs/flutter-apk/app-release.apk` |
+| Linux (Ubuntu) | `flutter run -d linux` | `flutter build linux --release --no-tree-shake-icons` | `build/linux/x64/release/bundle/` |
+
+- **Linux/Ubuntu**: carpeta `linux/` habilitada con `flutter create --platforms=linux .`. Toolchain: `clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev`.
+- Ventana 420×880 centrada, mínimo 360×600 (`linux/runner/my_application.cc`). `APPLICATION_ID=com.example.motorcheck`.
+- Ícono de ventana `linux/motorcheck.png` (256×256), copiado al bundle por `linux/CMakeLists.txt`.
+- `--no-tree-shake-icons` es obligatorio en release: el tree-shaker descarta glyphs y los íconos quedan en blanco.
+- Para distribuir hay que copiar **toda** la carpeta `build/linux/x64/release/bundle/` (binario + `data/` + `lib/`). El binario enlaza contra la glibc del sistema donde se compiló.
+- Instalación local (sin sudo): `./scripts/install-linux.sh` → `~/.local/opt/motorcheck`, symlink `~/.local/bin/motorcheck`, `.desktop` en `~/.local/share/applications` e ícono en `~/.local/share/icons`. `--uninstall` revierte.
+- En VS Code basta con "Select Device" → **Linux (desktop)** y F5/`flutter run`.
 
 ## Reglas de Trabajo
 
@@ -79,7 +102,7 @@ lib/
 ├── main.dart / app.dart         # Entry + MaterialApp.router
 ├── core/
 │   ├── theme/                   # Colores, tipografía, temas light+dark
-│   ├── database/                # SQLite helper + DDL (v7)
+│   ├── database/                # SQLite helper + DDL (v12) + factory FFI
 │   └── utils/                   # Formateadores, extensiones
 ├── features/
 │   ├── vehicles/                # CRUD vehículos + selección default
@@ -91,6 +114,17 @@ lib/
 ```
 
 **Feature típica**: `models/` (@freezed), `repository.dart`, `providers.dart`, `screens/` (smart), `widgets/` (dumb).
+
+### Base de datos por plataforma
+
+- **Android/iOS**: plugin `sqflite` (nativo).
+- **Linux/Windows/macOS**: `sqflite_common_ffi`; `initDatabaseFactory()` en
+  `lib/core/database/database_factory.dart` se llama desde `main()`.
+- Ruta del archivo: `getDatabasesPath()` en móvil; en escritorio
+  `getApplicationSupportDirectory()` → Linux:
+  `~/.local/share/com.example.motorcheck/motorcheck.db`.
+- Los tests mantienen `sqfliteFfiInit()` + `databaseFactory = databaseFactoryFfi`
+  y caen a `getDatabasesPath()` porque no hay plugins registrados.
 
 ### Modelos y Categorías
 
@@ -132,6 +166,12 @@ flutter test --concurrency 1              # SQLite sin race conditions
 
 **Context7 MCP**: documentación actualizada de librerías (resolver ID → `query-docs`).
 **Dart MCP Server**: `analyze_files`, `pub_dev_search`, `pub`, `lsp`, `dtd`, `flutter_driver_command`.
+
+Los skills se declaran en `skills-lock.json` (versionado) y sus archivos viven en `.agents/` (gitignored). Para restaurarlos tras clonar:
+
+```bash
+npx skills experimental_install --no-frozen-lockfile
+```
 
 ## Documentación
 

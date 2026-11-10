@@ -6,9 +6,20 @@
 |------|-----------|--------|
 | Manejo de Estado | Riverpod 2.x | Ligero, reactivo, similar a la reactividad de Vue |
 | Navegación | GoRouter 14.x | Rutas declarativas, tipo-seguras |
-| Almacenamiento | sqflite | SQLite en dispositivo, sin backend |
+| Almacenamiento | sqflite (Android/iOS) + sqflite_common_ffi (escritorio) | SQLite local, sin backend |
 | Generación de Código | freezed + json_serializable | Modelos inmutables, JSON automático |
 | Pruebas | flutter_test + mocktail | Pruebas unitarias y de widget, mocks sin code-gen |
+
+## Plataformas
+
+| Plataforma | UI | SQLite |
+|-----------|----|--------|
+| Android | Flutter móvil | `sqflite` nativo |
+| Linux (Ubuntu) | Ventana 420×880 (mín. 360×600) | `sqflite_common_ffi` |
+
+El código de features es idéntico en ambas plataformas. Solo cambia el backend
+de base de datos, inicializado en `lib/core/database/database_factory.dart`
+desde `main()`. Ver `README.md` → «Desarrollo en Linux / Ubuntu».
 
 ## Estructura Orientada a Features
 
@@ -21,7 +32,7 @@ lib/
 ├── app.dart
 ├── core/                    # Infraestructura compartida
 │   ├── theme/               # Sistema de diseño (light + dark)
-│   ├── database/            # SQLite
+│   ├── database/            # SQLite + factory FFI (escritorio)
 │   └── utils/               # Utilidades
 ├── features/                # Features de negocio
 │   ├── vehicles/            # CRUD vehículos + selección default

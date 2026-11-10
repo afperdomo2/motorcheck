@@ -1,5 +1,21 @@
 # Esquema de Base de Datos
 
+## Ubicación del archivo y backend
+
+| Plataforma | Backend | Ruta |
+|-----------|---------|------|
+| Android/iOS | `sqflite` (plugin nativo) | `getDatabasesPath()/motorcheck.db` |
+| Linux | `sqflite_common_ffi` | `~/.local/share/com.example.motorcheck/motorcheck.db` |
+| Windows/macOS | `sqflite_common_ffi` | `getApplicationSupportDirectory()/motorcheck.db` |
+
+- `initDatabaseFactory()` (`lib/core/database/database_factory.dart`) se llama
+  desde `main()` y activa la implementación FFI solo en escritorio.
+- En escritorio `DatabaseHelper` resuelve el directorio con
+  `getApplicationSupportDirectory()`; si el plugin no está disponible (tests)
+  cae a `getDatabasesPath()`.
+- Los tests usan `sqfliteFfiInit()` + `databaseFactory = databaseFactoryFfi`
+  sobre una base temporal.
+
 ## Tablas
 
 ### vehicles
@@ -168,7 +184,7 @@ almacena la `key` de la tabla como FK lógico (ej: `car_engine`, `motorcycle_oil
 | warning_km | INTEGER | NULL (avisar cuando falten X km) |
 | created_at | TEXT | NOT NULL (ISO 8601) |
 
-### Seed Inicial (43 categorías por defecto)
+### Seed Inicial (38 categorías por defecto)
 
 | Tipo Vehículo | Keys |
 |--------------|------|

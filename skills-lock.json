@@ -3,18 +3,27 @@
   "skills": {
     "dart-best-practices": {
       "source": "kevmoo/dash_skills",
-      "sourceType": "autoskills-registry",
-      "computedHash": "37da3773e51308a56bfc011659ba609b658be3308f9282b4e4d028da88bdeba2"
+      "sourceType": "github",
+      "skillPath": "skills/dart-best-practices/SKILL.md",
+      "computedHash": "bef12dc34bc172ada836350234702768f7d29fa487114556137513cf5b89b93f"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "913b9d37d0d54047dd65222bb8c67b2bf04e3cb87dcad1729068d7a8b2c8c396"
     },
     "flutter-animations": {
       "source": "madteacher/mad-agents-skills",
-      "sourceType": "autoskills-registry",
-      "computedHash": "bb61dc664754acb797b37ffe2ce2a42212eb7f92eeab575797a05413b2ef134b"
+      "sourceType": "github",
+      "skillPath": "flutter-animations/SKILL.md",
+      "computedHash": "a0f81c4bbff81b43be42cd11ebf33b6a4e50e2f94134d3071e441785fc4872e8"
     },
     "flutter-expert": {
       "source": "jeffallan/claude-skills",
-      "sourceType": "autoskills-registry",
-      "computedHash": "71285453d40e4949865bf47cf63b7f41dd4461f44cd1a3970eb3eb0e76b9025b"
+      "sourceType": "github",
+      "skillPath": "skills/flutter-expert/SKILL.md",
+      "computedHash": "6c4f8b042b46d775208d7761d801f18beb34bec9f890abe60a12430234417245"
     }
   }
 }

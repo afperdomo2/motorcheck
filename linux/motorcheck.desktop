@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=MotorCheck
+GenericName=Control de mantenimiento vehicular
+Comment=Seguimiento del mantenimiento de vehículos
+# install-linux.sh reemplaza el marcador de Exec por la ruta absoluta del
+# binario instalado en ~/.local/opt/motorcheck.
+Exec=@EXEC@
+TryExec=@EXEC@
+Icon=motorcheck
+Terminal=false
+Categories=Utility;
+Keywords=vehiculos;mantenimiento;motorcheck;carro;moto;
+StartupNotify=true
+StartupWMClass=com.example.motorcheck

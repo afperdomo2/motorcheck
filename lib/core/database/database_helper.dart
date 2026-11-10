@@ -1,5 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'database_factory.dart';
 import 'tables.dart';
 import '../utils/formatters.dart';
 
@@ -22,7 +24,7 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    final dbPath = await getDatabasesPath();
+    final dbPath = await _resolveDatabaseDirectory();
     final path = join(dbPath, 'motorcheck.db');
 
     return openDatabase(
@@ -37,15 +39,30 @@ class DatabaseHelper {
     );
   }
 
+  /// Directorio donde vive `motorcheck.db`.
+  ///
+  /// En escritorio se usa el directorio de soporte de la app
+  /// (`~/.local/share/com.example.motorcheck` en Linux). En móvil se usa el
+  /// directorio estándar de `sqflite`.
+  Future<String> _resolveDatabaseDirectory() async {
+    if (isDesktopDatabasePlatform) {
+      try {
+        final dir = await getApplicationSupportDirectory();
+        return dir.path;
+      } catch (_) {
+        // En tests no hay plugins registrados: se cae a la ruta de FFI.
+      }
+    }
+    return getDatabasesPath();
+  }
+
   Future<void> _ensureSchemaIntegrity(Database db) async {
     final vehicleColumns = await db.rawQuery("PRAGMA table_info('vehicles')");
     final hasLastSelected = vehicleColumns.any(
       (c) => c['name'] == 'last_selected_at',
     );
     if (!hasLastSelected) {
-      await db.execute(
-        'ALTER TABLE vehicles ADD COLUMN last_selected_at TEXT',
-      );
+      await db.execute('ALTER TABLE vehicles ADD COLUMN last_selected_at TEXT');
     }
 
     final catColumns = await db.rawQuery(
@@ -164,9 +181,7 @@ class DatabaseHelper {
       }
     }
     if (oldVersion < 12) {
-      final vehicleColumns = await db.rawQuery(
-        "PRAGMA table_info('vehicles')",
-      );
+      final vehicleColumns = await db.rawQuery("PRAGMA table_info('vehicles')");
       final hasLastSelected = vehicleColumns.any(
         (c) => c['name'] == 'last_selected_at',
       );
