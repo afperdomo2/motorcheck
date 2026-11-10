@@ -8,8 +8,15 @@ Aplicación Flutter para el seguimiento del mantenimiento personal de vehículos
 - Vehículo seleccionado por defecto
 - Registro de mantenimientos con múltiples items (cambio de aceite, llantas, filtros, frenos, etc.)
 - Costos de mano de obra y repuestos por item
+- Próximos mantenimientos por kilometraje **o por tiempo** (lo que ocurra primero)
+- Historial de kilometraje y fecha estimada del próximo servicio
+- Recordatorios de mantenimiento, SOAT, RTM, impuesto, seguro y licencia
+- Documentos con adjuntos (PDF o imagen)
+- Pico y placa semanal con aviso en el inicio
+- Hoja de vida del vehículo en PDF
+- Copia de seguridad ZIP (datos + adjuntos) y exportación CSV
 - Almacenamiento local con SQLite (sin conexión a internet)
-- Tema claro con sistema de diseño consistente
+- Tema claro/oscuro con sistema de diseño consistente
 - Disponible en **Android** y **Linux (escritorio Ubuntu)**
 
 ## Tecnologías
@@ -68,12 +75,20 @@ lib/
 ├── app.dart               # MaterialApp.router + tema
 ├── core/                  # Infraestructura compartida
 │   ├── theme/             # Sistema de diseño
-│   ├── database/          # SQLite
+│   ├── database/          # SQLite v15
+│   ├── backup/            # Copias ZIP y CSV
+│   ├── notifications/     # Avisos locales
+│   ├── settings/          # Preferencias
 │   └── utils/             # Utilidades
 ├── features/              # Features de negocio
-│   ├── vehicles/          # CRUD de vehículos
+│   ├── vehicles/          # CRUD de vehículos y kilometraje
 │   ├── maintenance/       # CRUD de mantenimientos
-│   └── dashboard/         # Panel principal
+│   ├── documents/         # SOAT, RTM, impuesto, seguro y licencia
+│   ├── restrictions/      # Pico y placa
+│   ├── reminders/         # Bandeja de recordatorios
+│   ├── reports/           # Hoja de vida PDF
+│   ├── dashboard/         # Panel principal
+│   └── settings/          # Configuración
 ├── shared/widgets/        # Componentes reutilizables
 └── routes/                # Configuración de rutas
 ```

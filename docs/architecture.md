@@ -7,15 +7,18 @@
 | Manejo de Estado | Riverpod 2.x | Ligero, reactivo, similar a la reactividad de Vue |
 | Navegación | GoRouter 14.x | Rutas declarativas, tipo-seguras |
 | Almacenamiento | sqflite (Android/iOS) + sqflite_common_ffi (escritorio) | SQLite local, sin backend |
-| Generación de Código | freezed + json_serializable | Modelos inmutables, JSON automático |
+| Generación de Código | freezed 4 + json_serializable | Modelos inmutables, JSON automático |
+| Notificaciones | flutter_local_notifications + timezone | Alertas programadas en Android |
+| Respaldo | archive + file_selector + share_plus | ZIP local con datos y adjuntos |
+| Reportes | pdf + printing | Hoja de vida del vehículo |
 | Pruebas | flutter_test + mocktail | Pruebas unitarias y de widget, mocks sin code-gen |
 
 ## Plataformas
 
-| Plataforma | UI | SQLite |
-|-----------|----|--------|
-| Android | Flutter móvil | `sqflite` nativo |
-| Linux (Ubuntu) | Ventana 420×880 (mín. 360×600) | `sqflite_common_ffi` |
+| Plataforma | UI | SQLite | Notificaciones |
+|-----------|----|--------|----------------|
+| Android | Flutter móvil | `sqflite` nativo | Programadas por el sistema |
+| Linux (Ubuntu) | Ventana 420×880 (mín. 360×600) | `sqflite_common_ffi` | Solo bandeja dentro de la app |
 
 El código de features es idéntico en ambas plataformas. Solo cambia el backend
 de base de datos, inicializado en `lib/core/database/database_factory.dart`
@@ -32,13 +35,20 @@ lib/
 ├── app.dart
 ├── core/                    # Infraestructura compartida
 │   ├── theme/               # Sistema de diseño (light + dark)
-│   ├── database/            # SQLite + factory FFI (escritorio)
+│   ├── database/            # SQLite v15 + factory FFI (escritorio)
+│   ├── backup/              # ZIP (datos + adjuntos) y CSV
+│   ├── notifications/       # Notificaciones locales y sincronización
+│   ├── settings/            # Preferencias de avisos y respaldo
 │   └── utils/               # Utilidades
 ├── features/                # Features de negocio
-│   ├── vehicles/            # CRUD vehículos + selección default
+│   ├── vehicles/            # CRUD vehículos, selección default y kilometraje
 │   ├── maintenance/         # CRUD mantenimientos + items + categorías
-│   ├── dashboard/           # Resumen + alertas vencimiento
-│   └── settings/            # Tema (system/light/dark) + CRUD talleres + categorías
+│   ├── dashboard/           # Inicio, recordatorios y pico y placa
+│   ├── documents/           # SOAT, RTM, impuesto, seguro y licencia
+│   ├── restrictions/        # Regla semanal de pico y placa
+│   ├── reminders/           # Bandeja única y salud del vehículo
+│   ├── reports/             # Hoja de vida en PDF
+│   └── settings/            # Tema, talleres, categorías, respaldo y avisos
 ├── shared/                  # Widgets reutilizables (dumb)
 │   └── widgets/
 └── routes/                  # Navegación (4 tabs con StatefulShellRoute)
@@ -103,9 +113,38 @@ Después de una mutación, invalida los providers derivados:
 ### Inicio
 
 El dashboard muestra el **vehículo por defecto** (o el primero si no hay
-predeterminado): resumen, próximos, actividad y estadísticas. Las alertas de
-documentos (SOAT/RTM) siguen siendo globales por seguridad. El badge de
-navegación también cuenta pendientes de todos los vehículos.
+predeterminado): salud, recordatorios, pico y placa, actividad y estadísticas.
+`remindersProvider` unifica mantenimiento (km y fecha), documentos y pico y
+placa; el badge de navegación usa esa misma bandeja.
+
+### Recordatorios y notificaciones
+
+```
+Datos (mantenimiento, documentos, restricción)
+                 ↓
+        remindersProvider
+   ├─ bandeja en la app (/reminders)
+   └─ NotificationService.sync()
+          ↓
+   Android: notificaciones programadas
+   Linux: solo bandeja (sin scheduler)
+```
+
+`NotificationSync` escucha `remindersProvider` y `notificationSettingsProvider`
+para reprogramar avisos. Los mantenimientos solo por km usan la fecha estimada
+según el promedio km/día de `mileage_readings`.
+
+### Respaldo
+
+```
+Ajustes → Datos y respaldo
+   ├─ Crear copia → ZIP (data.json + attachments/)
+   ├─ Exportar CSV → ZIP con un archivo por tabla
+   └─ Restaurar → validar → copia previa → transacción → adjuntos
+```
+
+La restauración reemplaza todos los datos y se ejecuta en una transacción. Los
+adjuntos se guardan en `documents/` dentro del directorio de soporte de la app.
 
 ### Responsive
 

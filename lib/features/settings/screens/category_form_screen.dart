@@ -84,6 +84,8 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
   late final TextEditingController _sortOrderController;
   late final TextEditingController _intervalKmController;
   late final TextEditingController _warningKmController;
+  late final TextEditingController _intervalMonthsController;
+  late final TextEditingController _warningDaysController;
   String _selectedIcon = 'build';
   String _selectedVehicleType = 'car';
   String? _originalKey;
@@ -100,6 +102,8 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     _sortOrderController = TextEditingController();
     _intervalKmController = TextEditingController();
     _warningKmController = TextEditingController();
+    _intervalMonthsController = TextEditingController();
+    _warningDaysController = TextEditingController();
 
     if (widget.vehicleType != null) {
       _selectedVehicleType = widget.vehicleType!;
@@ -123,6 +127,12 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
       _warningKmController.text = cat.warningKm != null
           ? cat.warningKm.toString()
           : '';
+      _intervalMonthsController.text = cat.intervalMonths != null
+          ? cat.intervalMonths.toString()
+          : '';
+      _warningDaysController.text = cat.warningDays != null
+          ? cat.warningDays.toString()
+          : '';
       setState(() {
         _selectedIcon = cat.iconName;
         _selectedVehicleType = cat.vehicleType;
@@ -139,6 +149,8 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     _sortOrderController.dispose();
     _intervalKmController.dispose();
     _warningKmController.dispose();
+    _intervalMonthsController.dispose();
+    _warningDaysController.dispose();
     super.dispose();
   }
 
@@ -155,6 +167,12 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     final warningKm = _warningKmController.text.trim().isEmpty
         ? null
         : int.tryParse(_warningKmController.text.trim());
+    final intervalMonths = _intervalMonthsController.text.trim().isEmpty
+        ? null
+        : int.tryParse(_intervalMonthsController.text.trim());
+    final warningDays = _warningDaysController.text.trim().isEmpty
+        ? null
+        : int.tryParse(_warningDaysController.text.trim());
     final key = _isEditing && _originalKey != null
         ? _originalKey!
         : '${_selectedVehicleType}_${_slugify(name)}';
@@ -174,6 +192,8 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
           sortOrder: sortOrder,
           intervalKm: intervalKm,
           warningKm: warningKm,
+          intervalMonths: intervalMonths,
+          warningDays: warningDays,
           createdAt: _originalCreatedAt ?? DateTime.now(),
         );
         await notifier.update(category);
@@ -186,6 +206,8 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
           sortOrder: sortOrder,
           intervalKm: intervalKm,
           warningKm: warningKm,
+          intervalMonths: intervalMonths,
+          warningDays: warningDays,
           createdAt: DateTime.now(),
         );
         await notifier.add(category);
@@ -416,6 +438,62 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
                                   return 'Configura primero la frecuencia';
                                 }
                                 if (n >= interval) {
+                                  return 'Debe ser menor que la frecuencia';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            TextFormField(
+                              controller: _intervalMonthsController,
+                              decoration: const InputDecoration(
+                                labelText: 'Frecuencia (meses)',
+                                hintText: 'Ej: 6',
+                                helperText: 'Opcional: avisa también por fecha',
+                                suffixText: 'meses',
+                                prefixIcon: Icon(Icons.event_repeat),
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) return null;
+                                final n = int.tryParse(v.trim());
+                                if (n == null || n <= 0) {
+                                  return 'La frecuencia debe ser mayor a 0';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            TextFormField(
+                              controller: _warningDaysController,
+                              decoration: const InputDecoration(
+                                labelText: 'Aviso (días antes)',
+                                hintText: 'Ej: 15',
+                                helperText:
+                                    'Se avisa antes del próximo servicio',
+                                suffixText: 'días',
+                                prefixIcon: Icon(Icons.notifications_outlined),
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) return null;
+                                final n = int.tryParse(v.trim());
+                                if (n == null || n < 0) {
+                                  return 'Usa un número mayor o igual a 0';
+                                }
+                                final interval = int.tryParse(
+                                  _intervalMonthsController.text.trim(),
+                                );
+                                if (interval == null) {
+                                  return 'Configura primero la frecuencia';
+                                }
+                                if (n >= interval * 30) {
                                   return 'Debe ser menor que la frecuencia';
                                 }
                                 return null;

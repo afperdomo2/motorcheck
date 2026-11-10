@@ -4,7 +4,7 @@ part 'maintenance_category.freezed.dart';
 part 'maintenance_category.g.dart';
 
 @freezed
-class MaintenanceCategory with _$MaintenanceCategory {
+abstract class MaintenanceCategory with _$MaintenanceCategory {
   const factory MaintenanceCategory({
     int? id,
     required String key,
@@ -14,6 +14,8 @@ class MaintenanceCategory with _$MaintenanceCategory {
     @Default(0) int sortOrder,
     int? intervalKm,
     int? warningKm,
+    int? intervalMonths,
+    int? warningDays,
     required DateTime createdAt,
   }) = _MaintenanceCategory;
 

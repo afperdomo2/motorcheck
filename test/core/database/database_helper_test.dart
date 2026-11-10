@@ -25,6 +25,29 @@ void main() {
       "SELECT name FROM sqlite_master WHERE type='table' AND name='maintenance_items'",
     );
     expect(itemsTable.isNotEmpty, isTrue);
+
+    for (final table in [
+      'mileage_readings',
+      'documents',
+      'vehicle_restrictions',
+    ]) {
+      final result = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+        [table],
+      );
+      expect(result.isNotEmpty, isTrue, reason: 'Falta la tabla $table');
+    }
+  });
+
+  test('maintenance_categories has interval columns', () async {
+    final db = await DatabaseHelper.instance.database;
+    final columns = await db.rawQuery(
+      'PRAGMA table_info(maintenance_categories)',
+    );
+    final names = columns.map((c) => c['name'] as String).toList();
+
+    expect(names, contains('interval_months'));
+    expect(names, contains('warning_days'));
   });
 
   test('vehicles table has expected columns', () async {

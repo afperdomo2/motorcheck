@@ -4,7 +4,7 @@ part 'maintenance_item.freezed.dart';
 part 'maintenance_item.g.dart';
 
 @freezed
-class MaintenanceItem with _$MaintenanceItem {
+abstract class MaintenanceItem with _$MaintenanceItem {
   const factory MaintenanceItem({
     int? id,
     required int maintenanceId,

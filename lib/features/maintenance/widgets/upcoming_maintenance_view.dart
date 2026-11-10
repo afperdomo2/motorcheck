@@ -39,9 +39,7 @@ class UpcomingMaintenanceView extends ConsumerWidget {
                 ref.invalidate(upcomingMaintenanceProvider(vehicleId)),
           ),
           data: (items) {
-            final programmed = items
-                .where((item) => item.category.intervalKm != null)
-                .toList();
+            final programmed = items.where((item) => item.hasInterval).toList();
 
             if (programmed.isEmpty) {
               if (vehicle.currentMileage == null) {
@@ -57,7 +55,7 @@ class UpcomingMaintenanceView extends ConsumerWidget {
                 icon: Icons.schedule,
                 title: 'Sin próximos mantenimientos',
                 subtitle:
-                    'Configura la frecuencia en kilómetros en las '
+                    'Configura la frecuencia en kilómetros o meses en las '
                     'categorías de mantenimiento',
               );
             }
@@ -85,7 +83,7 @@ class _UpcomingCategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final status = item.category.intervalKm == null
+    final status = !item.hasInterval
         ? AppStatus.neutral
         : item.isOverdue
         ? AppStatus.danger
@@ -94,6 +92,16 @@ class _UpcomingCategoryCard extends StatelessWidget {
         : AppStatus.ok;
     final label = item.statusLabel();
     final hasLastMileage = item.lastMileage != null;
+    final intervalParts = <String>[
+      if (item.category.intervalKm != null) '${item.category.intervalKm} km',
+      if (item.category.intervalMonths != null)
+        '${item.category.intervalMonths} meses',
+    ];
+    final warningParts = <String>[
+      if (item.category.warningKm != null) '${item.category.warningKm} km',
+      if (item.category.warningDays != null)
+        '${item.category.warningDays} días',
+    ];
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -122,20 +130,23 @@ class _UpcomingCategoryCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             const Divider(height: 1),
             const SizedBox(height: AppSpacing.sm),
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _MiniInfo(
                   icon: Icons.speed,
                   label: 'Cada',
-                  value: '${item.category.intervalKm} km',
+                  value: intervalParts.isEmpty
+                      ? 'Sin frecuencia'
+                      : intervalParts.join(' · '),
                 ),
-                const SizedBox(width: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.xs),
                 _MiniInfo(
                   icon: Icons.notifications_outlined,
                   label: 'Aviso',
-                  value: item.category.warningKm != null
-                      ? '${item.category.warningKm} km antes'
-                      : 'No configurado',
+                  value: warningParts.isEmpty
+                      ? 'No configurado'
+                      : '${warningParts.join(' · ')} antes',
                 ),
               ],
             ),
@@ -149,9 +160,30 @@ class _UpcomingCategoryCard extends StatelessWidget {
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    'Último: ${formatMileage(item.lastMileage)}',
-                    style: Theme.of(context).textTheme.bodySmall,
+                  Expanded(
+                    child: Text(
+                      'Último: ${formatMileage(item.lastMileage)}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            if (item.nextServiceDate != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Row(
+                children: [
+                  Icon(
+                    Icons.event_outlined,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      'Próximo: ${formatDisplayDate(item.nextServiceDate!)}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                   ),
                 ],
               ),
@@ -177,20 +209,25 @@ class _MiniInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 14,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        Padding(
+          padding: const EdgeInsets.only(top: 1),
+          child: Icon(
+            icon,
+            size: 14,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(width: AppSpacing.xs),
         Text('$label: ', style: Theme.of(context).textTheme.bodySmall),
-        Text(
-          value,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+        Expanded(
+          child: Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
         ),
       ],
     );

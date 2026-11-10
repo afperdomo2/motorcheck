@@ -13,12 +13,17 @@
 ```
 test/                           # Espejo de lib/
 ├── core/
-│   ├── database/               # Pruebas de SQLite con sqflite_common_ffi
-│   └── utils/                  # Formateadores, fechas y normalización de búsqueda
+│   ├── backup/                 # Round-trip del ZIP con datos y adjuntos
+│   ├── database/               # SQLite, migraciones y tablas v13-v15
+│   └── utils/                  # Formateadores, fechas y búsqueda
 ├── features/
-│   ├── settings/               # Repositorio de categorías (clave, orden, duplicados)
-│   ├── vehicles/               # Modelos, repositorios, notifier
-│   └── maintenance/            # Modelos y repositorios
+│   ├── settings/               # Repositorio de categorías
+│   ├── vehicles/               # Modelos, repositorios, km y notifier
+│   ├── maintenance/            # Modelos, repositorios y fechas
+│   ├── documents/              # CRUD de documentos
+│   ├── restrictions/           # Evaluación de pico y placa
+│   ├── reminders/              # Bandeja, salud y widget
+│   └── reports/                # Generación de PDF
 └── shared/widgets/             # Widgets dumb
 ```
 
@@ -113,6 +118,16 @@ void main() {
 - `category_repository_test.dart`: clave estable, orden y duplicados.
 - `maintenance_search_screen_test.dart`: búsqueda por categoría, estado sin
   resultados y ausencia de overflow a 360×640 con text scale 2.0.
+- `mileage_repository_test.dart`: lecturas, promedio km/día y kilometraje
+  monotónico.
+- `documents_repository_test.dart`: CRUD por vehículo/global y cascada.
+- `restriction_status_test.dart`: día, hora, próxima restricción y exención.
+- `health_score_test.dart`: descuentos y etiquetas de salud.
+- `backup_service_test.dart`: exportar, inspeccionar, restaurar y rechazar
+  archivos inválidos. Usa `DatabaseHelper.useDirectoryForTesting()` para
+  aislar SQLite y un directorio temporal para adjuntos.
+- `pdf_report_service_test.dart`: genera un PDF válido con Barlow.
+- `reminder_tile_test.dart`: estados visuales de la bandeja.
 
 ---
 

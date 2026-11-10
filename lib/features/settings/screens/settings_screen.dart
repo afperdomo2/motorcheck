@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/backup/backup_providers.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/theme_mode_provider.dart';
+import '../../../core/utils/formatters.dart';
 import '../providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -74,6 +76,46 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
+          Text('Recordatorios', style: theme.textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.sm),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const _TonalIcon(
+                    icon: Icons.notifications_active_outlined,
+                  ),
+                  title: const Text('Notificaciones y avisos'),
+                  subtitle: const Text('Antelación y permisos del sistema'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/settings/notifications'),
+                ),
+                const Divider(indent: 72),
+                ListTile(
+                  leading: const _TonalIcon(icon: Icons.inbox_outlined),
+                  title: const Text('Ver recordatorios'),
+                  subtitle: const Text(
+                    'Mantenimiento, documentos y pico y placa',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/reminders'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          Text('Datos y respaldo', style: theme.textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.sm),
+          Card(
+            child: ListTile(
+              leading: const _TonalIcon(icon: Icons.backup_outlined),
+              title: const Text('Copias y exportación'),
+              subtitle: const _LastBackupSubtitle(),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/settings/backup'),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
           Text('Catálogos', style: theme.textTheme.titleMedium),
           const SizedBox(height: AppSpacing.sm),
           Card(
@@ -98,6 +140,14 @@ class SettingsScreen extends ConsumerWidget {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/settings/categories'),
                 ),
+                const Divider(indent: 72),
+                ListTile(
+                  leading: const _TonalIcon(icon: Icons.badge_outlined),
+                  title: const Text('Mis documentos'),
+                  subtitle: const Text('Licencia de conducción y otros'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/settings/documents'),
+                ),
               ],
             ),
           ),
@@ -110,7 +160,7 @@ class SettingsScreen extends ConsumerWidget {
                 ListTile(
                   leading: _TonalIcon(icon: Icons.info_outline),
                   title: Text('MotorCheck'),
-                  subtitle: Text('Seguimiento de mantenimiento · v0.1.0'),
+                  subtitle: Text('Seguimiento de mantenimiento · v0.2.0'),
                 ),
                 Divider(indent: 72),
                 ListTile(
@@ -126,6 +176,20 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xxl),
         ],
       ),
+    );
+  }
+}
+
+class _LastBackupSubtitle extends ConsumerWidget {
+  const _LastBackupSubtitle();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final backup = ref.watch(lastBackupProvider).valueOrNull;
+    return Text(
+      backup == null
+          ? 'Sin copias todavía'
+          : 'Última copia: ${formatDisplayDate(backup)}',
     );
   }
 }

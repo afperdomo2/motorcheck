@@ -1,6 +1,6 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'maintenance_item.dart';
@@ -9,288 +9,292 @@ part of 'maintenance_item.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
-);
-
-MaintenanceItem _$MaintenanceItemFromJson(Map<String, dynamic> json) {
-  return _MaintenanceItem.fromJson(json);
-}
 
 /// @nodoc
 mixin _$MaintenanceItem {
-  int? get id => throw _privateConstructorUsedError;
-  int get maintenanceId => throw _privateConstructorUsedError;
-  String get category => throw _privateConstructorUsedError;
-  double get partsCost => throw _privateConstructorUsedError;
-  String? get notes => throw _privateConstructorUsedError;
-  DateTime get createdAt => throw _privateConstructorUsedError;
+
+ int? get id; int get maintenanceId; String get category; double get partsCost; String? get notes; DateTime get createdAt;
+/// Create a copy of MaintenanceItem
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$MaintenanceItemCopyWith<MaintenanceItem> get copyWith => _$MaintenanceItemCopyWithImpl<MaintenanceItem>(this as MaintenanceItem, _$identity);
 
   /// Serializes this MaintenanceItem to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  Map<String, dynamic> toJson();
 
-  /// Create a copy of MaintenanceItem
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $MaintenanceItemCopyWith<MaintenanceItem> get copyWith =>
-      throw _privateConstructorUsedError;
+
+@override
+bool operator ==(Object other) {
+  final _this = this as MaintenanceItem;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MaintenanceItem&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.maintenanceId, _this.maintenanceId) || other.maintenanceId == _this.maintenanceId)&&(identical(other.category, _this.category) || other.category == _this.category)&&(identical(other.partsCost, _this.partsCost) || other.partsCost == _this.partsCost)&&(identical(other.notes, _this.notes) || other.notes == _this.notes)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as MaintenanceItem;
+  return Object.hash(runtimeType,_this.id,_this.maintenanceId,_this.category,_this.partsCost,_this.notes,_this.createdAt);
+}
+
+@override
+String toString() {
+  final _this = this as MaintenanceItem;
+  return 'MaintenanceItem(id: ${_this.id}, maintenanceId: ${_this.maintenanceId}, category: ${_this.category}, partsCost: ${_this.partsCost}, notes: ${_this.notes}, createdAt: ${_this.createdAt})';
+}
+
+
 }
 
 /// @nodoc
-abstract class $MaintenanceItemCopyWith<$Res> {
-  factory $MaintenanceItemCopyWith(
-    MaintenanceItem value,
-    $Res Function(MaintenanceItem) then,
-  ) = _$MaintenanceItemCopyWithImpl<$Res, MaintenanceItem>;
-  @useResult
-  $Res call({
-    int? id,
-    int maintenanceId,
-    String category,
-    double partsCost,
-    String? notes,
-    DateTime createdAt,
-  });
-}
+abstract mixin class $MaintenanceItemCopyWith<$Res>  {
+  factory $MaintenanceItemCopyWith(MaintenanceItem value, $Res Function(MaintenanceItem) _then) = _$MaintenanceItemCopyWithImpl;
+@useResult
+$Res call({
+ int? id, int maintenanceId, String category, double partsCost, String? notes, DateTime createdAt
+});
 
+
+
+
+}
 /// @nodoc
-class _$MaintenanceItemCopyWithImpl<$Res, $Val extends MaintenanceItem>
+class _$MaintenanceItemCopyWithImpl<$Res>
     implements $MaintenanceItemCopyWith<$Res> {
-  _$MaintenanceItemCopyWithImpl(this._value, this._then);
+  _$MaintenanceItemCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final MaintenanceItem _self;
+  final $Res Function(MaintenanceItem) _then;
 
-  /// Create a copy of MaintenanceItem
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? id = freezed,
-    Object? maintenanceId = null,
-    Object? category = null,
-    Object? partsCost = null,
-    Object? notes = freezed,
-    Object? createdAt = null,
-  }) {
-    return _then(
-      _value.copyWith(
-            id: freezed == id
-                ? _value.id
-                : id // ignore: cast_nullable_to_non_nullable
-                      as int?,
-            maintenanceId: null == maintenanceId
-                ? _value.maintenanceId
-                : maintenanceId // ignore: cast_nullable_to_non_nullable
-                      as int,
-            category: null == category
-                ? _value.category
-                : category // ignore: cast_nullable_to_non_nullable
-                      as String,
-            partsCost: null == partsCost
-                ? _value.partsCost
-                : partsCost // ignore: cast_nullable_to_non_nullable
-                      as double,
-            notes: freezed == notes
-                ? _value.notes
-                : notes // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            createdAt: null == createdAt
-                ? _value.createdAt
-                : createdAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
-          )
-          as $Val,
-    );
-  }
+/// Create a copy of MaintenanceItem
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? maintenanceId = null,Object? category = null,Object? partsCost = null,Object? notes = freezed,Object? createdAt = null,}) {
+  return _then(MaintenanceItem(
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,maintenanceId: null == maintenanceId ? _self.maintenanceId : maintenanceId // ignore: cast_nullable_to_non_nullable
+as int,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
+as String,partsCost: null == partsCost ? _self.partsCost : partsCost // ignore: cast_nullable_to_non_nullable
+as double,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
+as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,
+  ));
 }
 
-/// @nodoc
-abstract class _$$MaintenanceItemImplCopyWith<$Res>
-    implements $MaintenanceItemCopyWith<$Res> {
-  factory _$$MaintenanceItemImplCopyWith(
-    _$MaintenanceItemImpl value,
-    $Res Function(_$MaintenanceItemImpl) then,
-  ) = __$$MaintenanceItemImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({
-    int? id,
-    int maintenanceId,
-    String category,
-    double partsCost,
-    String? notes,
-    DateTime createdAt,
-  });
 }
 
-/// @nodoc
-class __$$MaintenanceItemImplCopyWithImpl<$Res>
-    extends _$MaintenanceItemCopyWithImpl<$Res, _$MaintenanceItemImpl>
-    implements _$$MaintenanceItemImplCopyWith<$Res> {
-  __$$MaintenanceItemImplCopyWithImpl(
-    _$MaintenanceItemImpl _value,
-    $Res Function(_$MaintenanceItemImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of MaintenanceItem
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? id = freezed,
-    Object? maintenanceId = null,
-    Object? category = null,
-    Object? partsCost = null,
-    Object? notes = freezed,
-    Object? createdAt = null,
-  }) {
-    return _then(
-      _$MaintenanceItemImpl(
-        id: freezed == id
-            ? _value.id
-            : id // ignore: cast_nullable_to_non_nullable
-                  as int?,
-        maintenanceId: null == maintenanceId
-            ? _value.maintenanceId
-            : maintenanceId // ignore: cast_nullable_to_non_nullable
-                  as int,
-        category: null == category
-            ? _value.category
-            : category // ignore: cast_nullable_to_non_nullable
-                  as String,
-        partsCost: null == partsCost
-            ? _value.partsCost
-            : partsCost // ignore: cast_nullable_to_non_nullable
-                  as double,
-        notes: freezed == notes
-            ? _value.notes
-            : notes // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        createdAt: null == createdAt
-            ? _value.createdAt
-            : createdAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
-      ),
-    );
-  }
+/// Adds pattern-matching-related methods to [MaintenanceItem].
+extension MaintenanceItemPatterns on MaintenanceItem {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _MaintenanceItem value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _MaintenanceItem() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _MaintenanceItem value)  $default,){
+final _that = this;
+switch (_that) {
+case _MaintenanceItem():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _MaintenanceItem value)?  $default,){
+final _that = this;
+switch (_that) {
+case _MaintenanceItem() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  int maintenanceId,  String category,  double partsCost,  String? notes,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _MaintenanceItem() when $default != null:
+return $default(_that.id,_that.maintenanceId,_that.category,_that.partsCost,_that.notes,_that.createdAt);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  int maintenanceId,  String category,  double partsCost,  String? notes,  DateTime createdAt)  $default,) {final _that = this;
+switch (_that) {
+case _MaintenanceItem():
+return $default(_that.id,_that.maintenanceId,_that.category,_that.partsCost,_that.notes,_that.createdAt);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  int maintenanceId,  String category,  double partsCost,  String? notes,  DateTime createdAt)?  $default,) {final _that = this;
+switch (_that) {
+case _MaintenanceItem() when $default != null:
+return $default(_that.id,_that.maintenanceId,_that.category,_that.partsCost,_that.notes,_that.createdAt);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$MaintenanceItemImpl implements _MaintenanceItem {
-  const _$MaintenanceItemImpl({
-    this.id,
-    required this.maintenanceId,
-    this.category = 'general',
-    this.partsCost = 0,
-    this.notes,
-    required this.createdAt,
-  });
 
-  factory _$MaintenanceItemImpl.fromJson(Map<String, dynamic> json) =>
-      _$$MaintenanceItemImplFromJson(json);
+class _MaintenanceItem implements MaintenanceItem {
+  const _MaintenanceItem({this.id, required this.maintenanceId, this.category = 'general', this.partsCost = 0, this.notes, required this.createdAt});
+  factory _MaintenanceItem.fromJson(Map<String, dynamic> json) => _$MaintenanceItemFromJson(json);
 
-  @override
-  final int? id;
-  @override
-  final int maintenanceId;
-  @override
-  @JsonKey()
-  final String category;
-  @override
-  @JsonKey()
-  final double partsCost;
-  @override
-  final String? notes;
-  @override
-  final DateTime createdAt;
+@override final  int? id;
+@override final  int maintenanceId;
+@override@JsonKey() final  String category;
+@override@JsonKey() final  double partsCost;
+@override final  String? notes;
+@override final  DateTime createdAt;
 
-  @override
-  String toString() {
+/// Create a copy of MaintenanceItem
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$MaintenanceItemCopyWith<_MaintenanceItem> get copyWith => __$MaintenanceItemCopyWithImpl<_MaintenanceItem>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$MaintenanceItemToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MaintenanceItem&&(identical(other.id, id) || other.id == id)&&(identical(other.maintenanceId, maintenanceId) || other.maintenanceId == maintenanceId)&&(identical(other.category, category) || other.category == category)&&(identical(other.partsCost, partsCost) || other.partsCost == partsCost)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,maintenanceId,category,partsCost,notes,createdAt);
+}
+
+@override
+String toString() {
     return 'MaintenanceItem(id: $id, maintenanceId: $maintenanceId, category: $category, partsCost: $partsCost, notes: $notes, createdAt: $createdAt)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$MaintenanceItemImpl &&
-            (identical(other.id, id) || other.id == id) &&
-            (identical(other.maintenanceId, maintenanceId) ||
-                other.maintenanceId == maintenanceId) &&
-            (identical(other.category, category) ||
-                other.category == category) &&
-            (identical(other.partsCost, partsCost) ||
-                other.partsCost == partsCost) &&
-            (identical(other.notes, notes) || other.notes == notes) &&
-            (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode => Object.hash(
-    runtimeType,
-    id,
-    maintenanceId,
-    category,
-    partsCost,
-    notes,
-    createdAt,
-  );
-
-  /// Create a copy of MaintenanceItem
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$MaintenanceItemImplCopyWith<_$MaintenanceItemImpl> get copyWith =>
-      __$$MaintenanceItemImplCopyWithImpl<_$MaintenanceItemImpl>(
-        this,
-        _$identity,
-      );
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$MaintenanceItemImplToJson(this);
-  }
 }
 
-abstract class _MaintenanceItem implements MaintenanceItem {
-  const factory _MaintenanceItem({
-    final int? id,
-    required final int maintenanceId,
-    final String category,
-    final double partsCost,
-    final String? notes,
-    required final DateTime createdAt,
-  }) = _$MaintenanceItemImpl;
 
-  factory _MaintenanceItem.fromJson(Map<String, dynamic> json) =
-      _$MaintenanceItemImpl.fromJson;
-
-  @override
-  int? get id;
-  @override
-  int get maintenanceId;
-  @override
-  String get category;
-  @override
-  double get partsCost;
-  @override
-  String? get notes;
-  @override
-  DateTime get createdAt;
-
-  /// Create a copy of MaintenanceItem
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$MaintenanceItemImplCopyWith<_$MaintenanceItemImpl> get copyWith =>
-      throw _privateConstructorUsedError;
 }
+
+/// @nodoc
+abstract mixin class _$MaintenanceItemCopyWith<$Res> implements $MaintenanceItemCopyWith<$Res> {
+  factory _$MaintenanceItemCopyWith(_MaintenanceItem value, $Res Function(_MaintenanceItem) _then) = __$MaintenanceItemCopyWithImpl;
+@override @useResult
+$Res call({
+ int? id, int maintenanceId, String category, double partsCost, String? notes, DateTime createdAt
+});
+
+
+
+
+}
+/// @nodoc
+class __$MaintenanceItemCopyWithImpl<$Res>
+    implements _$MaintenanceItemCopyWith<$Res> {
+  __$MaintenanceItemCopyWithImpl(this._self, this._then);
+
+  final _MaintenanceItem _self;
+  final $Res Function(_MaintenanceItem) _then;
+
+/// Create a copy of MaintenanceItem
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? maintenanceId = null,Object? category = null,Object? partsCost = null,Object? notes = freezed,Object? createdAt = null,}) {
+  return _then(_MaintenanceItem(
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,maintenanceId: null == maintenanceId ? _self.maintenanceId : maintenanceId // ignore: cast_nullable_to_non_nullable
+as int,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
+as String,partsCost: null == partsCost ? _self.partsCost : partsCost // ignore: cast_nullable_to_non_nullable
+as double,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
+as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,
+  ));
+}
+
+
+}
+
+// dart format on

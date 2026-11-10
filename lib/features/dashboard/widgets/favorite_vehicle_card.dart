@@ -7,9 +7,13 @@ import '../../../core/utils/date_status.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/status_chip.dart';
 import '../../../shared/widgets/vehicle_avatar.dart';
+import '../../documents/models/vehicle_document.dart';
+import '../../documents/providers.dart';
 import '../../maintenance/providers.dart';
+import '../../reminders/providers.dart';
 import '../../vehicles/models/vehicle.dart';
 import '../../vehicles/providers.dart';
+import '../../vehicles/widgets/mileage_update_sheet.dart';
 
 class FavoriteVehicleCard extends ConsumerWidget {
   const FavoriteVehicleCard({super.key});
@@ -33,10 +37,13 @@ class FavoriteVehicleCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _VehicleHeader(vehicle: vehicle),
-              if (_hasDocuments(vehicle)) ...[
-                const SizedBox(height: AppSpacing.md),
-                _DocumentChips(vehicle: vehicle),
-              ],
+              _HealthRow(vehicleId: vehicle.id!),
+              _QuickLinks(
+                onUpdateMileage: () =>
+                    MileageUpdateSheet.show(context, vehicle),
+                onReport: () => context.push('/vehicles/${vehicle.id}/report'),
+              ),
+              _DocumentChips(vehicleId: vehicle.id!),
               const SizedBox(height: AppSpacing.md),
               const Divider(),
               _Actions(
@@ -52,9 +59,6 @@ class FavoriteVehicleCard extends ConsumerWidget {
       ),
     );
   }
-
-  bool _hasDocuments(Vehicle vehicle) =>
-      vehicle.soatExpiresAt != null || vehicle.rtmExpiresAt != null;
 
   int _upcomingCount(WidgetRef ref, int vehicleId) {
     final upcoming = ref
@@ -175,36 +179,100 @@ class _Meta extends StatelessWidget {
   }
 }
 
-class _DocumentChips extends StatelessWidget {
-  final Vehicle vehicle;
+class _DocumentChips extends ConsumerWidget {
+  final int vehicleId;
 
-  const _DocumentChips({required this.vehicle});
+  const _DocumentChips({required this.vehicleId});
 
   @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.xs,
-      children: [
-        if (vehicle.soatExpiresAt != null)
-          _documentChip('SOAT', vehicle.soatExpiresAt!),
-        if (vehicle.rtmExpiresAt != null)
-          _documentChip('RTM', vehicle.rtmExpiresAt!),
-      ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final documents =
+        ref.watch(vehicleDocumentsProvider(vehicleId)).valueOrNull ?? [];
+    if (documents.isEmpty) return const SizedBox.shrink();
+
+    final visible = [...documents]
+      ..sort((a, b) => a.expiresAt.compareTo(b.expiresAt));
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.xs,
+        children: [
+          for (final document in visible.take(2)) _documentChip(document),
+        ],
+      ),
     );
   }
 
-  Widget _documentChip(String label, DateTime date) {
-    final status = dateStatus(date);
+  Widget _documentChip(VehicleDocument document) {
+    final status = dateStatus(document.expiresAt);
     final appStatus = switch (status.level) {
       ExpiryLevel.danger => AppStatus.danger,
       ExpiryLevel.warning => AppStatus.warning,
       ExpiryLevel.ok => AppStatus.ok,
     };
+    final type = documentTypeFor(document.type);
     return StatusChip(
       status: appStatus,
-      label: '$label · ${status.shortLabel}',
-      icon: Icons.shield_outlined,
+      label: '${type.label} · ${status.shortLabel}',
+      icon: type.icon,
+    );
+  }
+}
+
+class _HealthRow extends ConsumerWidget {
+  final int vehicleId;
+
+  const _HealthRow({required this.vehicleId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final health = ref.watch(vehicleHealthProvider(vehicleId)).valueOrNull;
+    if (health == null || !health.hasData) return const SizedBox.shrink();
+
+    final status = health.value >= 90
+        ? AppStatus.ok
+        : health.value >= 70
+        ? AppStatus.warning
+        : AppStatus.danger;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: StatusChip(
+        status: status,
+        label: 'Salud ${health.value}/100 · ${health.label}',
+        icon: Icons.favorite_border,
+      ),
+    );
+  }
+}
+
+class _QuickLinks extends StatelessWidget {
+  final VoidCallback onUpdateMileage;
+  final VoidCallback onReport;
+
+  const _QuickLinks({required this.onUpdateMileage, required this.onReport});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        children: [
+          TextButton.icon(
+            onPressed: onUpdateMileage,
+            icon: const Icon(Icons.speed, size: 18),
+            label: const Text('Actualizar km'),
+          ),
+          TextButton.icon(
+            onPressed: onReport,
+            icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+            label: const Text('Hoja de vida'),
+          ),
+        ],
+      ),
     );
   }
 }

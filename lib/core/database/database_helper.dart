@@ -10,8 +10,14 @@ class DatabaseHelper {
 
   static DatabaseHelper? _instance;
   static Database? _database;
+  static String? _directoryOverride;
 
   static DatabaseHelper get instance => _instance ??= DatabaseHelper._();
+
+  /// Solo para pruebas: aísla la base de datos en un directorio temporal.
+  static void useDirectoryForTesting(String? path) {
+    _directoryOverride = path;
+  }
 
   Future<Database> get database async {
     _database ??= await _initDatabase();
@@ -29,7 +35,7 @@ class DatabaseHelper {
 
     return openDatabase(
       path,
-      version: 12,
+      version: 15,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onOpen: _ensureSchemaIntegrity,
@@ -45,6 +51,7 @@ class DatabaseHelper {
   /// (`~/.local/share/com.example.motorcheck` en Linux). En móvil se usa el
   /// directorio estándar de `sqflite`.
   Future<String> _resolveDatabaseDirectory() async {
+    if (_directoryOverride != null) return _directoryOverride!;
     if (isDesktopDatabasePlatform) {
       try {
         final dir = await getApplicationSupportDirectory();
@@ -80,6 +87,71 @@ class DatabaseHelper {
         'ALTER TABLE maintenance_categories ADD COLUMN warning_km INTEGER',
       );
     }
+    if (!await _hasColumn(db, 'maintenance_categories', 'interval_months')) {
+      await db.execute(
+        'ALTER TABLE maintenance_categories ADD COLUMN interval_months INTEGER',
+      );
+    }
+    if (!await _hasColumn(db, 'maintenance_categories', 'warning_days')) {
+      await db.execute(
+        'ALTER TABLE maintenance_categories ADD COLUMN warning_days INTEGER',
+      );
+    }
+
+    await db.execute(Tables.createMileageReadings);
+    await db.execute(Tables.createMileageUniqueIndex);
+    await db.execute(Tables.createMileageVehicleDateIndex);
+    await db.execute(Tables.createDocuments);
+    await db.execute(Tables.createDocumentsVehicleIndex);
+    await db.execute(Tables.createDocumentsExpiresIndex);
+    await db.execute(Tables.createVehicleRestrictions);
+
+    await _backfillMileageReadings(db);
+    await _backfillDocuments(db);
+  }
+
+  Future<bool> _hasColumn(Database db, String table, String column) async {
+    final columns = await db.rawQuery("PRAGMA table_info('$table')");
+    return columns.any((c) => c['name'] == column);
+  }
+
+  Future<void> _backfillMileageReadings(Database db) async {
+    await db.rawInsert(
+      'INSERT OR IGNORE INTO mileage_readings '
+      '(vehicle_id, date, mileage, source, created_at) '
+      'SELECT id, substr(COALESCE(mileage_updated_at, updated_at, created_at), 1, 10), '
+      'current_mileage, \'backfill\', created_at '
+      'FROM vehicles WHERE current_mileage IS NOT NULL',
+    );
+    await db.rawInsert(
+      'INSERT OR IGNORE INTO mileage_readings '
+      '(vehicle_id, date, mileage, source, created_at) '
+      'SELECT vehicle_id, date, mileage, \'maintenance\', created_at '
+      'FROM maintenances WHERE mileage IS NOT NULL',
+    );
+  }
+
+  Future<void> _backfillDocuments(Database db) async {
+    await db.rawInsert(
+      'INSERT INTO documents '
+      '(vehicle_id, type, name, expires_at, created_at, updated_at) '
+      'SELECT v.id, \'soat\', \'SOAT\', v.soat_expires_at, '
+      'v.created_at, v.updated_at '
+      'FROM vehicles v '
+      'WHERE v.soat_expires_at IS NOT NULL '
+      'AND NOT EXISTS (SELECT 1 FROM documents d '
+      'WHERE d.vehicle_id = v.id AND d.type = \'soat\')',
+    );
+    await db.rawInsert(
+      'INSERT INTO documents '
+      '(vehicle_id, type, name, expires_at, created_at, updated_at) '
+      'SELECT v.id, \'rtm\', \'Tecnomecánica\', v.rtm_expires_at, '
+      'v.created_at, v.updated_at '
+      'FROM vehicles v '
+      'WHERE v.rtm_expires_at IS NOT NULL '
+      'AND NOT EXISTS (SELECT 1 FROM documents d '
+      'WHERE d.vehicle_id = v.id AND d.type = \'rtm\')',
+    );
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -89,6 +161,13 @@ class DatabaseHelper {
     batch.execute(Tables.createMaintenances);
     batch.execute(Tables.createMaintenanceItems);
     batch.execute(Tables.createMaintenanceCategories);
+    batch.execute(Tables.createMileageReadings);
+    batch.execute(Tables.createMileageUniqueIndex);
+    batch.execute(Tables.createMileageVehicleDateIndex);
+    batch.execute(Tables.createDocuments);
+    batch.execute(Tables.createDocumentsVehicleIndex);
+    batch.execute(Tables.createDocumentsExpiresIndex);
+    batch.execute(Tables.createVehicleRestrictions);
     await batch.commit(noResult: true);
     await _seedDefaultCategories(db);
   }
@@ -190,6 +269,31 @@ class DatabaseHelper {
           'ALTER TABLE vehicles ADD COLUMN last_selected_at TEXT',
         );
       }
+    }
+    if (oldVersion < 13) {
+      if (!await _hasColumn(db, 'maintenance_categories', 'interval_months')) {
+        await db.execute(
+          'ALTER TABLE maintenance_categories ADD COLUMN interval_months INTEGER',
+        );
+      }
+      if (!await _hasColumn(db, 'maintenance_categories', 'warning_days')) {
+        await db.execute(
+          'ALTER TABLE maintenance_categories ADD COLUMN warning_days INTEGER',
+        );
+      }
+      await db.execute(Tables.createMileageReadings);
+      await db.execute(Tables.createMileageUniqueIndex);
+      await db.execute(Tables.createMileageVehicleDateIndex);
+      await _backfillMileageReadings(db);
+    }
+    if (oldVersion < 14) {
+      await db.execute(Tables.createDocuments);
+      await db.execute(Tables.createDocumentsVehicleIndex);
+      await db.execute(Tables.createDocumentsExpiresIndex);
+      await _backfillDocuments(db);
+    }
+    if (oldVersion < 15) {
+      await db.execute(Tables.createVehicleRestrictions);
     }
   }
 

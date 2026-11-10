@@ -75,6 +75,59 @@
 | notes | TEXT | |
 | created_at | TEXT | NOT NULL (ISO 8601) |
 
+### mileage_readings
+
+Historial de lecturas de odómetro. Alimenta el promedio km/día y la fecha
+estimada del próximo mantenimiento.
+
+| Columna | Tipo | Restricciones |
+|--------|------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
+| vehicle_id | INTEGER | NOT NULL, FK → vehicles(id) ON DELETE CASCADE |
+| date | TEXT | NOT NULL (fecha ISO 8601) |
+| mileage | INTEGER | NOT NULL |
+| source | TEXT | NOT NULL DEFAULT 'manual' (manual, maintenance, backfill) |
+| created_at | TEXT | NOT NULL (ISO 8601) |
+
+Índice único `(vehicle_id, date, mileage)` e índice por `(vehicle_id, date DESC)`.
+
+### documents
+
+Fuente de verdad de SOAT, RTM, impuesto, seguro y licencia. `vehicle_id` es
+nullable para documentos del conductor.
+
+| Columna | Tipo | Restricciones |
+|--------|------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
+| vehicle_id | INTEGER | FK → vehicles(id) ON DELETE CASCADE |
+| type | TEXT | NOT NULL (soat, rtm, tax, insurance, license, other) |
+| name | TEXT | |
+| number | TEXT | |
+| issued_at | TEXT | |
+| expires_at | TEXT | NOT NULL (fecha ISO 8601) |
+| file_path | TEXT | Ruta local del adjunto |
+| notes | TEXT | |
+| created_at | TEXT | NOT NULL (ISO 8601) |
+| updated_at | TEXT | NOT NULL (ISO 8601) |
+
+### vehicle_restrictions
+
+Regla semanal de pico y placa por vehículo.
+
+| Columna | Tipo | Restricciones |
+|--------|------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
+| vehicle_id | INTEGER | NOT NULL UNIQUE, FK → vehicles(id) ON DELETE CASCADE |
+| enabled | INTEGER | NOT NULL DEFAULT 0 |
+| city | TEXT | |
+| days | TEXT | JSON con días ISO (`[1,3,5]`) |
+| start_time | TEXT | DEFAULT '06:00' |
+| end_time | TEXT | DEFAULT '21:00' |
+| exempt | INTEGER | NOT NULL DEFAULT 0 |
+| notes | TEXT | |
+| created_at | TEXT | NOT NULL (ISO 8601) |
+| updated_at | TEXT | NOT NULL (ISO 8601) |
+
 ## Regla de kilometraje
 
 `vehicles.current_mileage` es la fuente de verdad y **solo sube
@@ -150,7 +203,56 @@ CREATE TABLE maintenance_categories (
   icon_name TEXT NOT NULL DEFAULT 'build',
   vehicle_type TEXT NOT NULL,
   sort_order INTEGER DEFAULT 0,
+  interval_km INTEGER,
+  warning_km INTEGER,
+  interval_months INTEGER,
+  warning_days INTEGER,
   created_at TEXT NOT NULL
+);
+
+CREATE TABLE mileage_readings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER NOT NULL,
+  date TEXT NOT NULL,
+  mileage INTEGER NOT NULL,
+  source TEXT NOT NULL DEFAULT 'manual',
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX idx_mileage_unique
+  ON mileage_readings(vehicle_id, date, mileage);
+CREATE INDEX idx_mileage_vehicle_date
+  ON mileage_readings(vehicle_id, date DESC);
+
+CREATE TABLE documents (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER,
+  type TEXT NOT NULL,
+  name TEXT,
+  number TEXT,
+  issued_at TEXT,
+  expires_at TEXT NOT NULL,
+  file_path TEXT,
+  notes TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+);
+
+CREATE TABLE vehicle_restrictions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER NOT NULL UNIQUE,
+  enabled INTEGER NOT NULL DEFAULT 0,
+  city TEXT,
+  days TEXT NOT NULL DEFAULT '[]',
+  start_time TEXT NOT NULL DEFAULT '06:00',
+  end_time TEXT NOT NULL DEFAULT '21:00',
+  exempt INTEGER NOT NULL DEFAULT 0,
+  notes TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
 );
 ```
 
@@ -159,13 +261,18 @@ CREATE TABLE maintenance_categories (
 ```
 workshops (1) ────< (N) maintenances (1) ────< (N) maintenance_items
                     │
-vehicles (1) ──────┘
+vehicles (1) ──────┼──< (N) mileage_readings
+                    ├──< (N) documents
+                    └──(1) vehicle_restrictions
 ```
 
-- Eliminar un vehículo → cascada a todos sus mantenimientos y sus items
+- Eliminar un vehículo → cascada a mantenimientos, items, lecturas de km,
+  documentos y regla de pico y placa
 - Eliminar un mantenimiento → cascada a todos sus items
 - Eliminar un taller → el `workshop_id` del mantenimiento se pone en NULL
 - Los costos en `maintenances` están desnormalizados para fácil visualización (suma de costos de items)
+- `documents.vehicle_id` es nullable: los documentos del conductor (licencia)
+  no pertenecen a un vehículo
 
 ## Tipos de Vehículo
 
@@ -195,6 +302,8 @@ almacena la `key` de la tabla como FK lógico (ej: `car_engine`, `motorcycle_oil
 | sort_order | INTEGER | DEFAULT 0 |
 | interval_km | INTEGER | NULL (km recomendados entre mantenimientos) |
 | warning_km | INTEGER | NULL (avisar cuando falten X km) |
+| interval_months | INTEGER | NULL (meses recomendados entre mantenimientos) |
+| warning_days | INTEGER | NULL (avisar cuando falten X días) |
 | created_at | TEXT | NOT NULL (ISO 8601) |
 
 ### Seed Inicial (38 categorías por defecto)
@@ -211,7 +320,7 @@ El borrado es hard-delete, pero el repositorio verifica que la categoría no est
 
 ## Versión de Base de Datos
 
-Versión actual: **12**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
+Versión actual: **15**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
 - v2: agregó `current_mileage`
 - v3: agregó `workshops` + `maintenance_cost` + `workshop_id` en maintenances
 - v4: reestructuró `maintenance_items` (renombró columnas)
@@ -223,6 +332,16 @@ Versión actual: **12**. Migraciones incrementales vía `onUpgrade` en `Database
 - v10: agregó `interval_km` y `warning_km` a maintenance_categories
 - v11: refuerzo de columnas `interval_km` / `warning_km` con verificación PRAGMA
 - v12: refuerzo de columna `last_selected_at` en vehicles con verificación PRAGMA
+- v13: agregó `interval_months` y `warning_days` + tabla `mileage_readings` + backfill
+- v14: agregó tabla `documents` + backfill de SOAT/RTM desde `vehicles`
+- v15: agregó tabla `vehicle_restrictions`
+
+## Respaldo
+
+`BackupService` genera un ZIP con `data.json` (todas las tablas y preferencias),
+`manifest.json` y `attachments/documents/` con los archivos adjuntos. Restaurar
+reemplaza todos los datos y crea una copia de seguridad previa. La exportación
+CSV genera un ZIP con un archivo por tabla.
 
 ---
 

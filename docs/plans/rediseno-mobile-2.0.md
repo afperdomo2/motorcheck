@@ -53,7 +53,7 @@ flowchart TD
   U[Usuario] --> P[Pantalla ConsumerWidget]
   P --> R[Provider Riverpod]
   R --> Rep[Repository]
-  Rep --> DB[(SQLite v12)]
+  Rep --> DB[(SQLite v15)]
   DB --> R
   R --> P
 ```

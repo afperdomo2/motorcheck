@@ -6,21 +6,20 @@ part of 'maintenance.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$MaintenanceImpl _$$MaintenanceImplFromJson(Map<String, dynamic> json) =>
-    _$MaintenanceImpl(
-      id: (json['id'] as num?)?.toInt(),
-      vehicleId: (json['vehicleId'] as num).toInt(),
-      date: DateTime.parse(json['date'] as String),
-      mileage: (json['mileage'] as num?)?.toInt(),
-      maintenanceCost: (json['maintenanceCost'] as num?)?.toDouble() ?? 0,
-      totalPartsCost: (json['totalPartsCost'] as num?)?.toDouble() ?? 0,
-      workshopId: (json['workshopId'] as num?)?.toInt(),
-      notes: json['notes'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
-    );
+_Maintenance _$MaintenanceFromJson(Map<String, dynamic> json) => _Maintenance(
+  id: (json['id'] as num?)?.toInt(),
+  vehicleId: (json['vehicleId'] as num).toInt(),
+  date: DateTime.parse(json['date'] as String),
+  mileage: (json['mileage'] as num?)?.toInt(),
+  maintenanceCost: (json['maintenanceCost'] as num?)?.toDouble() ?? 0,
+  totalPartsCost: (json['totalPartsCost'] as num?)?.toDouble() ?? 0,
+  workshopId: (json['workshopId'] as num?)?.toInt(),
+  notes: json['notes'] as String?,
+  createdAt: DateTime.parse(json['createdAt'] as String),
+  updatedAt: DateTime.parse(json['updatedAt'] as String),
+);
 
-Map<String, dynamic> _$$MaintenanceImplToJson(_$MaintenanceImpl instance) =>
+Map<String, dynamic> _$MaintenanceToJson(_Maintenance instance) =>
     <String, dynamic>{
       'id': instance.id,
       'vehicleId': instance.vehicleId,

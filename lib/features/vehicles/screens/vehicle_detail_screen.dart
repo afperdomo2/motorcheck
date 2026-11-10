@@ -13,9 +13,16 @@ import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/status_chip.dart';
 import '../../../shared/widgets/vehicle_avatar.dart';
+import '../../documents/models/vehicle_document.dart';
+import '../../documents/providers.dart';
 import '../../maintenance/providers.dart';
+import '../../reminders/health_score.dart';
+import '../../reminders/providers.dart';
+import '../../restrictions/providers.dart';
+import '../../restrictions/restriction_status.dart';
 import '../models/vehicle.dart';
 import '../providers.dart';
+import '../widgets/mileage_update_sheet.dart';
 
 class VehicleDetailScreen extends ConsumerWidget {
   final int vehicleId;
@@ -28,6 +35,11 @@ class VehicleDetailScreen extends ConsumerWidget {
     final summaryAsync = ref.watch(
       vehicleMaintenanceSummaryProvider(vehicleId),
     );
+    final documentsAsync = ref.watch(vehicleDocumentsProvider(vehicleId));
+    final restrictionAsync = ref.watch(
+      vehicleRestrictionStatusProvider(vehicleId),
+    );
+    final healthAsync = ref.watch(vehicleHealthProvider(vehicleId));
 
     return Scaffold(
       appBar: AppBar(
@@ -93,19 +105,41 @@ class VehicleDetailScreen extends ConsumerWidget {
               ref.invalidate(selectedVehicleProvider(vehicleId));
               ref.invalidate(vehicleMaintenanceSummaryProvider(vehicleId));
               ref.invalidate(upcomingMaintenanceProvider(vehicleId));
+              ref.invalidate(vehicleDocumentsProvider(vehicleId));
+              ref.invalidate(vehicleRestrictionStatusProvider(vehicleId));
+              ref.invalidate(vehicleHealthProvider(vehicleId));
               await Future.wait([
                 ref.read(selectedVehicleProvider(vehicleId).future),
                 ref.read(vehicleMaintenanceSummaryProvider(vehicleId).future),
                 ref.read(upcomingMaintenanceProvider(vehicleId).future),
+                ref.read(vehicleDocumentsProvider(vehicleId).future),
+                ref.read(vehicleRestrictionStatusProvider(vehicleId).future),
+                ref.read(vehicleHealthProvider(vehicleId).future),
               ]);
             },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(AppSpacing.lg),
               children: [
-                _VehicleHeader(vehicle: vehicle),
+                _VehicleHeader(
+                  vehicle: vehicle,
+                  onUpdateMileage: () =>
+                      MileageUpdateSheet.show(context, vehicle),
+                ),
                 const SizedBox(height: AppSpacing.lg),
+                _HealthCard(healthAsync: healthAsync),
+                const SizedBox(height: AppSpacing.sm),
                 _InfoCard(vehicle: vehicle),
+                const SizedBox(height: AppSpacing.lg),
+                _DocumentsCard(
+                  documentsAsync: documentsAsync,
+                  vehicleId: vehicleId,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _RestrictionCard(
+                  restrictionAsync: restrictionAsync,
+                  vehicleId: vehicleId,
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 summaryAsync.when(
                   loading: () => const LoadingIndicator(),
@@ -162,8 +196,9 @@ enum _VehicleAction { edit, delete }
 
 class _VehicleHeader extends StatelessWidget {
   final Vehicle vehicle;
+  final VoidCallback onUpdateMileage;
 
-  const _VehicleHeader({required this.vehicle});
+  const _VehicleHeader({required this.vehicle, required this.onUpdateMileage});
 
   @override
   Widget build(BuildContext context) {
@@ -213,7 +248,241 @@ class _VehicleHeader extends StatelessWidget {
             ],
           ),
         ),
+        if (vehicle.currentMileage != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            formatMileage(vehicle.currentMileage),
+            style: theme.textTheme.titleSmall,
+          ),
+        ],
+        TextButton.icon(
+          onPressed: onUpdateMileage,
+          icon: const Icon(Icons.speed, size: 18),
+          label: const Text('Actualizar kilometraje'),
+        ),
       ],
+    );
+  }
+}
+
+class _HealthCard extends StatelessWidget {
+  final AsyncValue<HealthScore> healthAsync;
+
+  const _HealthCard({required this.healthAsync});
+
+  @override
+  Widget build(BuildContext context) {
+    final health = healthAsync.valueOrNull;
+    if (health == null) return const SizedBox.shrink();
+
+    final status = health.value >= 90
+        ? AppStatus.ok
+        : health.value >= 70
+        ? AppStatus.warning
+        : AppStatus.danger;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: [
+            Icon(
+              Icons.favorite_border,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Salud del vehículo',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    health.reasons.join(' · '),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            StatusChip(
+              status: status,
+              label: '${health.value}/100',
+              icon: Icons.speed,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DocumentsCard extends StatelessWidget {
+  final AsyncValue<List<VehicleDocument>> documentsAsync;
+  final int vehicleId;
+
+  const _DocumentsCard({required this.documentsAsync, required this.vehicleId});
+
+  @override
+  Widget build(BuildContext context) {
+    final documents = documentsAsync.valueOrNull ?? [];
+    final theme = Theme.of(context);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.description_outlined,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text('Documentos', style: theme.textTheme.titleMedium),
+                ),
+                TextButton(
+                  onPressed: () =>
+                      context.push('/vehicles/$vehicleId/documents'),
+                  child: const Text('Ver todo'),
+                ),
+              ],
+            ),
+            if (documents.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Sin documentos registrados',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          context.push('/vehicles/$vehicleId/documents/add'),
+                      child: const Text('Agregar'),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ...documents
+                  .take(3)
+                  .map((document) => _DocumentRow(document: document)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DocumentRow extends StatelessWidget {
+  final VehicleDocument document;
+
+  const _DocumentRow({required this.document});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final type = documentTypeFor(document.type);
+    final status = dateStatus(document.expiresAt);
+    final appStatus = switch (status.level) {
+      ExpiryLevel.danger => AppStatus.danger,
+      ExpiryLevel.warning => AppStatus.warning,
+      ExpiryLevel.ok => AppStatus.ok,
+    };
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: Row(
+        children: [
+          Icon(type.icon, size: 18, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  document.name ?? type.label,
+                  style: theme.textTheme.bodyMedium,
+                ),
+                Text(
+                  formatDisplayDate(document.expiresAt),
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          StatusChip(
+            status: appStatus,
+            label: status.shortLabel,
+            icon: Icons.schedule,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RestrictionCard extends StatelessWidget {
+  final AsyncValue<RestrictionStatus> restrictionAsync;
+  final int vehicleId;
+
+  const _RestrictionCard({
+    required this.restrictionAsync,
+    required this.vehicleId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final status = restrictionAsync.valueOrNull;
+    if (status == null) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: [
+            Icon(
+              status.restrictedToday
+                  ? Icons.do_not_disturb_on_outlined
+                  : Icons.directions_car_outlined,
+              color: status.restrictedToday
+                  ? theme.colorScheme.error
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Pico y placa', style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 2),
+                  Text(
+                    status.configured
+                        ? '${status.todayLabel}\n${status.nextLabel}'
+                        : 'Sin configurar',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: () => context.push('/vehicles/$vehicleId/restriction'),
+              child: Text(status.configured ? 'Editar' : 'Configurar'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -271,26 +540,12 @@ class _InfoCard extends StatelessWidget {
               ),
             if (vehicle.vin != null)
               _InfoRow(icon: Icons.numbers, label: 'VIN', value: vehicle.vin!),
-            if (vehicle.soatExpiresAt != null)
-              _ExpiryRow(
-                icon: Icons.health_and_safety_outlined,
-                label: 'SOAT',
-                date: vehicle.soatExpiresAt!,
-              ),
-            if (vehicle.rtmExpiresAt != null)
-              _ExpiryRow(
-                icon: Icons.engineering_outlined,
-                label: 'Tecnomecánica',
-                date: vehicle.rtmExpiresAt!,
-              ),
             if (vehicle.brand == null &&
                 vehicle.model == null &&
                 vehicle.year == null &&
                 vehicle.plate == null &&
                 vehicle.color == null &&
                 vehicle.vin == null &&
-                vehicle.soatExpiresAt == null &&
-                vehicle.rtmExpiresAt == null &&
                 vehicle.currentMileage == null)
               const EmptyState(
                 compact: true,
@@ -334,62 +589,6 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _ExpiryRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final DateTime date;
-
-  const _ExpiryRow({
-    required this.icon,
-    required this.label,
-    required this.date,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final status = dateStatus(date);
-    final appStatus = switch (status.level) {
-      ExpiryLevel.danger => AppStatus.danger,
-      ExpiryLevel.warning => AppStatus.warning,
-      ExpiryLevel.ok => AppStatus.ok,
-    };
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
-              const SizedBox(width: AppSpacing.sm),
-              Text('$label: ', style: theme.textTheme.bodyMedium),
-              Flexible(
-                child: Text(
-                  formatDisplayDate(date),
-                  style: theme.textTheme.bodyLarge,
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.only(
-              left: AppSpacing.lg + AppSpacing.md,
-              top: AppSpacing.xs,
-            ),
-            child: StatusChip(
-              status: appStatus,
-              label: status.longLabel,
-              icon: Icons.schedule,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _MaintenanceSummaryCard extends StatelessWidget {
   final ({int count, double totalCost, DateTime? lastDate}) summary;
   final int vehicleId;
@@ -421,11 +620,23 @@ class _MaintenanceSummaryCard extends StatelessWidget {
               const SizedBox(height: AppSpacing.sm),
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: () =>
-                      context.push('/vehicles/$vehicleId/upcoming'),
-                  icon: const Icon(Icons.schedule, size: 16),
-                  label: const Text('Próximos mantenimientos'),
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: AppSpacing.sm,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () =>
+                          context.push('/vehicles/$vehicleId/report'),
+                      icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
+                      label: const Text('Hoja de vida'),
+                    ),
+                    TextButton.icon(
+                      onPressed: () =>
+                          context.push('/vehicles/$vehicleId/upcoming'),
+                      icon: const Icon(Icons.schedule, size: 16),
+                      label: const Text('Próximos'),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -465,10 +676,23 @@ class _MaintenanceSummaryCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: () => context.push('/vehicles/$vehicleId/upcoming'),
-                icon: const Icon(Icons.schedule, size: 16),
-                label: const Text('Próximos mantenimientos'),
+              child: Wrap(
+                alignment: WrapAlignment.end,
+                spacing: AppSpacing.sm,
+                children: [
+                  TextButton.icon(
+                    onPressed: () =>
+                        context.push('/vehicles/$vehicleId/report'),
+                    icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
+                    label: const Text('Hoja de vida'),
+                  ),
+                  TextButton.icon(
+                    onPressed: () =>
+                        context.push('/vehicles/$vehicleId/upcoming'),
+                    icon: const Icon(Icons.schedule, size: 16),
+                    label: const Text('Próximos'),
+                  ),
+                ],
               ),
             ),
           ],

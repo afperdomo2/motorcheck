@@ -4,7 +4,7 @@ part 'maintenance.freezed.dart';
 part 'maintenance.g.dart';
 
 @freezed
-class Maintenance with _$Maintenance {
+abstract class Maintenance with _$Maintenance {
   const factory Maintenance({
     int? id,
     required int vehicleId,

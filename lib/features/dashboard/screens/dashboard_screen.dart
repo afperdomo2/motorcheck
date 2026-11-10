@@ -9,11 +9,11 @@ import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../vehicles/providers.dart';
 import '../providers.dart';
-import '../widgets/expiry_alerts.dart';
 import '../widgets/favorite_vehicle_card.dart';
+import '../widgets/pico_y_placa_banner.dart';
 import '../widgets/quick_stats.dart';
 import '../widgets/recent_activity.dart';
-import '../widgets/upcoming_summary.dart';
+import '../widgets/reminders_summary.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -81,11 +81,11 @@ class DashboardScreen extends ConsumerWidget {
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: AppSpacing.md),
+                    const PicoYPlacaBanner(),
+                    const SizedBox(height: AppSpacing.md),
                     const FavoriteVehicleCard(),
                     const SizedBox(height: AppSpacing.lg),
-                    const UpcomingSummary(),
-                    const SizedBox(height: AppSpacing.lg),
-                    const ExpiryAlerts(),
+                    const RemindersSummary(),
                     const SizedBox(height: AppSpacing.lg),
                     QuickStats(summary: summary),
                     const SizedBox(height: AppSpacing.lg),

@@ -60,7 +60,7 @@ pre-commit:
 5. **Archivos**: snake_case. **Clases**: PascalCase. **Providers**: sufijo `Provider`
 6. **Imports**: relativos para código propio; `package:` solo para dependencias externas. **Tests**: `package:motorcheck/...`
 7. **Riverpod**: `ConsumerWidget`/`ConsumerStatefulWidget` para UI; `Notifier`/`AsyncNotifier` para estado
-8. **Modelos**: `@freezed` (inmutabilidad, `copyWith`, JSON). `int? id` nullable, timestamps `required`
+8. **Modelos**: `@freezed` 4 (`abstract class` + factory; inmutabilidad, `copyWith`, JSON). `int? id` nullable, timestamps `required`
 9. **AsyncValue y caché**: usar `.when(loading:, error:, data:)` siempre. `AsyncValue.guard()` en notifiers. `valueOrNull` solo para acceso síncrono. Tras una mutación, invalida los providers derivados (detalle, próximos, dashboard, resumen del vehículo)
 10. **Errores**: nunca `try/catch` vacío; usar `friendlyErrorMessage()` y `logError()`, nunca `err.toString()` en UI; borrados con `await` + snackbar
 11. **`context.mounted`**: verificar tras `await` antes de usar `context`
@@ -118,13 +118,20 @@ lib/
 ├── main.dart / app.dart         # Entry + MaterialApp.router
 ├── core/
 │   ├── theme/                   # Tokens, Barlow, temas light+dark, ThemeExtension
-│   ├── database/                # SQLite helper + DDL (v12) + factory FFI
+│   ├── database/                # SQLite helper + DDL (v15) + factory FFI
+│   ├── backup/                  # Copia ZIP (JSON + adjuntos) y exportación CSV
+│   ├── notifications/           # Notificaciones locales y sincronización
+│   ├── settings/                # Preferencias de notificaciones y respaldo
 │   └── utils/                   # Formateadores es_CO, dateStatus, búsqueda y errores
 ├── features/
-│   ├── vehicles/                # CRUD vehículos + selección default
+│   ├── vehicles/                # CRUD vehículos, selección default y kilometraje
 │   ├── maintenance/             # CRUD mantenimientos + items (categorías por tipo)
-│   ├── dashboard/               # Vehículo por defecto, próximos km + alertas globales
-│   └── settings/                # Tema (system/light/dark) + CRUD talleres
+│   ├── dashboard/               # Vehículo por defecto, recordatorios y pico y placa
+│   ├── documents/               # SOAT, RTM, impuesto, seguro y licencia
+│   ├── restrictions/            # Regla semanal de pico y placa
+│   ├── reminders/               # Bandeja única, salud del vehículo y alertas
+│   ├── reports/                 # Hoja de vida en PDF
+│   └── settings/                # Tema, talleres, categorías, respaldo y avisos
 ├── shared/widgets/              # Dumb widgets reutilizables
 └── routes/                      # GoRouter (StatefulShellRoute, 4 tabs)
 ```
@@ -146,13 +153,22 @@ lib/
 
 | Modelo | Tabla | Campos clave |
 |--------|-------|-------------|
-| `Vehicle` | `vehicles` | name, type, brand, plate, vin, currentMileage, soatExpiresAt, rtmExpiresAt, isDefault |
+| `Vehicle` | `vehicles` | name, type, brand, plate, vin, currentMileage, soatExpiresAt/rtmExpiresAt (legado), isDefault |
 | `Maintenance` | `maintenances` | vehicleId, date, mileage, maintenanceCost, workshopId, notes |
 | `MaintenanceItem` | `maintenance_items` | maintenanceId, category, partsCost, notes |
 | `Workshop` | `workshops` | name, location |
+| `MileageReading` | `mileage_readings` | vehicleId, date, mileage, source |
+| `VehicleDocument` | `documents` | vehicleId (nullable), type, number, issuedAt, expiresAt, filePath |
+| `VehicleRestriction` | `vehicle_restrictions` | vehicleId, enabled, city, days, startTime, endTime, exempt |
 
 Categorías de mantenimiento por tipo: car/truck (11), motorcycle (9), bike (6), other (1).
-Definidas en `lib/features/maintenance/categories.dart`.
+Definidas en `lib/features/maintenance/categories.dart`. Cada categoría puede tener
+`interval_km`/`warning_km` y `interval_months`/`warning_days`; el próximo servicio
+se calcula con **lo que ocurra primero** entre kilometraje y fecha.
+
+La fuente de verdad de SOAT, RTM, impuesto, seguro y licencia es `documents`.
+Las columnas `vehicles.soat_expires_at` y `rtm_expires_at` se conservan solo por
+compatibilidad y se migraron a `documents` en la v14.
 
 ## Tests
 

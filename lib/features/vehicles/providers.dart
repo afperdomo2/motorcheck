@@ -1,9 +1,27 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'mileage_repository.dart';
+import 'models/mileage_reading.dart';
 import 'models/vehicle.dart';
 import 'repository.dart';
 
 final vehicleRepositoryProvider = Provider<VehicleRepository>((ref) {
   return VehicleRepository();
+});
+
+final mileageRepositoryProvider = Provider<MileageRepository>((ref) {
+  return MileageRepository();
+});
+
+final vehicleMileageReadingsProvider =
+    FutureProvider.family<List<MileageReading>, int>((ref, vehicleId) async {
+      return ref.watch(mileageRepositoryProvider).getByVehicleId(vehicleId);
+    });
+
+final mileageStatsProvider = FutureProvider.family<MileageStats, int>((
+  ref,
+  vehicleId,
+) async {
+  return ref.watch(mileageRepositoryProvider).getStats(vehicleId);
 });
 
 final selectedVehicleIdProvider = StateProvider<int?>((ref) => null);
@@ -94,6 +112,18 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
     ref.invalidate(vehiclesProvider);
     ref.invalidate(defaultVehicleProvider);
     ref.invalidate(selectedVehicleProvider(vehicle.id!));
+  }
+
+  Future<void> updateMileage(int vehicleId, int mileage) async {
+    await ref
+        .read(mileageRepositoryProvider)
+        .addReading(vehicleId: vehicleId, mileage: mileage);
+    state = AsyncValue.data(await _repo.getAll());
+    ref.invalidate(vehiclesProvider);
+    ref.invalidate(defaultVehicleProvider);
+    ref.invalidate(selectedVehicleProvider(vehicleId));
+    ref.invalidate(vehicleMileageReadingsProvider(vehicleId));
+    ref.invalidate(mileageStatsProvider(vehicleId));
   }
 
   Future<void> remove(int id) async {

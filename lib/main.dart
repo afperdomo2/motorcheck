@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'app.dart';
+import 'core/backup/backup_service.dart';
 import 'core/database/database_factory.dart';
+import 'core/notifications/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,4 +16,6 @@ void main() async {
   await initializeDateFormatting('es_CO');
   await initializeDateFormatting('es');
   runApp(const ProviderScope(child: MotorCheckApp()));
+  unawaited(NotificationService.instance.initialize());
+  unawaited(BackupService().createAutoBackupIfNeeded());
 }

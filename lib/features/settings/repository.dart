@@ -136,6 +136,8 @@ class MaintenanceCategoryRepository {
           : (maxOrder ?? 0) + 1,
       'interval_km': category.intervalKm,
       'warning_km': category.warningKm,
+      'interval_months': category.intervalMonths,
+      'warning_days': category.warningDays,
       'created_at': formatDateTime(category.createdAt),
     });
   }
@@ -161,6 +163,8 @@ class MaintenanceCategoryRepository {
         'sort_order': category.sortOrder,
         'interval_km': category.intervalKm,
         'warning_km': category.warningKm,
+        'interval_months': category.intervalMonths,
+        'warning_days': category.warningDays,
       },
       where: 'id = ?',
       whereArgs: [category.id],
@@ -224,6 +228,8 @@ class MaintenanceCategoryRepository {
         sortOrder: m['sort_order'] as int? ?? 0,
         intervalKm: m['interval_km'] as int?,
         warningKm: m['warning_km'] as int?,
+        intervalMonths: m['interval_months'] as int?,
+        warningDays: m['warning_days'] as int?,
         createdAt: parseDateTime(m['created_at'] as String),
       );
 }

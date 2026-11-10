@@ -78,14 +78,21 @@ final dashboardUpcomingProvider = FutureProvider<List<DashboardUpcomingEntry>>((
     upcomingMaintenanceProvider(vehicle!.id!).future,
   );
   final entries = upcoming
-      .where((item) => item.category.intervalKm != null)
+      .where((item) => item.hasInterval)
       .map((item) => DashboardUpcomingEntry(vehicle: vehicle, item: item))
       .toList();
 
   entries.sort((a, b) {
-    final severityA = a.item.isOverdue ? 0 : (a.item.isWarning ? 1 : 2);
-    final severityB = b.item.isOverdue ? 0 : (b.item.isWarning ? 1 : 2);
+    final severityA = a.item.isOverdue
+        ? 0
+        : (a.item.isWarning ? 1 : (a.item.hasRecord ? 2 : 3));
+    final severityB = b.item.isOverdue
+        ? 0
+        : (b.item.isWarning ? 1 : (b.item.hasRecord ? 2 : 3));
     if (severityA != severityB) return severityA.compareTo(severityB);
+    final daysA = a.item.remainingDays ?? 1 << 30;
+    final daysB = b.item.remainingDays ?? 1 << 30;
+    if (daysA != daysB) return daysA.compareTo(daysB);
     return (a.item.remainingKm ?? 1 << 30).compareTo(
       b.item.remainingKm ?? 1 << 30,
     );

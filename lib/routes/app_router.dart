@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../features/maintenance/providers.dart';
+import '../core/notifications/notification_sync.dart';
+import '../features/reminders/providers.dart';
 import '../features/vehicles/providers.dart';
 import '../features/dashboard/screens/dashboard_screen.dart';
 import '../features/vehicles/screens/vehicles_screen.dart';
@@ -17,6 +18,13 @@ import '../features/settings/screens/workshops_screen.dart';
 import '../features/settings/screens/workshop_form_screen.dart';
 import '../features/settings/screens/categories_screen.dart';
 import '../features/settings/screens/category_form_screen.dart';
+import '../features/settings/screens/data_backup_screen.dart';
+import '../features/settings/screens/notification_settings_screen.dart';
+import '../features/documents/screens/documents_screen.dart';
+import '../features/documents/screens/document_form_screen.dart';
+import '../features/restrictions/screens/pico_y_placa_screen.dart';
+import '../features/reminders/screens/reminders_screen.dart';
+import '../features/reports/screens/vehicle_report_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -101,6 +109,51 @@ final appRouter = GoRouter(
                     return UpcomingMaintenanceScreen(vehicleId: id);
                   },
                 ),
+                GoRoute(
+                  path: ':id/documents',
+                  builder: (context, state) {
+                    final id = int.parse(state.pathParameters['id']!);
+                    return DocumentsScreen(vehicleId: id);
+                  },
+                  routes: [
+                    GoRoute(
+                      path: 'add',
+                      builder: (context, state) {
+                        final id = int.parse(state.pathParameters['id']!);
+                        return DocumentFormScreen(vehicleId: id);
+                      },
+                    ),
+                    GoRoute(
+                      path: ':documentId/edit',
+                      builder: (context, state) {
+                        final vehicleId = int.parse(
+                          state.pathParameters['id']!,
+                        );
+                        final documentId = int.tryParse(
+                          state.pathParameters['documentId'] ?? '',
+                        );
+                        return DocumentFormScreen(
+                          vehicleId: vehicleId,
+                          documentId: documentId,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                GoRoute(
+                  path: ':id/restriction',
+                  builder: (context, state) {
+                    final id = int.parse(state.pathParameters['id']!);
+                    return PicoYPlacaScreen(vehicleId: id);
+                  },
+                ),
+                GoRoute(
+                  path: ':id/report',
+                  builder: (context, state) {
+                    final id = int.parse(state.pathParameters['id']!);
+                    return VehicleReportScreen(vehicleId: id);
+                  },
+                ),
               ],
             ),
           ],
@@ -152,11 +205,43 @@ final appRouter = GoRouter(
                     ),
                   ],
                 ),
+                GoRoute(
+                  path: 'backup',
+                  builder: (context, state) => const DataBackupScreen(),
+                ),
+                GoRoute(
+                  path: 'notifications',
+                  builder: (context, state) =>
+                      const NotificationSettingsScreen(),
+                ),
+                GoRoute(
+                  path: 'documents',
+                  builder: (context, state) => const DocumentsScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'add',
+                      builder: (context, state) => const DocumentFormScreen(),
+                    ),
+                    GoRoute(
+                      path: ':documentId/edit',
+                      builder: (context, state) {
+                        final documentId = int.tryParse(
+                          state.pathParameters['documentId'] ?? '',
+                        );
+                        return DocumentFormScreen(documentId: documentId);
+                      },
+                    ),
+                  ],
+                ),
               ],
             ),
           ],
         ),
       ],
+    ),
+    GoRoute(
+      path: '/reminders',
+      builder: (context, state) => const RemindersScreen(),
     ),
   ],
 );
@@ -173,64 +258,69 @@ class AppShell extends ConsumerWidget {
     // usuario visite la pestaña de vehículos.
     ref.watch(vehiclesNotifierProvider);
     final attentionCount =
-        ref.watch(maintenanceAttentionCountProvider).valueOrNull ?? 0;
+        ref.watch(remindersAttentionCountProvider).valueOrNull ?? 0;
 
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth <= 720) return navigationShell;
-          return Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: 720,
-                minHeight: constraints.maxHeight,
+    return NotificationSync(
+      child: Scaffold(
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth <= 720) return navigationShell;
+            return Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 720,
+                  minHeight: constraints.maxHeight,
+                ),
+                child: navigationShell,
               ),
-              child: navigationShell,
-            ),
-          );
-        },
-      ),
-      bottomNavigationBar: DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(color: theme.colorScheme.outlineVariant),
-          ),
-        ),
-        child: NavigationBar(
-          selectedIndex: navigationShell.currentIndex,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          onDestinationSelected: (index) {
-            navigationShell.goBranch(
-              index,
-              initialLocation: index == navigationShell.currentIndex,
             );
           },
-          destinations: [
-            const NavigationDestination(
-              icon: Icon(Icons.dashboard_outlined),
-              selectedIcon: Icon(Icons.dashboard),
-              label: 'Inicio',
+        ),
+        bottomNavigationBar: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(color: theme.colorScheme.outlineVariant),
             ),
-            NavigationDestination(
-              icon: _NavBadge(
-                icon: Icons.build_outlined,
-                count: attentionCount,
+          ),
+          child: NavigationBar(
+            selectedIndex: navigationShell.currentIndex,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            onDestinationSelected: (index) {
+              navigationShell.goBranch(
+                index,
+                initialLocation: index == navigationShell.currentIndex,
+              );
+            },
+            destinations: [
+              const NavigationDestination(
+                icon: Icon(Icons.dashboard_outlined),
+                selectedIcon: Icon(Icons.dashboard),
+                label: 'Inicio',
               ),
-              selectedIcon: _NavBadge(icon: Icons.build, count: attentionCount),
-              label: 'Mantenimientos',
-            ),
-            const NavigationDestination(
-              icon: Icon(Icons.directions_car_outlined),
-              selectedIcon: Icon(Icons.directions_car),
-              label: 'Vehículos',
-            ),
-            const NavigationDestination(
-              icon: Icon(Icons.tune),
-              selectedIcon: Icon(Icons.tune),
-              label: 'Ajustes',
-            ),
-          ],
+              NavigationDestination(
+                icon: _NavBadge(
+                  icon: Icons.build_outlined,
+                  count: attentionCount,
+                ),
+                selectedIcon: _NavBadge(
+                  icon: Icons.build,
+                  count: attentionCount,
+                ),
+                label: 'Mantenimientos',
+              ),
+              const NavigationDestination(
+                icon: Icon(Icons.directions_car_outlined),
+                selectedIcon: Icon(Icons.directions_car),
+                label: 'Vehículos',
+              ),
+              const NavigationDestination(
+                icon: Icon(Icons.tune),
+                selectedIcon: Icon(Icons.tune),
+                label: 'Ajustes',
+              ),
+            ],
+          ),
         ),
       ),
     );

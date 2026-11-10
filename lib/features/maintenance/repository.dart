@@ -179,7 +179,30 @@ class MaintenanceRepository {
       'FROM maintenances m '
       'JOIN maintenance_items i ON i.maintenance_id = m.id '
       'WHERE m.vehicle_id = ? AND i.category = ? AND m.mileage IS NOT NULL '
-      'ORDER BY m.date DESC LIMIT 1',
+      'ORDER BY m.date DESC, m.id DESC LIMIT 1',
+      [vehicleId, categoryKey],
+    );
+    if (maps.isEmpty) return (mileage: null, date: null);
+    final row = maps.first;
+    return (
+      mileage: row['mileage'] as int?,
+      date: row['date'] != null ? parseDate(row['date'] as String) : null,
+    );
+  }
+
+  /// Último servicio de una categoría, tenga o no kilometraje registrado.
+  /// Se usa para calcular vencimientos por fecha.
+  Future<({int? mileage, DateTime? date})> getLastServiceByCategory(
+    int vehicleId,
+    String categoryKey,
+  ) async {
+    final db = await _db.database;
+    final maps = await db.rawQuery(
+      'SELECT m.mileage, m.date '
+      'FROM maintenances m '
+      'JOIN maintenance_items i ON i.maintenance_id = m.id '
+      'WHERE m.vehicle_id = ? AND i.category = ? '
+      'ORDER BY m.date DESC, m.id DESC LIMIT 1',
       [vehicleId, categoryKey],
     );
     if (maps.isEmpty) return (mileage: null, date: null);
@@ -236,6 +259,13 @@ class MaintenanceRepository {
   ) async {
     if (mileage == null) return;
     final now = formatDateTime(DateTime.now());
+    await txn.insert('mileage_readings', {
+      'vehicle_id': vehicleId,
+      'date': formatDate(DateTime.now()),
+      'mileage': mileage,
+      'source': 'maintenance',
+      'created_at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
     await txn.rawUpdate(
       'UPDATE vehicles SET current_mileage = ?, mileage_updated_at = ?, '
       'updated_at = ? WHERE id = ? '
