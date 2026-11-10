@@ -77,6 +77,7 @@ class VehicleRepository {
     final maps = await db.query(
       'vehicles',
       columns: ['id'],
+      where: 'last_selected_at IS NOT NULL',
       orderBy: 'last_selected_at DESC',
       limit: 1,
     );

@@ -99,22 +99,26 @@ class MaintenanceCard extends StatelessWidget {
 
     if (workshopName != null) {
       parts.add(
-        Icon(
-          Icons.handyman_outlined,
-          size: 14,
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-      );
-      parts.add(
-        Flexible(
-          child: Text(
-            workshopLocation != null && workshopLocation!.isNotEmpty
-                ? '$workshopName · $workshopLocation'
-                : workshopName!,
-            style: theme.textTheme.bodySmall,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.handyman_outlined,
+              size: 14,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Flexible(
+              child: Text(
+                workshopLocation != null && workshopLocation!.isNotEmpty
+                    ? '$workshopName · $workshopLocation'
+                    : workshopName!,
+                style: theme.textTheme.bodySmall,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       );
     }

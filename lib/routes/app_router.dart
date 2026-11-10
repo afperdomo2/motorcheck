@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/maintenance/providers.dart';
+import '../features/vehicles/providers.dart';
 import '../features/dashboard/screens/dashboard_screen.dart';
 import '../features/vehicles/screens/vehicles_screen.dart';
 import '../features/vehicles/screens/vehicle_detail_screen.dart';
@@ -168,6 +169,9 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    // Inicializa la selección de vehículo al arrancar, sin depender de que el
+    // usuario visite la pestaña de vehículos.
+    ref.watch(vehiclesNotifierProvider);
     final attentionCount =
         ref.watch(maintenanceAttentionCountProvider).valueOrNull ?? 0;
 

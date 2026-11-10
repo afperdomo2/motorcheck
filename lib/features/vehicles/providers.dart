@@ -43,13 +43,25 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
       if (vehicles.isNotEmpty &&
           (selectedId == null || !vehicles.any((v) => v.id == selectedId))) {
         final lastSelectedId = await _repo.getLastSelectedId();
-        if (lastSelectedId != null &&
-            vehicles.any((v) => v.id == lastSelectedId)) {
-          ref.read(selectedVehicleIdProvider.notifier).state = lastSelectedId;
+        final initialId = _resolveInitialVehicleId(vehicles, lastSelectedId);
+        if (initialId != null) {
+          ref.read(selectedVehicleIdProvider.notifier).state = initialId;
         }
       }
       return vehicles;
     });
+  }
+
+  /// Prioriza el último vehículo seleccionado, luego el favorito y, por
+  /// último, el primero de la lista.
+  int? _resolveInitialVehicleId(List<Vehicle> vehicles, int? lastSelectedId) {
+    if (lastSelectedId != null && vehicles.any((v) => v.id == lastSelectedId)) {
+      return lastSelectedId;
+    }
+    for (final vehicle in vehicles) {
+      if (vehicle.isDefault) return vehicle.id;
+    }
+    return vehicles.first.id;
   }
 
   Future<void> add(Vehicle vehicle) async {
