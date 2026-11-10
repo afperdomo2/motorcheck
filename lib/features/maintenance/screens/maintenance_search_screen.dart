@@ -93,10 +93,10 @@ class _MaintenanceSearchScreenState
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.search_off,
                           size: 48,
-                          color: Colors.grey,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -302,7 +302,7 @@ class _MaintenanceSearchScreenState
               Icon(
                 _searchVehicleIcon(vehicle?.type),
                 size: 18,
-                color: Theme.of(context).disabledColor,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 6),
               Expanded(
@@ -354,7 +354,7 @@ class _MaintenanceSearchScreenState
                     Icon(
                       Icons.handyman,
                       size: 12,
-                      color: Theme.of(context).disabledColor,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 4),
                     Flexible(

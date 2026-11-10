@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
 import '../categories.dart';
 import '../models/maintenance.dart';
@@ -31,38 +32,36 @@ class MaintenanceCard extends StatelessWidget {
     final visibleItems = items.take(maxItems).toList();
     final remaining = items.length - maxItems;
 
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: theme.dividerColor, width: 0.5),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(context, theme, total),
-            if (workshopName != null || maintenance.mileage != null)
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(context, theme, total),
               _buildSubHeader(context, theme),
-            if (items.isNotEmpty || maintenance.maintenanceCost > 0) ...[
-              const SizedBox(height: 8),
-              if (maintenance.maintenanceCost > 0) _buildLaborItem(context),
-              ...visibleItems.map((item) => _buildItemLine(context, item)),
-              if (remaining > 0)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    '+$remaining más',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
+              if (items.isNotEmpty || maintenance.maintenanceCost > 0) ...[
+                const SizedBox(height: AppSpacing.md),
+                const Divider(),
+                const SizedBox(height: AppSpacing.sm),
+                if (maintenance.maintenanceCost > 0) _buildLaborItem(context),
+                ...visibleItems.map((item) => _buildItemLine(context, item)),
+                if (remaining > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.xs),
+                    child: Text(
+                      '+$remaining más',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                   ),
-                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -70,56 +69,49 @@ class MaintenanceCard extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context, ThemeData theme, double total) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (maintenance.mileage != null)
-          Expanded(
-            child: Text(
-              formatMileage(maintenance.mileage),
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-          )
-        else
-          const Expanded(child: SizedBox.shrink()),
-        if (total > 0)
-          Text(
-            formatCurrency(total),
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
+        Expanded(
+          child: Text(
+            maintenance.mileage != null
+                ? formatMileage(maintenance.mileage)
+                : 'Sin kilometraje',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: maintenance.mileage != null
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
             ),
           ),
+        ),
+        if (total > 0)
+          Text(formatCurrency(total), style: theme.textTheme.titleMedium),
       ],
     );
   }
 
   Widget _buildSubHeader(BuildContext context, ThemeData theme) {
-    final parts = <Widget>[];
-
-    parts.add(
+    final parts = <Widget>[
       Text(
         formatWeekdayDay(maintenance.date),
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
+        style: theme.textTheme.bodySmall,
       ),
-    );
+    ];
 
     if (workshopName != null) {
-      parts.add(Text(' · ', style: TextStyle(color: theme.disabledColor)));
-      parts.add(Icon(Icons.handyman, size: 12, color: theme.disabledColor));
-      parts.add(const SizedBox(width: 3));
+      parts.add(
+        Icon(
+          Icons.handyman_outlined,
+          size: 14,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      );
       parts.add(
         Flexible(
           child: Text(
             workshopLocation != null && workshopLocation!.isNotEmpty
                 ? '$workshopName · $workshopLocation'
                 : workshopName!,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: theme.textTheme.bodySmall,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -129,7 +121,12 @@ class MaintenanceCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(top: 2),
-      child: Row(children: parts),
+      child: Wrap(
+        spacing: AppSpacing.xs,
+        runSpacing: AppSpacing.xs,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: parts,
+      ),
     );
   }
 
@@ -140,18 +137,18 @@ class MaintenanceCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             cat != null
                 ? MaintenanceCategories.iconByName(cat.iconName)
-                : Icons.build,
-            size: 14,
-            color: theme.disabledColor,
+                : Icons.build_outlined,
+            size: 15,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text.rich(
               TextSpan(
@@ -161,24 +158,24 @@ class MaintenanceCard extends StatelessWidget {
                     TextSpan(
                       text: ' · ${item.notes}',
                       style: TextStyle(
-                        color: theme.disabledColor,
+                        color: theme.colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.normal,
                       ),
                     ),
                 ],
-                style: theme.textTheme.bodySmall,
+              ),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
           if (item.partsCost > 0) ...[
-            const SizedBox(width: 6),
+            const SizedBox(width: AppSpacing.sm),
             Text(
               formatCurrency(item.partsCost),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.disabledColor,
-              ),
+              style: theme.textTheme.bodySmall,
             ),
           ],
         ],
@@ -190,24 +187,26 @@ class MaintenanceCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             Icons.engineering_outlined,
-            size: 14,
-            color: theme.disabledColor,
+            size: 15,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: Text('Mano de obra', style: theme.textTheme.bodySmall),
+            child: Text(
+              'Mano de obra',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
           ),
           Text(
             formatCurrency(maintenance.maintenanceCost),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.disabledColor,
-            ),
+            style: theme.textTheme.bodySmall,
           ),
         ],
       ),

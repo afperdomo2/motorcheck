@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/app_snack_bar.dart';
+import '../../../shared/widgets/confirm_dialog.dart';
+import '../../../shared/widgets/form_section.dart';
+import '../../../shared/widgets/sticky_bottom_bar.dart';
 import '../models/vehicle.dart';
 import '../providers.dart';
 import '../widgets/vehicle_type_selector.dart';
@@ -28,6 +32,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
   String _type = 'car';
   bool _isDefault = false;
   bool _isLoading = false;
+  bool _dirty = false;
   DateTime? _originalCreatedAt;
   int? _originalMileage;
   DateTime? _originalMileageUpdatedAt;
@@ -83,6 +88,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
         _originalCreatedAt = vehicle.createdAt;
         _originalMileage = vehicle.currentMileage;
         _originalMileageUpdatedAt = vehicle.mileageUpdatedAt;
+        _dirty = false;
       });
     }
   }
@@ -153,223 +159,301 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
 
     final notifier = ref.read(vehiclesNotifierProvider.notifier);
 
-    if (_isEditing) {
-      await notifier.update(vehicle);
-    } else {
-      await notifier.add(vehicle);
-    }
+    try {
+      if (_isEditing) {
+        await notifier.update(vehicle);
+      } else {
+        await notifier.add(vehicle);
+      }
 
-    if (mounted) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _dirty = false;
+      });
+      AppSnackBar.success(
+        _isEditing ? 'Vehículo actualizado' : 'Vehículo creado',
+      );
+      await Future<void>.delayed(Duration.zero);
+      if (mounted) context.pop();
+    } catch (error) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      context.pop();
+      AppSnackBar.error('No se pudo guardar el vehículo');
+    }
+  }
+
+  Future<void> _confirmDiscard() async {
+    final leave = await showConfirmDialog(
+      context,
+      title: 'Descartar cambios',
+      message: '¿Salir sin guardar los cambios?',
+      confirmLabel: 'Descartar',
+      cancelLabel: 'Seguir editando',
+      isDestructive: true,
+    );
+    if (leave == true && mounted) {
+      setState(() => _dirty = false);
+      await Future<void>.delayed(Duration.zero);
+      if (mounted) context.pop();
+    }
+  }
+
+  Future<void> _pickSoatDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _soatDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
+      helpText: 'Vencimiento SOAT',
+    );
+    if (date != null) {
+      setState(() {
+        _soatDate = date;
+        _soatController.text = formatDisplayDate(date);
+        _dirty = true;
+      });
+    }
+  }
+
+  Future<void> _pickRtmDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _rtmDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
+      helpText: 'Vencimiento RTM',
+    );
+    if (date != null) {
+      setState(() {
+        _rtmDate = date;
+        _rtmController.text = formatDisplayDate(date);
+        _dirty = true;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditing ? 'Editar vehículo' : 'Nuevo vehículo'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
+    return PopScope(
+      canPop: !_dirty && !_isLoading,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _confirmDiscard();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_isEditing ? 'Editar vehículo' : 'Nuevo vehículo'),
+        ),
+        body: Form(
           key: _formKey,
+          onChanged: () {
+            if (!_dirty) setState(() => _dirty = true);
+          },
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nombre (opcional)',
-                  prefixIcon: Icon(Icons.badge_outlined),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Tipo de vehículo',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 8),
-              VehicleTypeSelector(
-                selectedType: _type,
-                onChanged: (type) => setState(() => _type = type),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _brandController,
-                      decoration: const InputDecoration(
-                        labelText: 'Marca',
-                        prefixIcon: Icon(Icons.factory_outlined),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      FormSection(
+                        title: 'Identificación',
+                        icon: Icons.badge_outlined,
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: _nameController,
+                              decoration: const InputDecoration(
+                                labelText: 'Nombre (opcional)',
+                                hintText: 'Ej: Mi carro',
+                                prefixIcon: Icon(Icons.badge_outlined),
+                              ),
+                              textCapitalization: TextCapitalization.words,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Tipo de vehículo',
+                                style: Theme.of(context).textTheme.labelLarge,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            VehicleTypeSelector(
+                              selectedType: _type,
+                              onChanged: (type) => setState(() {
+                                _type = type;
+                                _dirty = true;
+                              }),
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            TextFormField(
+                              controller: _brandController,
+                              decoration: const InputDecoration(
+                                labelText: 'Marca',
+                                hintText: 'Ej: Toyota',
+                                prefixIcon: Icon(Icons.factory_outlined),
+                              ),
+                              textCapitalization: TextCapitalization.words,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            TextFormField(
+                              controller: _modelController,
+                              decoration: const InputDecoration(
+                                labelText: 'Modelo',
+                                hintText: 'Ej: Corolla',
+                                prefixIcon: Icon(Icons.info_outline),
+                              ),
+                              textCapitalization: TextCapitalization.words,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            TextFormField(
+                              controller: _yearController,
+                              decoration: const InputDecoration(
+                                labelText: 'Año',
+                                hintText: 'Ej: 2020',
+                                prefixIcon: Icon(Icons.calendar_month_outlined),
+                              ),
+                              keyboardType: TextInputType.number,
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) return null;
+                                final year = int.tryParse(v.trim());
+                                if (year == null) {
+                                  return 'Ingresa un año válido';
+                                }
+                                final currentYear = DateTime.now().year;
+                                if (year < 1886 || year > currentYear + 1) {
+                                  return 'Año fuera de rango';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            TextFormField(
+                              controller: _plateController,
+                              decoration: const InputDecoration(
+                                labelText: 'Placa',
+                                hintText: 'Ej: ABC123',
+                                prefixIcon: Icon(Icons.pin_outlined),
+                              ),
+                              textCapitalization: TextCapitalization.characters,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            TextFormField(
+                              controller: _colorController,
+                              decoration: const InputDecoration(
+                                labelText: 'Color',
+                                hintText: 'Ej: Blanco',
+                                prefixIcon: Icon(Icons.palette_outlined),
+                              ),
+                              textCapitalization: TextCapitalization.words,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _modelController,
-                      decoration: const InputDecoration(
-                        labelText: 'Modelo',
-                        prefixIcon: Icon(Icons.info_outline),
+                      const SizedBox(height: AppSpacing.lg),
+                      FormSection(
+                        title: 'Documentos',
+                        icon: Icons.description_outlined,
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: _vinController,
+                              decoration: const InputDecoration(
+                                labelText: 'VIN / Número de serie',
+                                hintText: '17 caracteres alfanuméricos',
+                                prefixIcon: Icon(Icons.numbers),
+                              ),
+                              textCapitalization: TextCapitalization.characters,
+                              maxLength: 17,
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) return null;
+                                if (v.trim().length != 17) {
+                                  return 'El VIN debe tener 17 caracteres';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            TextFormField(
+                              controller: _soatController,
+                              readOnly: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Vencimiento SOAT',
+                                hintText: 'Selecciona la fecha',
+                                prefixIcon: Icon(
+                                  Icons.health_and_safety_outlined,
+                                ),
+                                suffixIcon: Icon(Icons.calendar_month_outlined),
+                              ),
+                              onTap: _pickSoatDate,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            TextFormField(
+                              controller: _rtmController,
+                              readOnly: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Revisión técnico-mecánica',
+                                hintText: 'Selecciona la fecha',
+                                prefixIcon: Icon(Icons.engineering_outlined),
+                                suffixIcon: Icon(Icons.calendar_month_outlined),
+                              ),
+                              onTap: _pickRtmDate,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _yearController,
-                      decoration: const InputDecoration(
-                        labelText: 'Año',
-                        prefixIcon: Icon(Icons.calendar_month_outlined),
+                      const SizedBox(height: AppSpacing.lg),
+                      FormSection(
+                        title: 'Estado',
+                        icon: Icons.speed,
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: _mileageController,
+                              decoration: const InputDecoration(
+                                labelText: 'Kilometraje actual',
+                                hintText: 'Ej: 15000',
+                                prefixIcon: Icon(Icons.speed),
+                                suffixText: 'km',
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            SwitchListTile(
+                              title: const Text('Vehículo por defecto'),
+                              subtitle: const Text(
+                                'Se mostrará primero en el inicio',
+                              ),
+                              value: _isDefault,
+                              contentPadding: EdgeInsets.zero,
+                              onChanged: (value) => setState(() {
+                                _isDefault = value;
+                                _dirty = true;
+                              }),
+                            ),
+                          ],
+                        ),
                       ),
-                      keyboardType: TextInputType.number,
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) return null;
-                        final year = int.tryParse(v.trim());
-                        if (year == null) return 'Ingresa un año válido';
-                        final currentYear = DateTime.now().year;
-                        if (year < 1886 || year > currentYear + 1) {
-                          return 'Año fuera de rango';
-                        }
-                        return null;
-                      },
-                    ),
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _plateController,
-                      decoration: const InputDecoration(
-                        labelText: 'Placa',
-                        prefixIcon: Icon(Icons.pin_outlined),
-                      ),
-                    ),
+                ),
+              ),
+              StickyBottomBar(
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: _isLoading ? null : _save,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(_isEditing ? 'Guardar' : 'Crear vehículo'),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _colorController,
-                decoration: const InputDecoration(
-                  labelText: 'Color',
-                  prefixIcon: Icon(Icons.palette_outlined),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Documentos',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _vinController,
-                decoration: const InputDecoration(
-                  labelText: 'VIN / Número de serie',
-                  hintText: '17 caracteres alfanuméricos',
-                  prefixIcon: Icon(Icons.numbers),
-                ),
-                textCapitalization: TextCapitalization.characters,
-                maxLength: 17,
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return null;
-                  if (v.trim().length != 17) {
-                    return 'El VIN debe tener 17 caracteres';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _soatController,
-                readOnly: true,
-                decoration: const InputDecoration(
-                  labelText: 'Vencimiento SOAT',
-                  hintText: 'Selecciona la fecha de vencimiento',
-                  prefixIcon: Icon(Icons.health_and_safety_outlined),
-                ),
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: _soatDate ?? DateTime.now(),
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
-                    helpText: 'Vencimiento SOAT',
-                  );
-                  if (date != null) {
-                    setState(() {
-                      _soatDate = date;
-                      _soatController.text = formatDisplayDate(date);
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _rtmController,
-                readOnly: true,
-                decoration: const InputDecoration(
-                  labelText: 'Vencimiento revisión técnico-mecánica',
-                  hintText: 'Selecciona la fecha de vencimiento',
-                  prefixIcon: Icon(Icons.engineering_outlined),
-                ),
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: _rtmDate ?? DateTime.now(),
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
-                    helpText: 'Vencimiento RTM',
-                  );
-                  if (date != null) {
-                    setState(() {
-                      _rtmDate = date;
-                      _rtmController.text = formatDisplayDate(date);
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _mileageController,
-                decoration: const InputDecoration(
-                  labelText: 'Kilometraje actual',
-                  hintText: 'Ej: 15000',
-                  prefixIcon: Icon(Icons.speed),
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              SwitchListTile(
-                title: const Text('Vehículo por defecto'),
-                value: _isDefault,
-                onChanged: (v) => setState(() => _isDefault = v),
-                contentPadding: EdgeInsets.zero,
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _save,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(_isEditing ? 'Guardar' : 'Crear vehículo'),
                 ),
               ),
             ],

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/status_chip.dart';
+import '../../../shared/widgets/vehicle_avatar.dart';
 import '../../vehicles/models/vehicle.dart';
 
 class VehicleFicha extends StatelessWidget {
@@ -9,31 +11,18 @@ class VehicleFicha extends StatelessWidget {
 
   const VehicleFicha({super.key, required this.vehicle, this.onTap});
 
-  IconData get _typeIcon => switch (vehicle.type) {
-    'car' => Icons.directions_car,
-    'motorcycle' => Icons.motorcycle,
-    'bike' => Icons.pedal_bike,
-    'truck' => Icons.local_shipping,
-    _ => Icons.help_outline,
-  };
-
   @override
   Widget build(BuildContext context) {
-    final typeColor = AppColors.forVehicleType(vehicle.type);
     final theme = Theme.of(context);
 
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: typeColor.withValues(alpha: 0.15),
-              child: Icon(_typeIcon, color: typeColor, size: 26),
-            ),
-            const SizedBox(width: 12),
+            VehicleAvatar(type: vehicle.type, size: 48),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,16 +32,18 @@ class VehicleFicha extends StatelessWidget {
                       Flexible(
                         child: Text(
                           vehicle.name,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: theme.textTheme.titleMedium,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (vehicle.isDefault) ...[
                         const SizedBox(width: 4),
-                        Icon(Icons.star, size: 16, color: Colors.amber[600]),
+                        Icon(
+                          Icons.star,
+                          size: 16,
+                          color: theme.colorScheme.primary,
+                        ),
                       ],
                     ],
                   ),
@@ -63,58 +54,36 @@ class VehicleFicha extends StatelessWidget {
                         vehicle.brand,
                         vehicle.model,
                       ].whereType<String>().join(' '),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                      style: theme.textTheme.bodySmall,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                  const SizedBox(height: 4),
-                  Row(
+                  const SizedBox(height: AppSpacing.xs),
+                  Wrap(
+                    spacing: AppSpacing.md,
+                    runSpacing: AppSpacing.xs,
                     children: [
-                      if (vehicle.plate != null) ...[
-                        Icon(Icons.pin, size: 14, color: theme.disabledColor),
-                        const SizedBox(width: 2),
-                        Text(
-                          vehicle.plate!,
-                          style: theme.textTheme.labelMedium,
+                      if (vehicle.plate != null)
+                        _Meta(icon: Icons.pin_outlined, text: vehicle.plate!),
+                      if (vehicle.currentMileage != null)
+                        _Meta(
+                          icon: Icons.speed,
+                          text: formatMileage(vehicle.currentMileage),
                         ),
-                      ],
-                      if (vehicle.plate != null &&
-                          vehicle.currentMileage != null)
-                        const SizedBox(width: 12),
-                      if (vehicle.currentMileage != null) ...[
-                        Icon(Icons.speed, size: 14, color: theme.disabledColor),
-                        const SizedBox(width: 2),
-                        Text(
-                          formatMileage(vehicle.currentMileage),
-                          style: theme.textTheme.labelMedium,
-                        ),
-                      ],
                     ],
                   ),
                   if (vehicle.soatExpiresAt != null ||
                       vehicle.rtmExpiresAt != null) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppSpacing.sm),
                     Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
+                      spacing: AppSpacing.xs,
+                      runSpacing: AppSpacing.xs,
                       children: [
                         if (vehicle.soatExpiresAt != null)
-                          _statusPill(
-                            theme,
-                            Icons.health_and_safety_outlined,
-                            'SOAT',
-                            vehicle.soatExpiresAt!,
-                          ),
+                          _statusPill('SOAT', vehicle.soatExpiresAt!),
                         if (vehicle.rtmExpiresAt != null)
-                          _statusPill(
-                            theme,
-                            Icons.engineering_outlined,
-                            'RTM',
-                            vehicle.rtmExpiresAt!,
-                          ),
+                          _statusPill('RTM', vehicle.rtmExpiresAt!),
                       ],
                     ),
                   ],
@@ -122,51 +91,65 @@ class VehicleFicha extends StatelessWidget {
               ),
             ),
             if (onTap != null)
-              Icon(Icons.expand_more, color: theme.disabledColor),
+              Icon(
+                Icons.expand_more,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _statusPill(
-    ThemeData theme,
-    IconData icon,
-    String label,
-    DateTime date,
-  ) {
-    final color = expiryColor(date);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 3),
-          Text(
-            '$label · ${_daysShort(date)}',
-            style: TextStyle(
-              fontSize: 11,
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+  Widget _statusPill(String label, DateTime date) {
+    final days = _daysUntil(date);
+    final status = days < 0
+        ? AppStatus.danger
+        : days <= 30
+        ? AppStatus.warning
+        : AppStatus.ok;
+    return StatusChip(
+      status: status,
+      label: '$label · ${_daysShort(days)}',
+      icon: Icons.shield_outlined,
     );
   }
 
-  String _daysShort(DateTime date) {
+  static int _daysUntil(DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final target = DateTime(date.year, date.month, date.day);
-    final diff = target.difference(today).inDays;
-    if (diff > 0) return 'en $diff d';
-    if (diff == 0) return 'hoy';
-    return 'hace ${-diff} d';
+    return target.difference(today).inDays;
+  }
+
+  static String _daysShort(int days) {
+    if (days < 0) return 'hace ${-days} d';
+    if (days == 0) return 'hoy';
+    return 'en $days d';
+  }
+}
+
+class _Meta extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _Meta({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
   }
 }

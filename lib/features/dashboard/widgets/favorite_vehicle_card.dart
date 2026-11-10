@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/status_chip.dart';
+import '../../../shared/widgets/vehicle_avatar.dart';
 import '../../maintenance/providers.dart';
 import '../../vehicles/models/vehicle.dart';
 import '../../vehicles/providers.dart';
@@ -23,14 +26,18 @@ class FavoriteVehicleCard extends ConsumerWidget {
     return Card(
       child: InkWell(
         onTap: () => context.push('/vehicles/${vehicle.id}'),
-        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _VehicleHeader(vehicle: vehicle),
-              const SizedBox(height: 12),
+              if (_hasDocuments(vehicle)) ...[
+                const SizedBox(height: AppSpacing.md),
+                _DocumentChips(vehicle: vehicle),
+              ],
+              const SizedBox(height: AppSpacing.md),
+              const Divider(),
               _Actions(
                 upcomingCount: _upcomingCount(ref, vehicle.id!),
                 onMaintenance: () => _goToMaintenance(context, ref, vehicle),
@@ -44,6 +51,9 @@ class FavoriteVehicleCard extends ConsumerWidget {
       ),
     );
   }
+
+  bool _hasDocuments(Vehicle vehicle) =>
+      vehicle.soatExpiresAt != null || vehicle.rtmExpiresAt != null;
 
   int _upcomingCount(WidgetRef ref, int vehicleId) {
     final upcoming = ref
@@ -70,27 +80,14 @@ class _VehicleHeader extends StatelessWidget {
 
   const _VehicleHeader({required this.vehicle});
 
-  IconData get _typeIcon => switch (vehicle.type) {
-    'car' => Icons.directions_car,
-    'motorcycle' => Icons.motorcycle,
-    'bike' => Icons.pedal_bike,
-    'truck' => Icons.local_shipping,
-    _ => Icons.help_outline,
-  };
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final typeColor = AppColors.forVehicleType(vehicle.type);
 
     return Row(
       children: [
-        CircleAvatar(
-          radius: 24,
-          backgroundColor: typeColor.withValues(alpha: 0.15),
-          child: Icon(_typeIcon, color: typeColor, size: 26),
-        ),
-        const SizedBox(width: 12),
+        VehicleAvatar(type: vehicle.type, size: 52),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,16 +97,19 @@ class _VehicleHeader extends StatelessWidget {
                   Flexible(
                     child: Text(
                       vehicle.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: theme.textTheme.titleLarge,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   if (vehicle.isDefault) ...[
                     const SizedBox(width: 4),
-                    Icon(Icons.star, size: 16, color: Colors.amber[600]),
+                    Icon(
+                      Icons.star,
+                      size: 18,
+                      color: theme.colorScheme.primary,
+                      semanticLabel: 'Vehículo por defecto',
+                    ),
                   ],
                 ],
               ),
@@ -117,39 +117,107 @@ class _VehicleHeader extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   [vehicle.brand, vehicle.model].whereType<String>().join(' '),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  style: theme.textTheme.bodyMedium,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
-              const SizedBox(height: 4),
-              Row(
+              const SizedBox(height: AppSpacing.xs),
+              Wrap(
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.xs,
                 children: [
-                  if (vehicle.plate != null) ...[
-                    Icon(Icons.pin, size: 14, color: theme.disabledColor),
-                    const SizedBox(width: 2),
-                    Text(vehicle.plate!, style: theme.textTheme.labelMedium),
-                  ],
-                  if (vehicle.plate != null && vehicle.currentMileage != null)
-                    const SizedBox(width: 12),
-                  if (vehicle.currentMileage != null) ...[
-                    Icon(Icons.speed, size: 14, color: theme.disabledColor),
-                    const SizedBox(width: 2),
-                    Text(
-                      formatMileage(vehicle.currentMileage),
-                      style: theme.textTheme.labelMedium,
+                  if (vehicle.plate != null)
+                    _Meta(icon: Icons.pin_outlined, text: vehicle.plate!),
+                  if (vehicle.currentMileage != null)
+                    _Meta(
+                      icon: Icons.speed,
+                      text: formatMileage(vehicle.currentMileage),
                     ),
-                  ],
+                  _Meta(
+                    icon: vehicleTypeIcon(vehicle.type),
+                    text: vehicleTypeLabel(vehicle.type),
+                  ),
                 ],
               ),
             ],
           ),
         ),
-        Icon(Icons.chevron_right, color: theme.disabledColor),
+        Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
       ],
     );
+  }
+}
+
+class _Meta extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _Meta({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DocumentChips extends StatelessWidget {
+  final Vehicle vehicle;
+
+  const _DocumentChips({required this.vehicle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.xs,
+      children: [
+        if (vehicle.soatExpiresAt != null)
+          _documentChip('SOAT', vehicle.soatExpiresAt!),
+        if (vehicle.rtmExpiresAt != null)
+          _documentChip('RTM', vehicle.rtmExpiresAt!),
+      ],
+    );
+  }
+
+  Widget _documentChip(String label, DateTime date) {
+    final days = _daysUntil(date);
+    final status = days < 0
+        ? AppStatus.danger
+        : days <= 30
+        ? AppStatus.warning
+        : AppStatus.ok;
+    return StatusChip(
+      status: status,
+      label: '$label · ${_daysShort(days)}',
+      icon: Icons.shield_outlined,
+    );
+  }
+
+  static int _daysUntil(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(date.year, date.month, date.day);
+    return target.difference(today).inDays;
+  }
+
+  static String _daysShort(int days) {
+    if (days < 0) return 'vencido hace ${-days} d';
+    if (days == 0) return 'vence hoy';
+    return 'en $days d';
   }
 }
 
@@ -168,28 +236,23 @@ class _Actions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       children: [
-        const Divider(height: 24),
-        Row(
-          children: [
-            _ActionItem(
-              icon: Icons.build,
-              label: 'Mantenimientos',
-              onTap: onMaintenance,
-            ),
-            _ActionItem(
-              icon: Icons.info_outline,
-              label: 'Detalles',
-              onTap: onDetails,
-            ),
-            _ActionItem(
-              icon: Icons.schedule,
-              label: 'Próximos',
-              badge: upcomingCount > 0 ? upcomingCount : null,
-              onTap: onUpcoming,
-            ),
-          ],
+        _ActionItem(
+          icon: Icons.build_outlined,
+          label: 'Mantenimientos',
+          onTap: onMaintenance,
+        ),
+        _ActionItem(
+          icon: Icons.info_outline,
+          label: 'Detalles',
+          onTap: onDetails,
+        ),
+        _ActionItem(
+          icon: Icons.schedule,
+          label: 'Próximos',
+          badge: upcomingCount > 0 ? upcomingCount : null,
+          onTap: onUpcoming,
         ),
       ],
     );
@@ -212,25 +275,30 @@ class _ActionItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final semantic = AppSemanticColors.of(context);
 
     return Expanded(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
           child: Column(
             children: [
               Badge(
                 isLabelVisible: badge != null,
                 label: Text('$badge'),
-                child: Icon(icon, size: 24, color: AppColors.primary),
+                child: Icon(icon, size: 24, color: semantic.accentText),
               ),
               const SizedBox(height: 6),
               Text(
                 label,
-                style: theme.textTheme.labelMedium,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ),
                 textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

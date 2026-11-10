@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../features/vehicles/providers.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../features/vehicles/models/vehicle.dart';
+import '../../features/vehicles/providers.dart';
+import 'vehicle_avatar.dart';
 
 class VehicleSelectorSheet extends ConsumerWidget {
   const VehicleSelectorSheet({super.key});
@@ -10,10 +12,9 @@ class VehicleSelectorSheet extends ConsumerWidget {
     return showModalBottomSheet<Vehicle>(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => const VehicleSelectorSheet(),
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (_) => const VehicleSelectorSheet(),
     );
   }
 
@@ -21,111 +22,88 @@ class VehicleSelectorSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.5,
-      minChildSize: 0.3,
-      maxChildSize: 0.8,
-      expand: false,
-      builder: (context, scrollController) {
-        return Column(
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.55,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.sm,
+              AppSpacing.lg,
+              AppSpacing.sm,
             ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Selecciona un vehículo',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+            child: Text(
+              'Selecciona un vehículo',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-            Expanded(
-              child: vehiclesAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, _) => Center(child: Text('Error: $err')),
-                data: (vehicles) {
-                  return ListView.builder(
-                    controller: scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: vehicles.length,
-                    itemBuilder: (context, index) {
-                      final vehicle = vehicles[index];
-                      return Card(
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: _typeColor(
-                              vehicle.type,
-                            ).withValues(alpha: 0.15),
-                            child: Icon(
-                              _typeIcon(vehicle.type),
-                              color: _typeColor(vehicle.type),
-                            ),
-                          ),
-                          title: Row(
-                            children: [
-                              Flexible(child: Text(vehicle.name)),
-                              if (vehicle.isDefault) ...[
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Icons.star,
-                                  size: 16,
-                                  color: Colors.amber[600],
-                                ),
-                              ],
-                            ],
-                          ),
-                          subtitle:
-                              [
-                                vehicle.brand,
-                                vehicle.model,
-                              ].whereType<String>().join(' ').isEmpty
-                              ? null
-                              : Text(
-                                  [
-                                    vehicle.brand,
-                                    vehicle.model,
-                                  ].whereType<String>().join(' '),
-                                ),
-                          trailing: vehicle.plate != null
-                              ? Text(vehicle.plate!)
-                              : null,
-                          onTap: () => Navigator.of(context).pop(vehicle),
-                        ),
-                      );
-                    },
+          ),
+          Expanded(
+            child: vehiclesAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, _) => Center(
+                child: Text(
+                  'No se pudieron cargar los vehículos',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+              data: (vehicles) {
+                if (vehicles.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No hay vehículos registrados',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   );
-                },
-              ),
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  itemCount: vehicles.length,
+                  itemBuilder: (context, index) {
+                    final vehicle = vehicles[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: ListTile(
+                        leading: VehicleAvatar(type: vehicle.type, size: 40),
+                        title: Row(
+                          children: [
+                            Flexible(child: Text(vehicle.name)),
+                            if (vehicle.isDefault) ...[
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.star,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ],
+                          ],
+                        ),
+                        subtitle: _subtitle(vehicle) != null
+                            ? Text(_subtitle(vehicle)!)
+                            : null,
+                        trailing: vehicle.plate != null
+                            ? Text(vehicle.plate!)
+                            : null,
+                        onTap: () => Navigator.of(context).pop(vehicle),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
-          ],
-        );
-      },
+          ),
+        ],
+      ),
     );
   }
-}
 
-Color _typeColor(String type) {
-  return switch (type) {
-    'car' => const Color(0xFF2563EB),
-    'motorcycle' => const Color(0xFF7C3AED),
-    'bike' => const Color(0xFF059669),
-    'truck' => const Color(0xFFD97706),
-    _ => const Color(0xFF64748B),
-  };
-}
-
-IconData _typeIcon(String type) {
-  return switch (type) {
-    'car' => Icons.directions_car,
-    'motorcycle' => Icons.motorcycle,
-    'bike' => Icons.pedal_bike,
-    'truck' => Icons.local_shipping,
-    _ => Icons.help_outline,
-  };
+  String? _subtitle(Vehicle vehicle) {
+    final parts = [vehicle.brand, vehicle.model].whereType<String>().join(' ');
+    return parts.isEmpty ? null : parts;
+  }
 }

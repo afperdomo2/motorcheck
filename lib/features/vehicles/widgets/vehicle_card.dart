@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/vehicle_avatar.dart';
 import '../models/vehicle.dart';
 
 class VehicleCard extends StatelessWidget {
@@ -18,32 +19,42 @@ class VehicleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final typeColor = AppColors.forVehicleType(vehicle.type);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
     return Card(
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: typeColor.withValues(alpha: 0.15),
-                child: Icon(_typeIcon(vehicle.type), color: typeColor),
-              ),
-              const SizedBox(width: 16),
+              VehicleAvatar(type: vehicle.type, size: 48),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      vehicle.name,
-                      style: Theme.of(context).textTheme.titleMedium,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            vehicle.name,
+                            style: theme.textTheme.titleMedium,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (vehicle.isDefault) ...[
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.star,
+                            size: 16,
+                            color: scheme.primary,
+                            semanticLabel: 'Vehículo por defecto',
+                          ),
+                        ],
+                      ],
                     ),
                     if (vehicle.brand != null || vehicle.model != null)
                       Text(
@@ -51,88 +62,78 @@ class VehicleCard extends StatelessWidget {
                           vehicle.brand,
                           vehicle.model,
                         ].whereType<String>().join(' '),
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: theme.textTheme.bodyMedium,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    if (vehicle.plate != null || vehicle.currentMileage != null)
-                      Row(
-                        children: [
-                          if (vehicle.plate != null) ...[
-                            Icon(
-                              Icons.pin,
-                              size: 14,
-                              color: Theme.of(context).disabledColor,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              vehicle.plate!,
-                              style: Theme.of(context).textTheme.labelMedium,
-                            ),
-                          ],
-                          if (vehicle.plate != null &&
-                              vehicle.currentMileage != null)
-                            const SizedBox(width: 14),
-                          if (vehicle.currentMileage != null) ...[
-                            Icon(
-                              Icons.speed,
-                              size: 14,
-                              color: Theme.of(context).disabledColor,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              formatMileage(vehicle.currentMileage),
-                              style: Theme.of(context).textTheme.labelMedium,
-                            ),
-                          ],
-                        ],
-                      ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Wrap(
+                      spacing: AppSpacing.md,
+                      runSpacing: AppSpacing.xs,
+                      children: [
+                        _Meta(
+                          icon: vehicleTypeIcon(vehicle.type),
+                          text: vehicleTypeLabel(vehicle.type),
+                        ),
+                        if (vehicle.plate != null)
+                          _Meta(icon: Icons.pin_outlined, text: vehicle.plate!),
+                        if (vehicle.currentMileage != null)
+                          _Meta(
+                            icon: Icons.speed,
+                            text: formatMileage(vehicle.currentMileage),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ),
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    onSetDefault?.call();
-                  },
-                  borderRadius: BorderRadius.circular(20),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      switchInCurve: Curves.easeOut,
-                      switchOutCurve: Curves.easeIn,
-                      child: Icon(
-                        vehicle.isDefault ? Icons.star : Icons.star_border,
-                        key: ValueKey(vehicle.isDefault),
-                        color: vehicle.isDefault ? Colors.amber[600] : null,
-                        size: 24,
-                      ),
-                    ),
-                  ),
+              IconButton(
+                onPressed: onSetDefault == null
+                    ? null
+                    : () {
+                        HapticFeedback.lightImpact();
+                        onSetDefault!.call();
+                      },
+                tooltip: vehicle.isDefault
+                    ? 'Quitar de favoritos'
+                    : 'Marcar como favorito',
+                icon: Icon(
+                  vehicle.isDefault ? Icons.star_rounded : Icons.star_border,
+                  color: vehicle.isDefault
+                      ? scheme.primary
+                      : scheme.onSurfaceVariant,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(left: 4),
-                child: Icon(
-                  Icons.chevron_right,
-                  color: Theme.of(context).disabledColor,
-                ),
-              ),
+              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  IconData _typeIcon(String type) {
-    return switch (type) {
-      'car' => Icons.directions_car,
-      'motorcycle' => Icons.motorcycle,
-      'bike' => Icons.pedal_bike,
-      'truck' => Icons.local_shipping,
-      _ => Icons.help_outline,
-    };
+class _Meta extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _Meta({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
   }
 }

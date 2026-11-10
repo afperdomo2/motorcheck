@@ -4,6 +4,7 @@ import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/status_chip.dart';
 import '../../vehicles/providers.dart';
 import '../providers.dart';
 import 'vehicle_ficha.dart';
@@ -82,7 +83,14 @@ class _UpcomingCategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = item.statusColor();
+    final theme = Theme.of(context);
+    final status = item.category.intervalKm == null
+        ? AppStatus.neutral
+        : item.isOverdue
+        ? AppStatus.danger
+        : item.isWarning
+        ? AppStatus.warning
+        : AppStatus.ok;
     final label = item.statusLabel();
     final hasLastMileage = item.lastMileage != null;
 
@@ -95,32 +103,19 @@ class _UpcomingCategoryCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.category, size: 20, color: color),
+                Icon(
+                  Icons.category_outlined,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     item.category.name,
-                    style: Theme.of(context).textTheme.titleSmall,
+                    style: theme.textTheme.titleSmall,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: color,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+                StatusChip(status: status, label: label, icon: Icons.schedule),
               ],
             ),
             const SizedBox(height: 8),
@@ -150,7 +145,7 @@ class _UpcomingCategoryCard extends StatelessWidget {
                   Icon(
                     Icons.history,
                     size: 14,
-                    color: Theme.of(context).disabledColor,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -183,7 +178,11 @@ class _MiniInfo extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: Theme.of(context).disabledColor),
+        Icon(
+          icon,
+          size: 14,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         const SizedBox(width: 4),
         Text('$label: ', style: Theme.of(context).textTheme.bodySmall),
         Text(

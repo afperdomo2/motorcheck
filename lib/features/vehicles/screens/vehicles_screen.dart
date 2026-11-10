@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
@@ -15,7 +17,18 @@ class VehiclesScreen extends ConsumerWidget {
     final vehiclesAsync = ref.watch(vehiclesNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(title: _buildTitle(context, vehiclesAsync)),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Vehículos'),
+            Text(
+              _countLabel(vehiclesAsync.valueOrNull?.length),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/vehicles/add'),
         icon: const Icon(Icons.add),
@@ -44,14 +57,20 @@ class VehiclesScreen extends ConsumerWidget {
           return RefreshIndicator(
             onRefresh: ref.read(vehiclesNotifierProvider.notifier).loadVehicles,
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                AppSpacing.xxl * 2,
+              ),
               itemCount: sorted.length,
               itemBuilder: (context, index) {
                 final vehicle = sorted[index];
                 final wasFavorite = vehicle.isDefault;
 
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                   child: VehicleCard(
                     vehicle: vehicle,
                     onTap: () => context.push('/vehicles/${vehicle.id}'),
@@ -59,24 +78,11 @@ class VehiclesScreen extends ConsumerWidget {
                       ref
                           .read(vehiclesNotifierProvider.notifier)
                           .setDefault(vehicle.id!);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              wasFavorite
-                                  ? 'Quitado de favoritos'
-                                  : 'Marcado como favorito',
-                            ),
-                            duration: const Duration(seconds: 1),
-                            behavior: SnackBarBehavior.floating,
-                            margin: const EdgeInsets.only(
-                              bottom: 80,
-                              left: 16,
-                              right: 16,
-                            ),
-                          ),
-                        );
-                      }
+                      AppSnackBar.success(
+                        wasFavorite
+                            ? 'Quitado de favoritos'
+                            : 'Marcado como favorito',
+                      );
                     },
                   ),
                 );
@@ -88,26 +94,10 @@ class VehiclesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTitle(
-    BuildContext context,
-    AsyncValue<List<dynamic>> vehiclesAsync,
-  ) {
-    final count = vehiclesAsync.valueOrNull?.length;
-
-    if (count == null) return const Text('Mis Vehículos');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Mis Vehículos'),
-        Text(
-          '$count vehículos',
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
-    );
+  String _countLabel(int? count) {
+    if (count == null) return 'Cargando…';
+    if (count == 1) return '1 vehículo registrado';
+    return '$count vehículos registrados';
   }
 
   List<dynamic> _sortVehicles(List<dynamic> vehicles) {

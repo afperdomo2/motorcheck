@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/category_history_sheet.dart';
-import '../../../shared/widgets/loading_indicator.dart';
-import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
+import '../../../shared/widgets/error_state.dart';
+import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/vehicle_avatar.dart';
 import '../../settings/models/maintenance_category.dart';
 import '../../settings/providers.dart';
 import '../../vehicles/models/vehicle.dart';
@@ -60,16 +63,47 @@ class MaintenanceDetailScreen extends ConsumerWidget {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () =>
-                context.pushReplacement('/maintenance/$maintenanceId/edit'),
-            tooltip: 'Editar',
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () => _deleteMaintenance(context, ref, maintenanceId),
-            tooltip: 'Eliminar',
+          PopupMenuButton<_MaintenanceAction>(
+            tooltip: 'Opciones',
+            onSelected: (action) {
+              switch (action) {
+                case _MaintenanceAction.edit:
+                  context.pushReplacement('/maintenance/$maintenanceId/edit');
+                case _MaintenanceAction.delete:
+                  _deleteMaintenance(context, ref, maintenanceId);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: _MaintenanceAction.edit,
+                child: Row(
+                  children: [
+                    Icon(Icons.edit_outlined, size: 20),
+                    SizedBox(width: 12),
+                    Text('Editar'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: _MaintenanceAction.delete,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.delete_outline,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Eliminar',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -186,19 +220,13 @@ class MaintenanceDetailScreen extends ConsumerWidget {
     );
     if (confirmed == true && context.mounted) {
       ref.read(maintenancesNotifierProvider.notifier).remove(maintenanceId);
+      AppSnackBar.success('Mantenimiento eliminado');
       context.pop();
     }
   }
 }
 
-IconData _vehicleTypeIcon(String type) {
-  return switch (type) {
-    'motorcycle' => Icons.motorcycle,
-    'bike' => Icons.pedal_bike,
-    'truck' => Icons.local_shipping,
-    _ => Icons.directions_car,
-  };
-}
+enum _MaintenanceAction { edit, delete }
 
 class _InfoCard extends StatelessWidget {
   final Maintenance maintenance;
@@ -215,22 +243,33 @@ class _InfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final vehicleName = vehicle?.name ?? 'Vehículo';
     final vehicleType = vehicle?.type as String? ?? 'other';
-    final typeColor = AppColors.forVehicleType(vehicleType);
+    final typeColor = AppSemanticColors.of(context).vehicleColor(vehicleType);
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(_vehicleTypeIcon(vehicleType), color: typeColor, size: 24),
-                const SizedBox(width: 10),
+                VehicleAvatar(type: vehicleType, size: 40),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
-                  child: Text(
-                    vehicleName,
-                    style: Theme.of(context).textTheme.titleMedium,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        vehicleName,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Text(
+                        vehicleTypeLabel(vehicleType),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: typeColor),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -286,7 +325,7 @@ class _CostCard extends StatelessWidget {
               formatCurrency(total),
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+                color: theme.colorScheme.primary,
               ),
             ),
             Text('Total', style: theme.textTheme.labelSmall),
@@ -360,7 +399,7 @@ class _ItemsCard extends StatelessWidget {
                   Text(
                     formatCurrency(totalParts),
                     style: theme.textTheme.titleSmall?.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
               ],
@@ -370,7 +409,7 @@ class _ItemsCard extends StatelessWidget {
               Text(
                 'Sin items registrados',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ] else ...[
@@ -420,7 +459,7 @@ class _ItemTile extends StatelessWidget {
               ? CrossAxisAlignment.start
               : CrossAxisAlignment.center,
           children: [
-            Icon(icon, size: 22, color: AppColors.onSurfaceVariant),
+            Icon(icon, size: 22, color: theme.colorScheme.onSurfaceVariant),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -434,7 +473,7 @@ class _ItemTile extends StatelessWidget {
                     Text(
                       item.notes!,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -450,10 +489,10 @@ class _ItemTile extends StatelessWidget {
                 ),
               ),
             const SizedBox(width: 4),
-            const Icon(
+            Icon(
               Icons.chevron_right,
               size: 20,
-              color: AppColors.onSurfaceVariant,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ],
         ),
@@ -502,7 +541,11 @@ class _DetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: Theme.of(context).disabledColor),
+        Icon(
+          icon,
+          size: 20,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         const SizedBox(width: 8),
         Text('$label: ', style: Theme.of(context).textTheme.bodyMedium),
         Flexible(

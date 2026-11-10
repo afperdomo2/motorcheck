@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/status_chip.dart';
 import '../../vehicles/models/vehicle.dart';
 import '../../vehicles/providers.dart';
 
@@ -16,32 +17,28 @@ class ExpiryAlerts extends ConsumerWidget {
 
     if (alerts.isEmpty) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.warning_amber_rounded,
-                    color: Colors.orange,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Documentos por vencer',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              ...alerts,
-            ],
-          ),
+    final theme = Theme.of(context);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.shield_outlined,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text('Documentos', style: theme.textTheme.titleMedium),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            ...alerts,
+          ],
         ),
       ),
     );
@@ -103,6 +100,12 @@ class ExpiryAlerts extends ConsumerWidget {
     final target = DateTime(date.year, date.month, date.day);
     return target.difference(today).inDays;
   }
+
+  static String _daysShort(int days) {
+    if (days < 0) return 'Vencido ${-days} d';
+    if (days == 0) return 'Vence hoy';
+    return 'En $days d';
+  }
 }
 
 class _AlertData {
@@ -138,57 +141,59 @@ class _AlertItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = expiryColor(date);
-    final daysText = formatDaysRemaining(date);
+    final theme = Theme.of(context);
+    final days = ExpiryAlerts._daysUntil(date);
+    final status = days < 0 ? AppStatus.danger : AppStatus.warning;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: InkWell(
-        onTap: () => context.push('/vehicles/$vehicleId'),
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, size: 20, color: color),
+    return InkWell(
+      onTap: () => context.push('/vehicles/$vehicleId'),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainer,
+                borderRadius: BorderRadius.circular(10),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$label - $vehicleName',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    Text(
-                      formatDisplayDate(date),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
+              child: Icon(
+                icon,
+                size: 18,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  daysText,
-                  style: TextStyle(fontSize: 12, color: color),
-                ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$label · $vehicleName',
+                    style: theme.textTheme.bodyLarge,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    formatDisplayDate(date),
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Semantics(
+              label: formatDaysRemaining(date),
+              excludeSemantics: true,
+              child: StatusChip(
+                status: status,
+                label: ExpiryAlerts._daysShort(days),
+                icon: Icons.schedule,
+              ),
+            ),
+          ],
         ),
       ),
     );

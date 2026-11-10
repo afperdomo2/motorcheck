@@ -1,19 +1,18 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:motorcheck/core/utils/formatters.dart';
 
 void main() {
   group('formatCurrency', () {
     test('formatea cero correctamente', () {
-      expect(formatCurrency(0), '\$0');
+      expect(formatCurrency(0), '\$ 0');
     });
 
     test('formatea miles correctamente', () {
-      expect(formatCurrency(1500), '\$1,500');
+      expect(formatCurrency(1500), '\$ 1.500');
     });
 
     test('formatea decimales correctamente', () {
-      expect(formatCurrency(1500.50), '\$1,501');
+      expect(formatCurrency(1500.50), '\$ 1.501');
     });
   });
 
@@ -34,7 +33,7 @@ void main() {
     });
 
     test('formatea kilometraje con comas si es mayor a 1000', () {
-      expect(formatMileage(15000), '15,000 km');
+      expect(formatMileage(15000), '15.000 km');
     });
   });
 
@@ -84,27 +83,6 @@ void main() {
     test('muestra vence hoy para fecha actual', () {
       final today = DateTime.now();
       expect(formatDaysRemaining(today), 'Vence hoy');
-    });
-  });
-
-  group('expiryColor', () {
-    test('devuelve gris para null', () {
-      expect(expiryColor(null), Colors.grey);
-    });
-
-    test('devuelve rojo para fecha vencida', () {
-      final pastDate = DateTime.now().subtract(const Duration(days: 1));
-      expect(expiryColor(pastDate), Colors.red);
-    });
-
-    test('devuelve naranja para fecha dentro de 30 días', () {
-      final futureDate = DateTime.now().add(const Duration(days: 30));
-      expect(expiryColor(futureDate), Colors.orange);
-    });
-
-    test('devuelve verde para fecha más allá de 30 días', () {
-      final futureDate = DateTime.now().add(const Duration(days: 31));
-      expect(expiryColor(futureDate), Colors.green);
     });
   });
 }

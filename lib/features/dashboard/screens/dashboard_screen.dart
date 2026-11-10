@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../vehicles/providers.dart';
 import '../providers.dart';
+import '../widgets/expiry_alerts.dart';
 import '../widgets/favorite_vehicle_card.dart';
 import '../widgets/quick_stats.dart';
-import '../widgets/expiry_alerts.dart';
+import '../widgets/recent_activity.dart';
+import '../widgets/upcoming_summary.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -20,7 +23,25 @@ class DashboardScreen extends ConsumerWidget {
     final summaryAsync = ref.watch(dashboardSummaryProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('MotorCheck')),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(_greeting(DateTime.now().hour)),
+            Text(
+              'Tu vehículo al día',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            onPressed: () => _refresh(ref),
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Actualizar',
+          ),
+        ],
+      ),
       floatingActionButton: _buildFab(context, ref),
       body: vehiclesAsync.when(
         loading: () => const LoadingIndicator(),
@@ -47,16 +68,21 @@ class DashboardScreen extends ConsumerWidget {
             ),
             data: (summary) {
               return RefreshIndicator(
-                onRefresh: () async {
-                  ref.invalidate(dashboardSummaryProvider);
-                  return ref.read(dashboardSummaryProvider.future);
-                },
+                onRefresh: () => _refresh(ref),
                 child: ListView(
-                  padding: const EdgeInsets.all(16),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   children: [
                     const FavoriteVehicleCard(),
-                    QuickStats(summary: summary),
+                    const SizedBox(height: AppSpacing.lg),
+                    const UpcomingSummary(),
+                    const SizedBox(height: AppSpacing.lg),
                     const ExpiryAlerts(),
+                    const SizedBox(height: AppSpacing.lg),
+                    QuickStats(summary: summary),
+                    const SizedBox(height: AppSpacing.lg),
+                    RecentActivity(summary: summary),
+                    const SizedBox(height: AppSpacing.xxl),
                   ],
                 ),
               );
@@ -67,14 +93,22 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _refresh(WidgetRef ref) async {
+    ref.invalidate(vehiclesProvider);
+    ref.invalidate(dashboardSummaryProvider);
+    ref.invalidate(dashboardUpcomingProvider);
+    await ref.read(dashboardSummaryProvider.future);
+  }
+
   Widget? _buildFab(BuildContext context, WidgetRef ref) {
     final vehicles = ref.watch(vehiclesProvider).valueOrNull ?? [];
     if (vehicles.isEmpty) return null;
 
-    return FloatingActionButton(
+    return FloatingActionButton.extended(
       onPressed: () => _addMaintenance(context, ref),
-      tooltip: 'Agregar mantenimiento',
-      child: const Icon(Icons.build),
+      tooltip: 'Registrar mantenimiento',
+      icon: const Icon(Icons.add),
+      label: const Text('Registrar'),
     );
   }
 
@@ -93,5 +127,11 @@ class DashboardScreen extends ConsumerWidget {
     if (selected != null && context.mounted) {
       context.push('/maintenance/add?vehicleId=${selected.id}');
     }
+  }
+
+  static String _greeting(int hour) {
+    if (hour < 12) return 'Buenos días';
+    if (hour < 19) return 'Buenas tardes';
+    return 'Buenas noches';
   }
 }

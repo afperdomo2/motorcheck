@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../categories.dart';
 import '../models/maintenance_item.dart';
 import '../../settings/models/maintenance_category.dart';
 
-class ItemFormRow extends StatelessWidget {
+class ItemFormRow extends StatefulWidget {
   final MaintenanceItem item;
   final int index;
   final VoidCallback onRemove;
@@ -22,8 +23,37 @@ class ItemFormRow extends StatelessWidget {
   });
 
   @override
+  State<ItemFormRow> createState() => _ItemFormRowState();
+}
+
+class _ItemFormRowState extends State<ItemFormRow> {
+  late final TextEditingController _costController;
+  late final TextEditingController _notesController;
+
+  @override
+  void initState() {
+    super.initState();
+    _costController = TextEditingController(
+      text: widget.item.partsCost > 0
+          ? widget.item.partsCost.toStringAsFixed(0)
+          : '',
+    );
+    _notesController = TextEditingController(text: widget.item.notes ?? '');
+  }
+
+  @override
+  void dispose() {
+    _costController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Card(
+      margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -31,29 +61,31 @@ class ItemFormRow extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(
-                  'Item ${index + 1}',
-                  style: Theme.of(context).textTheme.labelLarge,
+                Expanded(
+                  child: Text(
+                    'Item ${widget.index + 1}',
+                    style: theme.textTheme.titleSmall,
+                  ),
                 ),
-                const Spacer(),
-                if (canRemove)
+                if (widget.canRemove)
                   IconButton(
-                    onPressed: onRemove,
+                    onPressed: widget.onRemove,
+                    tooltip: 'Quitar item',
                     icon: const Icon(Icons.close, size: 20),
-                    visualDensity: VisualDensity.compact,
                   ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             DropdownButtonFormField<String>(
-              initialValue: categories.any((c) => c.key == item.category)
-                  ? item.category
+              initialValue:
+                  widget.categories.any((c) => c.key == widget.item.category)
+                  ? widget.item.category
                   : null,
               decoration: const InputDecoration(
                 labelText: 'Categoría',
-                prefixIcon: Icon(Icons.category),
+                prefixIcon: Icon(Icons.category_outlined),
               ),
-              items: categories
+              items: widget.categories
                   .map(
                     (c) => DropdownMenuItem(
                       value: c.key,
@@ -64,40 +96,49 @@ class ItemFormRow extends StatelessWidget {
                             size: 20,
                           ),
                           const SizedBox(width: 8),
-                          Text(c.name),
+                          Flexible(
+                            child: Text(
+                              c.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   )
                   .toList(),
-              onChanged: (v) =>
-                  onChanged(item.copyWith(category: v ?? 'general')),
+              onChanged: (value) => widget.onChanged(
+                widget.item.copyWith(category: value ?? 'general'),
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             TextFormField(
-              initialValue: item.partsCost > 0
-                  ? item.partsCost.toStringAsFixed(0)
-                  : '',
+              controller: _costController,
               decoration: const InputDecoration(
                 labelText: 'Repuestos',
                 prefixIcon: Icon(Icons.attach_money),
-                prefixText: '\$ ',
+                suffixText: 'COP',
               ),
               keyboardType: TextInputType.number,
-              onChanged: (v) =>
-                  onChanged(item.copyWith(partsCost: double.tryParse(v) ?? 0)),
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onChanged: (value) => widget.onChanged(
+                widget.item.copyWith(partsCost: double.tryParse(value) ?? 0),
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             TextFormField(
-              initialValue: item.notes ?? '',
+              controller: _notesController,
               decoration: const InputDecoration(
                 labelText: 'Nota del item',
                 prefixIcon: Icon(Icons.note_alt_outlined),
                 hintText: 'Ej: Compré el filtro original',
               ),
               maxLines: 2,
-              onChanged: (v) => onChanged(
-                item.copyWith(notes: v.trim().isEmpty ? null : v.trim()),
+              textCapitalization: TextCapitalization.sentences,
+              onChanged: (value) => widget.onChanged(
+                widget.item.copyWith(
+                  notes: value.trim().isEmpty ? null : value.trim(),
+                ),
               ),
             ),
           ],

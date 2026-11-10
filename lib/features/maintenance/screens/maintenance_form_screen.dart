@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/app_snack_bar.dart';
+import '../../../shared/widgets/confirm_dialog.dart';
+import '../../../shared/widgets/date_field.dart';
+import '../../../shared/widgets/form_section.dart';
+import '../../../shared/widgets/sticky_bottom_bar.dart';
 import '../../vehicles/providers.dart';
 import '../../vehicles/models/vehicle.dart';
 import '../../settings/providers.dart';
@@ -29,6 +36,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
   DateTime _date = DateTime.now();
   final List<MaintenanceItem> _items = [];
   bool _isLoading = false;
+  bool _dirty = false;
   DateTime? _originalCreatedAt;
   int? _vehicleCurrentMileage;
   DateTime? _vehicleMileageUpdatedAt;
@@ -77,6 +85,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
       _items
         ..clear()
         ..addAll(items);
+      _dirty = false;
     });
   }
 
@@ -91,6 +100,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
         _vehicleCurrentMileage = vehicle.currentMileage;
         _vehicleMileageUpdatedAt = vehicle.mileageUpdatedAt;
         _vehicle = vehicle;
+        _dirty = false;
       });
       if (vehicle.currentMileage != null) {
         _mileageController.text = vehicle.currentMileage.toString();
@@ -114,15 +124,22 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
           createdAt: DateTime.now(),
         ),
       );
+      _dirty = true;
     });
   }
 
   void _removeItem(int index) {
-    setState(() => _items.removeAt(index));
+    setState(() {
+      _items.removeAt(index);
+      _dirty = true;
+    });
   }
 
   void _updateItem(int index, MaintenanceItem updated) {
-    setState(() => _items[index] = updated);
+    setState(() {
+      _items[index] = updated;
+      _dirty = true;
+    });
   }
 
   double get _totalParts =>
@@ -169,15 +186,43 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
 
     final notifier = ref.read(maintenancesNotifierProvider.notifier);
 
-    if (_isEditing) {
-      await notifier.update(maintenance, items);
-    } else {
-      await notifier.add(maintenance, items);
-    }
+    try {
+      if (_isEditing) {
+        await notifier.update(maintenance, items);
+      } else {
+        await notifier.add(maintenance, items);
+      }
 
-    if (mounted) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _dirty = false;
+      });
+      AppSnackBar.success(
+        _isEditing ? 'Mantenimiento actualizado' : 'Mantenimiento registrado',
+      );
+      await Future<void>.delayed(Duration.zero);
+      if (mounted) context.pop();
+    } catch (error) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      context.pop();
+      AppSnackBar.error('No se pudo guardar el mantenimiento');
+    }
+  }
+
+  Future<void> _confirmDiscard() async {
+    final leave = await showConfirmDialog(
+      context,
+      title: 'Descartar cambios',
+      message: '¿Salir sin guardar los cambios?',
+      confirmLabel: 'Descartar',
+      cancelLabel: 'Seguir editando',
+      isDestructive: true,
+    );
+    if (leave == true && mounted) {
+      setState(() => _dirty = false);
+      await Future<void>.delayed(Duration.zero);
+      if (mounted) context.pop();
     }
   }
 
@@ -189,7 +234,10 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
       lastDate: DateTime.now(),
     );
     if (picked != null) {
-      setState(() => _date = picked);
+      setState(() {
+        _date = picked;
+        _dirty = true;
+      });
     }
   }
 
@@ -252,223 +300,268 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
           .read(workshopRepositoryProvider)
           .insert(result.name, location: result.location);
       ref.invalidate(workshopsProvider);
-      setState(() => _workshopId = id);
+      setState(() {
+        _workshopId = id;
+        _dirty = true;
+      });
     }
+  }
+
+  Widget _buildWorkshopField(AsyncValue<List<dynamic>> workshopsAsync) {
+    return workshopsAsync.when(
+      loading: () => const SizedBox(
+        height: 56,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (workshops) {
+        return Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<int?>(
+                key: ValueKey('workshop-$_workshopId-${workshops.length}'),
+                initialValue: workshops.any((w) => w.id == _workshopId)
+                    ? _workshopId
+                    : null,
+                decoration: const InputDecoration(
+                  labelText: '¿Dónde se hizo?',
+                  prefixIcon: Icon(Icons.handyman_outlined),
+                ),
+                items: [
+                  const DropdownMenuItem<int?>(
+                    value: null,
+                    child: Text('Sin taller'),
+                  ),
+                  ...workshops.map(
+                    (w) => DropdownMenuItem<int?>(
+                      value: w.id,
+                      child: Text(
+                        w.location != null && w.location!.isNotEmpty
+                            ? '${w.name} · ${w.location}'
+                            : w.name,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
+                onChanged: (value) => setState(() {
+                  _workshopId = value;
+                  _dirty = true;
+                }),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            IconButton.filledTonal(
+              onPressed: _addWorkshop,
+              icon: const Icon(Icons.add),
+              tooltip: 'Agregar taller',
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final workshopsAsync = ref.watch(workshopsProvider);
     final vehicleType = _vehicle?.type ?? 'other';
-    final categoriesAsync = ref.watch(maintenanceCategoriesProvider);
-    final categories = categoriesAsync.valueOrNull ?? [];
+    final categories =
+        ref.watch(maintenanceCategoriesProvider).valueOrNull ?? [];
     final vehicleCategories = categories
         .where((c) => c.vehicleType == vehicleType)
         .toList();
+    final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _isEditing ? 'Editar mantenimiento' : 'Nuevo mantenimiento',
+    return PopScope(
+      canPop: !_dirty && !_isLoading,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _confirmDiscard();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            _isEditing ? 'Editar mantenimiento' : 'Nuevo mantenimiento',
+          ),
         ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
+        body: Form(
           key: _formKey,
+          onChanged: () {
+            if (!_dirty) setState(() => _dirty = true);
+          },
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: _pickDate,
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Fecha *',
-                          prefixIcon: Icon(Icons.calendar_today),
-                        ),
-                        child: Text(formatShortDate(_date)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _mileageController,
-                      decoration: InputDecoration(
-                        labelText: _vehicleCurrentMileage != null
-                            ? 'Kilometraje *'
-                            : 'Kilometraje',
-                        prefixIcon: const Icon(Icons.speed),
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (v) {
-                        final isRequired = _vehicleCurrentMileage != null;
-                        if (v == null || v.trim().isEmpty) {
-                          return isRequired ? 'Requerido' : null;
-                        }
-                        final km = int.tryParse(v.trim());
-                        if (km == null || km < 0) {
-                          return 'Inválido';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              if (_vehicleCurrentMileage != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  'Último registro: ${formatMileage(_vehicleCurrentMileage)}'
-                  '${_vehicleMileageUpdatedAt != null ? ' (${formatDisplayDate(_vehicleMileageUpdatedAt!)})' : ''}',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-              const SizedBox(height: 16),
-              workshopsAsync.when(
-                loading: () => const SizedBox(
-                  height: 48,
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (_, _) => const SizedBox.shrink(),
-                data: (workshops) {
-                  return Row(
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        child: DropdownButtonFormField<int?>(
-                          initialValue:
-                              workshops.any((w) => w.id == _workshopId)
-                              ? _workshopId
-                              : null,
-                          decoration: const InputDecoration(
-                            labelText: '¿Dónde se hizo?',
-                            prefixIcon: Icon(Icons.handyman),
-                          ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('--'),
+                      FormSection(
+                        title: 'Datos del mantenimiento',
+                        icon: Icons.event_note_outlined,
+                        child: Column(
+                          children: [
+                            DateField(
+                              label: 'Fecha *',
+                              value: _date,
+                              onTap: _pickDate,
                             ),
-                            ...workshops.map(
-                              (w) => DropdownMenuItem<int?>(
-                                value: w.id,
+                            const SizedBox(height: AppSpacing.lg),
+                            TextFormField(
+                              controller: _mileageController,
+                              decoration: InputDecoration(
+                                labelText: _vehicleCurrentMileage != null
+                                    ? 'Kilometraje *'
+                                    : 'Kilometraje',
+                                prefixIcon: const Icon(Icons.speed),
+                                suffixText: 'km',
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              validator: (v) {
+                                final isRequired =
+                                    _vehicleCurrentMileage != null;
+                                if (v == null || v.trim().isEmpty) {
+                                  return isRequired ? 'Requerido' : null;
+                                }
+                                final km = int.tryParse(v.trim());
+                                if (km == null || km < 0) return 'Inválido';
+                                return null;
+                              },
+                            ),
+                            if (_vehicleCurrentMileage != null) ...[
+                              const SizedBox(height: AppSpacing.xs),
+                              Align(
+                                alignment: Alignment.centerLeft,
                                 child: Text(
-                                  w.location != null && w.location!.isNotEmpty
-                                      ? '${w.name} · ${w.location}'
-                                      : w.name,
+                                  'Último registro: '
+                                  '${formatMileage(_vehicleCurrentMileage)}'
+                                  '${_vehicleMileageUpdatedAt != null ? ' (${formatDisplayDate(_vehicleMileageUpdatedAt!)})' : ''}',
+                                  style: theme.textTheme.bodySmall,
                                 ),
                               ),
+                            ],
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildWorkshopField(workshopsAsync),
+                            const SizedBox(height: AppSpacing.lg),
+                            TextFormField(
+                              controller: _maintenanceCostController,
+                              decoration: const InputDecoration(
+                                labelText: 'Mano de obra',
+                                prefixIcon: Icon(Icons.attach_money),
+                                suffixText: 'COP',
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              onChanged: (_) => setState(() {}),
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            TextFormField(
+                              controller: _notesController,
+                              decoration: const InputDecoration(
+                                labelText: 'Notas',
+                                hintText: 'Observaciones adicionales',
+                                prefixIcon: Icon(Icons.note_alt_outlined),
+                              ),
+                              maxLines: 3,
+                              textCapitalization: TextCapitalization.sentences,
                             ),
                           ],
-                          onChanged: (v) => setState(() => _workshopId = v),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        onPressed: _addWorkshop,
-                        icon: const Icon(Icons.add_circle_outline),
-                        tooltip: 'Agregar taller',
+                      const SizedBox(height: AppSpacing.lg),
+                      FormSection(
+                        title: 'Items del mantenimiento',
+                        icon: Icons.build_outlined,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    _items.isEmpty
+                                        ? 'Sin items'
+                                        : '${_items.length} item${_items.length == 1 ? '' : 's'}',
+                                    style: theme.textTheme.bodyMedium,
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  onPressed: _addItem,
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('Agregar'),
+                                ),
+                              ],
+                            ),
+                            if (_items.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  top: AppSpacing.sm,
+                                ),
+                                child: Text(
+                                  'Agrega repuestos o trabajos realizados '
+                                  'para llevar el detalle del costo.',
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              )
+                            else ...[
+                              const SizedBox(height: AppSpacing.sm),
+                              ..._items.asMap().entries.map(
+                                (entry) => ItemFormRow(
+                                  key: ValueKey(
+                                    entry.value.createdAt.toIso8601String(),
+                                  ),
+                                  item: entry.value,
+                                  index: entry.key,
+                                  canRemove: true,
+                                  categories: vehicleCategories,
+                                  onRemove: () => _removeItem(entry.key),
+                                  onChanged: (updated) =>
+                                      _updateItem(entry.key, updated),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
+                      const SizedBox(height: AppSpacing.xxl),
                     ],
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _maintenanceCostController,
-                decoration: const InputDecoration(
-                  labelText: 'Precio del mantenimiento',
-                  prefixIcon: Icon(Icons.attach_money),
-                  prefixText: '\$ ',
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _notesController,
-                decoration: const InputDecoration(
-                  labelText: 'Notas',
-                  hintText: 'Observaciones adicionales',
-                  prefixIcon: Icon(Icons.note_alt_outlined),
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Text(
-                    'Items del mantenimiento',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const Spacer(),
-                  TextButton.icon(
-                    onPressed: _addItem,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Agregar item'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ..._items.asMap().entries.map(
-                (entry) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: ItemFormRow(
-                    item: entry.value,
-                    index: entry.key,
-                    canRemove: true,
-                    categories: vehicleCategories,
-                    onRemove: () => _removeItem(entry.key),
-                    onChanged: (updated) => _updateItem(entry.key, updated),
                   ),
                 ),
               ),
-              if (_maintenanceCost > 0 || _totalParts > 0) ...[
-                const SizedBox(height: 16),
-                Card(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primaryContainer.withValues(alpha: 0.3),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.summarize, size: 24),
-                        const SizedBox(width: 12),
-                        const Text(
-                          'Total:',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+              StickyBottomBar(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Total', style: theme.textTheme.bodySmall),
+                          Text(
+                            formatCurrency(_total),
+                            style: theme.textTheme.titleLarge,
                           ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          formatCurrency(_total),
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 32),
-              SizedBox(
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _save,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(_isEditing ? 'Guardar' : 'Registrar'),
+                    const SizedBox(width: AppSpacing.md),
+                    FilledButton(
+                      onPressed: _isLoading ? null : _save,
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(_isEditing ? 'Guardar' : 'Registrar'),
+                    ),
+                  ],
                 ),
               ),
             ],

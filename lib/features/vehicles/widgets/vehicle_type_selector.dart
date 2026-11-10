@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
+
+import '../../../core/theme/app_semantic_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../shared/widgets/vehicle_avatar.dart';
 
 class VehicleTypeSelector extends StatelessWidget {
   final String? selectedType;
@@ -11,44 +14,40 @@ class VehicleTypeSelector extends StatelessWidget {
     required this.onChanged,
   });
 
-  static const _types = [
-    _TypeOption('car', 'Carro', Icons.directions_car),
-    _TypeOption('motorcycle', 'Moto', Icons.motorcycle),
-    _TypeOption('bike', 'Bicicleta', Icons.pedal_bike),
-    _TypeOption('truck', 'Camión', Icons.local_shipping),
-    _TypeOption('other', 'Otro', Icons.help_outline),
-  ];
+  static const _types = ['car', 'motorcycle', 'bike', 'truck', 'other'];
 
   @override
   Widget build(BuildContext context) {
+    final semantic = AppSemanticColors.of(context);
+    final scheme = Theme.of(context).colorScheme;
+
     return Wrap(
-      spacing: 8,
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
       children: _types.map((type) {
-        final isSelected = type.value == selectedType;
+        final isSelected = type == selectedType;
+        final color = semantic.vehicleColor(type);
+
         return ChoiceChip(
           selected: isSelected,
+          showCheckmark: false,
+          selectedColor: color.withValues(alpha: 0.16),
+          side: BorderSide(color: isSelected ? color : scheme.outlineVariant),
           label: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(type.icon, size: 18),
-              const SizedBox(width: 4),
-              Text(type.label),
+              Icon(
+                vehicleTypeIcon(type),
+                size: 18,
+                color: isSelected ? color : scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+              Text(vehicleTypeLabel(type)),
             ],
           ),
-          onSelected: (_) => onChanged(type.value),
-          selectedColor: AppColors.forVehicleType(
-            type.value,
-          ).withValues(alpha: 0.2),
+          onSelected: (_) => onChanged(type),
         );
       }).toList(),
     );
   }
-}
-
-class _TypeOption {
-  final String value;
-  final String label;
-  final IconData icon;
-
-  const _TypeOption(this.value, this.label, this.icon);
 }

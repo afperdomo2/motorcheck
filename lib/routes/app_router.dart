@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../features/maintenance/providers.dart';
 import '../features/dashboard/screens/dashboard_screen.dart';
 import '../features/vehicles/screens/vehicles_screen.dart';
 import '../features/vehicles/screens/vehicle_detail_screen.dart';
@@ -158,47 +160,75 @@ final appRouter = GoRouter(
   ],
 );
 
-class AppShell extends StatelessWidget {
+class AppShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   const AppShell({super.key, required this.navigationShell});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final attentionCount =
+        ref.watch(maintenanceAttentionCountProvider).valueOrNull ?? 0;
+
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-        onDestinationSelected: (index) {
-          navigationShell.goBranch(
-            index,
-            initialLocation: index == navigationShell.currentIndex,
-          );
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Inicio',
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(color: theme.colorScheme.outlineVariant),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.build_outlined),
-            selectedIcon: Icon(Icons.build),
-            label: 'Mantenimientos',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.directions_car_outlined),
-            selectedIcon: Icon(Icons.directions_car),
-            label: 'Vehículos',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.tune),
-            selectedIcon: Icon(Icons.tune),
-            label: 'Config',
-          ),
-        ],
+        ),
+        child: NavigationBar(
+          selectedIndex: navigationShell.currentIndex,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          onDestinationSelected: (index) {
+            navigationShell.goBranch(
+              index,
+              initialLocation: index == navigationShell.currentIndex,
+            );
+          },
+          destinations: [
+            const NavigationDestination(
+              icon: Icon(Icons.dashboard_outlined),
+              selectedIcon: Icon(Icons.dashboard),
+              label: 'Inicio',
+            ),
+            NavigationDestination(
+              icon: _NavBadge(
+                icon: Icons.build_outlined,
+                count: attentionCount,
+              ),
+              selectedIcon: _NavBadge(icon: Icons.build, count: attentionCount),
+              label: 'Mantenimientos',
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.directions_car_outlined),
+              selectedIcon: Icon(Icons.directions_car),
+              label: 'Vehículos',
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.tune),
+              selectedIcon: Icon(Icons.tune),
+              label: 'Ajustes',
+            ),
+          ],
+        ),
       ),
     );
+  }
+}
+
+class _NavBadge extends StatelessWidget {
+  final IconData icon;
+  final int count;
+
+  const _NavBadge({required this.icon, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    if (count <= 0) return Icon(icon);
+
+    return Badge(label: Text(count > 9 ? '9+' : '$count'), child: Icon(icon));
   }
 }

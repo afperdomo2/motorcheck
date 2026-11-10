@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_spacing.dart';
+
 class EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -18,30 +20,41 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 64, color: Theme.of(context).disabledColor),
-            const SizedBox(height: 16),
+            Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                color: scheme.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 40, color: scheme.onPrimaryContainer),
+            ),
+            const SizedBox(height: AppSpacing.xl),
             Text(
               title,
-              style: Theme.of(context).textTheme.titleMedium,
+              style: theme.textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 subtitle!,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: theme.textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
             ],
             if (onAction != null && actionLabel != null) ...[
-              const SizedBox(height: 24),
-              ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
+              const SizedBox(height: AppSpacing.xl),
+              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
             ],
           ],
         ),

@@ -1,677 +1,206 @@
-# MotorCheck — Sistema de Diseño
+# MotorCheck — Sistema de Diseño v3.0
 
-> Guía completa del lenguaje visual, componentes y patrones UX de la aplicación.
-> Versión 2.0 · Julio 2026
+> Identidad **grafito + ámbar industrial**, Material 3 y tipografía Barlow.
+> Última actualización: noviembre 2026.
 
----
+## 1. Principios
 
-## Índice
+1. **Un solo acento:** el ámbar significa acción o atención.
+2. **Superficies tonales:** cards con borde de 1 px, sin sombras.
+3. **Mobile-first:** una columna, targets de 48 dp y 8 dp entre acciones.
+4. **Paridad light/dark:** todo color nace de un token del tema.
+5. **Estado con icono + texto + color**, nunca solo color.
+6. **Español de Colombia** en textos, fechas, moneda y date pickers.
 
-1. [Principios de Diseño](#1-principios-de-diseño)
-2. [Paleta de Color](#2-paleta-de-color)
-3. [Tipografía](#3-tipografía)
-4. [Espaciado](#4-espaciado)
-5. [Bordes y Elevación](#5-bordes-y-elevación)
-6. [Iconografía](#6-iconografía)
-7. [Componentes Compartidos](#7-componentes-compartidos)
-8. [Componentes de Feature](#8-componentes-de-feature)
-9. [Patrones de Layout](#9-patrones-de-layout)
-10. [Estados de UI](#10-estados-de-ui)
-11. [Interacciones y Feedback](#11-interacciones-y-feedback)
-12. [Configuración de Tema](#12-configuración-de-tema)
-13. [Reglas de UX](#13-reglas-de-ux)
-14. [Apéndice: Guía Rápida de Uso](#14-apéndice-guía-rápida-de-uso)
+## 2. Paleta
 
----
+### Light
 
-## 1. Principios de Diseño
+| Rol | Hex | Uso |
+|---|---|---|
+| background | `#F5F4F1` | fondo del scaffold |
+| surface | `#FFFFFF` | cards, AppBar, inputs |
+| surfaceContainerLow | `#F0EEE9` | chips y contenedores suaves |
+| surfaceContainer | `#EAE7E0` | contenedores y skeletons |
+| onSurface | `#1B1D21` | texto principal |
+| onSurfaceVariant | `#5A5F66` | texto secundario |
+| outline | `#7F848B` | bordes de componentes |
+| outlineVariant | `#D8D4CC` | divisores y bordes de card |
+| primary | `#B45309` | CTA, FAB, selección |
+| onPrimary | `#FFFFFF` | texto sobre ámbar |
+| primaryContainer | `#FDE68A` | fondos de selección |
+| accentText | `#92400E` | texto/icono sobre ámbar claro |
 
-MotorCheck sigue 5 principios fundamentales que guían cada decisión de UI/UX:
+### Dark
 
-| Principio | Descripción |
+| Rol | Hex |
 |---|---|
-| **Claridad** | Flat design sin ruido visual. Cada pantalla comunica su propósito de inmediato. |
-| **Jerarquía** | La tipografía y el espaciado guían el ojo desde lo más importante a los detalles. |
-| **Consistencia** | Tokens compartidos en todo el sistema. Un `Card` siempre luce y se comporta igual. |
-| **Eficiencia** | Mínimo de toques para cada tarea. Acciones frecuentes a un tap de distancia. |
-| **Accesibilidad** | Contraste WCAG AA garantizado. Touch targets mínimos de 48px en dispositivos móviles. |
+| background | `#121417` |
+| surface | `#1A1D21` |
+| surfaceContainer | `#22262B` |
+| onSurface | `#E8E6E1` |
+| onSurfaceVariant | `#A6A9AE` |
+| outline | `#6B7077` |
+| outlineVariant | `#343941` |
+| primary | `#FBBF24` |
+| onPrimary | `#1F2328` |
 
-### Filosofía visual
+### Estados semánticos
 
-- **Flat**: cero sombras, cero elevación, diseño limpio y moderno.
-- **Mobile-first**: la app está diseñada exclusivamente para teléfonos. Layout de columna única con scroll.
-- **Material Design 3**: aprovecha el sistema de tokens, colores y tipografía de M3.
-- **Color con propósito**: los colores de tipo de vehículo crean identidad visual inmediata.
-- **Soporte Light + Dark**: la app tiene temas claro y oscuro completos, configurables por el usuario.
+| Estado | Light | Dark |
+|---|---|---|
+| success | `#047857` | `#34D399` |
+| warning | `#B45309` | `#FBBF24` |
+| danger | `#B91C1C` | `#F87171` |
 
----
+Cada estado tiene contenedor y color `on*` propio. En texto siempre se usa
+el par `onContainer / container`.
 
-## 2. Paleta de Color
+### Identidad por vehículo
 
-### 2.1 Colores Principales
+| Tipo | Light | Dark |
+|---|---|---|
+| Carro | `#1D4ED8` | `#93B4FF` |
+| Moto | `#6D28D9` | `#C4B5FD` |
+| Bicicleta | `#047857` | `#6EE7B7` |
+| Camión | `#0E7490` | `#67E8F9` |
+| Otro | `#475569` | `#CBD5E1` |
 
-| Token | Hex | Muestra | Uso |
-|---|---|---|---|
-| `primary` | `#3B82F6` | ██ | Botones principales, FAB, enlaces, bordes de selección |
-| `primaryVariant` | `#2563EB` | ██ | Estados hover/presionados de primary |
-| `secondary` | `#8B5CF6` | ██ | Acentos decorativos, variante de moto |
-| `secondaryVariant` | `#7C3AED` | ██ | Estados hover/presionados de secondary |
-
-**Ratio de contraste** (sobre blanco `#FFFFFF`):
-- `primary` → 4.65:1
-- `secondary` → 5.3:1
-
-### 2.2 Paleta Neutral
-
-| Token | Hex | Muestra | Modo Light | Modo Dark |
-|---|---|---|---|---|
-| `background` | `#F8FAFC` / `#0F172A` | ██ | Fondo del scaffold | Fondo oscuro profundo |
-| `surface` | `#FFFFFF` / `#1E293B` | ██ | Cards, diálogos, AppBar | Superficies elevadas |
-| `onSurface` | `#1E293B` / `#F1F5F9` | ██ | Texto principal, títulos | Texto claro |
-| `onSurfaceVariant` | `#64748B` / `#94A3B8` | ██ | Texto secundario | Texto secundario |
-| `outline` | `#CBD5E1` / `#475569` | ██ | Bordes, dividers | Bordes oscuros |
-
-### 2.3 Colores Semánticos
-
-| Token | Hex | Muestra | Uso |
-|---|---|---|---|
-| `error` | `#EF4444` | ██ | Estados de error, acciones destructivas, iconos de eliminar |
-
-### 2.4 Colores por Tipo de Vehículo
-
-Cada tipo de vehículo tiene un color de identidad:
-
-| Tipo | Clave | Hex | Muestra | Ícono |
-|---|---|---|---|---|
-| Carro | `car` | `#3B82F6` | ██ | `directions_car` |
-| Moto | `motorcycle` | `#8B5CF6` | ██ | `motorcycle` |
-| Bicicleta | `bike` | `#10B981` | ██ | `pedal_bike` |
-| Camión | `truck` | `#F59E0B` | ██ | `local_shipping` |
-| Otro | `other` | `#64748B` | ██ | `help_outline` |
-
-**API**:
-```dart
-Color color = AppColors.forVehicleType(vehicle.type);
-```
-
----
+El azul está reservado para “carro”: no se usa como color de marca.
 
 ## 3. Tipografía
 
-### 3.1 Configuración Base
+- **Barlow Semi Condensed 600/700:** títulos y cifras.
+- **Barlow 400/500/600:** cuerpo, labels y navegación.
+- Fuentes empaquetadas en `assets/fonts/` (OFL), sin red.
 
-| Propiedad | Valor |
-|---|---|
-| Familia | `Roboto` (Material Design default) |
-| Sistema | Material Design 3 Type Scale |
-
-### 3.2 Tabla Completa
-
-| Token | Tamaño | Peso | Uso en la app |
+| Token | Tamaño / alto | Familia | Uso |
 |---|---|---|---|
-| `headlineLarge` | 32px | 600 | Valores numéricos destacados en QuickStats |
-| `headlineMedium` | 28px | 600 | Título de pantalla ("Dashboard") |
-| `titleLarge` | 22px | 500 | Nombre del vehículo, total vehículos |
-| `titleMedium` | 16px | 500 | Título de cards, títulos de sección |
-| `bodyLarge` | 16px | 400 | Texto de cuerpo principal |
-| `bodyMedium` | 14px | 400 | Subtítulos, texto secundario, fechas |
-| `labelLarge` | 14px | 500 | Botones, etiquetas de formulario |
-| `labelMedium` | 12px | 500 | Placas de vehículos, chips, badges |
-
-**Uso**: siempre `Theme.of(context).textTheme.*` para que cambios de tema se propaguen automáticamente.
-
----
-
-## 4. Espaciado
-
-| Token | Valor | Uso principal |
-|---|---|---|
-| `xs` | 4px | Gap ícono↔texto en chips |
-| `sm` | 8px | Gap entre bloques de texto, separación entre cards |
-| `md` | 16px | **Unidad base**: padding de pantalla, padding de cards |
-| `lg` | 24px | Separación de botones de acción |
-| `xl` | 32px | Padding en EmptyState/ErrorState, height de divider |
-| `xxl` | 48px | Altura mínima de botones de acción |
-
-### Dónde se aplica cada token
-
-| Contexto | Token |
-|---|---|
-| Padding de pantalla | `md` (16px) |
-| Padding interno de Card | `md` (16px) |
-| Padding de Card anidada (ItemFormRow) | `12px` |
-| Gap entre campos de formulario | `md` (16px) |
-| Gap entre secciones en Card | `sm` (8px) |
-| Gap ícono↔etiqueta en fila | `xs` (4px) |
-| Padding de EmptyState / ErrorState | `xl` (32px) |
-| Altura mínima de botón | `xxl` (48px) |
-
-### Layouts de lista
-
-```dart
-ListView.builder(
-  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-  itemBuilder: (context, index) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: MyCard(...),
-  ),
-)
-```
-
----
-
-## 5. Bordes y Elevación
-
-| Componente | Radio |
-|---|---|
-| Cards | 12px |
-| Botones (Elevated + Outlined) | 8px |
-| Campos de texto (Input) | 8px |
-| ChoiceChips | Pill shape automática (M3) |
-
-MotorCheck usa un diseño **completamente plano**: elevación 0 en cards y AppBar.
-Solo `scrolledUnderElevation: 1` al hacer scroll.
-
----
-
-## 6. Iconografía
-
-### 6.1 Navegación (Bottom Bar — 4 tabs)
-
-| Pantalla | Inactivo | Activo |
-|---|---|---|
-| Dashboard | `dashboard_outlined` | `dashboard` |
-| Mantenimientos | `build_outlined` | `build` |
-| Vehículos | `directions_car_outlined` | `directions_car` |
-| Configuración | `tune` | `tune` |
-
-### 6.2 Tipos de Vehículo
-
-| Tipo | Ícono |
-|---|---|
-| Carro | `directions_car` |
-| Moto | `motorcycle` |
-| Bicicleta | `pedal_bike` |
-| Camión | `local_shipping` |
-| Otro | `help_outline` |
-
-### 6.3 Acciones
-
-| Acción | Ícono | Tamaño |
-|---|---|---|
-| Agregar / Nuevo | `add` | default (FAB) |
-| Editar | `edit` | 20px (PopupMenu) |
-| Eliminar | `delete` | 20px (PopupMenu) |
-| Cerrar / Remover | `close` | 20px (IconButton) |
-| Calendario / Fecha | `calendar_today` | 16px |
-| Kilometraje | `speed` | 16px |
-| Navegar / Siguiente | `chevron_right` | default |
-
-### 6.4 Estados de UI
-
-| Estado | Ícono | Tamaño | Color |
-|---|---|---|---|
-| Empty (dashboard) | `directions_car` | 64px | `disabledColor` |
-| Empty (mantenimientos) | `build` | 64px | `disabledColor` |
-| Error | `error_outline` | 64px | `Colors.red` |
-| Loading | `CircularProgressIndicator` | default | `primary` |
-
-### 6.5 Estadísticas (Dashboard)
-
-| Estadística | Ícono | Tamaño |
-|---|---|---|
-| Mantenimientos | `build` | 28px |
-| Total gastado | `payments` | 28px |
-
----
-
-## 7. Componentes Compartidos
-
-Los componentes compartidos están en `lib/shared/widgets/`. Son widgets dumb: reciben datos y callbacks, no manejan estado por sí mismos.
-
-### 7.1 LoadingIndicator
-
-Spinner centrado con mensaje opcional bajo él.
-
-**API**:
-| Parámetro | Tipo | Requerido | Default |
-|---|---|---|---|
-| `message` | `String?` | No | `null` |
-
-### 7.2 EmptyState
-
-Ícono grande (64px) + título + subtítulo opcional + botón CTA opcional.
-
-**API**:
-| Parámetro | Tipo | Requerido | Default |
-|---|---|---|---|
-| `icon` | `IconData` | Sí | — |
-| `title` | `String` | Sí | — |
-| `subtitle` | `String?` | No | `null` |
-| `onAction` | `VoidCallback?` | No | `null` |
-| `actionLabel` | `String?` | No | `null` |
-
-El botón solo se renderiza si **ambos** `onAction` y `actionLabel` son no-nulos.
-
-**Variantes en la app**:
-
-| Pantalla | Icon | Title | Subtitle | Action |
-|---|---|---|---|---|
-| Dashboard (sin vehículo) | `directions_car` | "Bienvenido a MotorCheck" | "Agrega un vehículo para comenzar" | "Agregar vehículo" |
-| Vehículos (lista vacía) | `directions_car` | "No tienes vehículos" | "Agrega tu primer vehículo..." | "Agregar vehículo" |
-| Mantenimientos (sin vehículo) | `build` | "Selecciona un vehículo" | "Elige un vehículo..." | "Ir a vehículos" |
-| Mantenimientos (sin registros) | `build` | "Sin mantenimientos" | "Agrega el primer..." | "Agregar mantenimiento" |
-
-### 7.3 ErrorState
-
-Ícono de error (64px, rojo) + "Algo salió mal" + mensaje + botón Reintentar opcional.
-
-**API**:
-| Parámetro | Tipo | Requerido | Default |
-|---|---|---|---|
-| `message` | `String` | Sí | — |
-| `onRetry` | `VoidCallback?` | No | `null` |
-
-### 7.4 showConfirmDialog
-
-Función top-level que muestra un `AlertDialog` de confirmación.
-
-**API**:
-| Parámetro | Tipo | Requerido | Default |
-|---|---|---|---|
-| `context` | `BuildContext` | Sí | — |
-| `title` | `String` | Sí | — |
-| `message` | `String` | Sí | — |
-| `confirmLabel` | `String` | No | `'Confirmar'` |
-| `cancelLabel` | `String` | No | `'Cancelar'` |
-| `isDestructive` | `bool` | No | `false` |
-
-Retorna `Future<bool?>` — `true` si confirma, `false` si cancela, `null` si cierra.
-
-**Uso típico**:
-```dart
-final confirmed = await showConfirmDialog(
-  context,
-  title: 'Eliminar vehículo',
-  message: '¿Estás seguro? Esta acción no se puede deshacer.',
-  confirmLabel: 'Eliminar',
-  isDestructive: true,
-);
-if (confirmed == true && context.mounted) {
-  ref.read(vehiclesProvider.notifier).delete(vehicle.id);
-}
-```
-
----
-
-## 8. Componentes de Feature
-
-### 8.1 VehicleCard
-
-Muestra un vehículo con avatar coloreado por tipo, nombre, marca/modelo, placa, kilometraje, y estrella de vehículo default.
-
-**API**:
-| Parámetro | Tipo | Requerido | Default |
-|---|---|---|---|
-| `vehicle` | `Vehicle` | Sí | — |
-| `onTap` | `VoidCallback` | Sí | — |
-| `onSetDefault` | `VoidCallback?` | No | `null` |
-
-La estrella a la derecha marca si es el vehículo default (⭐ dorada) o no (☆ outline). Al tocar la estrella, llama a `onSetDefault` con feedback háptico. El PopupMenu de editar/eliminar no existe en este componente; la edición y eliminación se manejan en la pantalla de detalle.
-
-### 8.2 VehicleTypeSelector
-
-Selector de tipo de vehículo con `ChoiceChip` en layout `Wrap`.
-
-**API**:
-| Parámetro | Tipo | Requerido | Default |
-|---|---|---|---|
-| `selectedType` | `String?` | Sí | — |
-| `onChanged` | `ValueChanged<String>` | Sí | — |
-
-### 8.3 TimelineTile
-
-Componente principal de la lista de mantenimientos. Muestra cada mantenimiento como una card dentro de una línea de tiempo vertical con conector.
-
-**API**:
-| Parámetro | Tipo | Requerido | Default |
-|---|---|---|---|
-| `maintenance` | `Maintenance` | Sí | — |
-| `onTap` | `VoidCallback` | Sí | — |
-| `vehicleName` | `String?` | No | `null` |
-| `vehicleType` | `String?` | No | `null` |
-| `workshopName` | `String?` | No | `null` |
-| `workshopLocation` | `String?` | No | `null` |
-| `items` | `List<MaintenanceItem>` | No | `[]` |
-| `showConnector` | `bool` | No | `true` |
-| `isLastInGroup` | `bool` | No | `false` |
-
-Muestra: nombre del vehículo (si no es null), badges de categorías (máx 2 + "+N"), kilometraje, taller, notas, costo total. Las categorías usan los iconos definidos en `MaintenanceCategories`.
-
-### 8.4 ItemFormRow
-
-Fila de formulario para un ítem de mantenimiento dentro del formulario.
-
-**API**:
-| Parámetro | Tipo | Requerido | Default |
-|---|---|---|---|
-| `item` | `MaintenanceItem` | Sí | — |
-| `index` | `int` | Sí | — |
-| `onRemove` | `VoidCallback` | Sí | — |
-| `canRemove` | `bool` | Sí | — |
-| `onChanged` | `ValueChanged<MaintenanceItem>` | Sí | — |
-| `vehicleType` | `String` | Sí | — |
-
-Campos: dropdown de categoría (filtrado por tipo de vehículo), campo numérico de repuestos ($), campo de notas. Las categorías disponibles varían según `vehicleType` (ver `lib/features/maintenance/categories.dart`).
-
-### 8.5 QuickStats
-
-Resumen dashboard con total de vehículos, conteo de mantenimientos y total gastado.
-
-**API**:
-| Parámetro | Tipo | Requerido | Default |
-|---|---|---|---|
-| `summary` | `DashboardSummary` | Sí | — |
-
-Muestra: icono de garaje + total vehículos, dos stats lado a lado (mantenimientos + total gastado), y último mantenimiento registrado.
-
-### 8.6 RecentActivity
-
-Lista de últimos mantenimientos del vehículo.
-
-**API**:
-| Parámetro | Tipo | Requerido | Default |
-|---|---|---|---|
-| `summary` | `DashboardSummary` | Sí | — |
-
-Muestra lista de `ListTile` con CircleAvatar por tipo de vehículo. Al tocar un ítem, navega a `/maintenance/:id/edit`.
-
-### 8.7 ExpiryAlerts
-
-Alertas de documentos por vencer (SOAT y Tecnomecánica). Se muestra automáticamente como `ConsumerWidget` que lee `vehiclesProvider`.
-
-Sin parámetros (es `ConsumerWidget`). Filtra vehículos con `soatExpiresAt` o `rtmExpiresAt` a 30 días o menos de vencer (o ya vencidos). Muestra un Card con header "Documentos por vencer" y lista de alertas con badge de días restantes coloreado (rojo/amarillo según proximidad). Al tocar, navega al detalle del vehículo.
-
----
-
-## 9. Patrones de Layout
-
-### 9.1 Estructura de Pantalla Típica
-
-```
-┌──────────────────────────────────────────────┐
-│ AppBar                                        │  ← elevation: 0, centrado
-│  Título                  [action]             │
-├──────────────────────────────────────────────┤
-│                                              │
-│  Content Area                                │
-│  - padding: 16px                             │
-│  - ScrollView / ListView                     │
-│  - Cards con 16px padding                    │
-│  - Gaps de 8-16px entre cards                │
-│                                              │
-│                                    ┌────┐    │
-│                                    │ +  │    │  ← FAB (opcional)
-│                                    └────┘    │
-└──────────────────────────────────────────────┘
-```
-
-### 9.2 Pantalla de Lista
-
-```dart
-Scaffold(
-  appBar: AppBar(title: Text('Título')),
-  body: asyncData.when(
-    loading: () => const LoadingIndicator(message: '...'),
-    error: (e, _) => ErrorState(message: e.toString(), onRetry: ...),
-    data: (items) {
-      if (items.isEmpty) return EmptyState(...);
-      return ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: items.length,
-        itemBuilder: (context, index) => Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: ItemCard(...),
-        ),
-      );
-    },
-  ),
-  floatingActionButton: FloatingActionButton(
-    onPressed: () => context.push('/route/new'),
-    child: const Icon(Icons.add),
-  ),
-)
-```
-
-### 9.3 Pantalla de Formulario
-
-```dart
-Scaffold(
-  appBar: AppBar(title: Text('Título')),
-  body: Form(
-    key: formKey,
-    child: SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Campo1,
-          SizedBox(height: 16),
-          Campo2,
-          SizedBox(height: 32),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              onPressed: save,
-              child: Text('Guardar'),
-            ),
-          ),
-        ],
-      ),
-    ),
-  ),
-)
-```
-
----
-
-## 10. Estados de UI
-
-Toda pantalla de la app maneja **4 estados**:
-
-| Estado | Componente | ¿Cuándo? |
-|---|---|---|
-| Loading | `LoadingIndicator` | Datos cargando de BD/async |
-| Empty | `EmptyState` | Lista vacía, sin vehículo seleccionado |
-| Content | Widgets de feature | Datos disponibles |
-| Error | `ErrorState` | Excepción en carga de datos |
-
-**Implementación con Riverpod**:
-```dart
-asyncValue.when(
-  loading: () => const LoadingIndicator(message: 'Cargando...'),
-  error: (error, stack) => ErrorState(
-    message: error.toString(),
-    onRetry: () => ref.invalidate(provider),
-  ),
-  data: (items) {
-    if (items.isEmpty) {
-      return EmptyState(
-        icon: Icons.directions_car,
-        title: 'No hay datos',
-        subtitle: 'Agrega un registro para comenzar',
-        onAction: () => context.push('/route/new'),
-        actionLabel: 'Agregar',
-      );
-    }
-    return ContentList(items: items);
-  },
-)
-```
-
----
-
-## 11. Interacciones y Feedback
-
-### 11.1 Navegación
-
-| Acción | Comportamiento |
-|---|---|
-| Bottom Navigation Bar | 4 tabs: Dashboard / Mantenimientos / Vehículos / Configuración |
-| FAB (+) | Navega a formulario de creación (`context.push('/route/new')`) |
-| Tap en Card | Navega al detalle |
-| Tap en ListTile (RecentActivity) | `context.push('/maintenance/:id/edit')` |
-| Back button / gesto | `context.pop()` automático vía GoRouter |
-| Tap en alerta (ExpiryAlerts) | `context.push('/vehicles/:id')` |
-
-### 11.2 Acciones Contextuales
-
-| Acción | Mecanismo | Feedback |
-|---|---|---|
-| Guardar formulario | ElevatedButton "Guardar" | SnackBar de éxito/error, navega hacia atrás |
-| Eliminar | PopupMenuButton → "Eliminar" | **Siempre** confirmación con `showConfirmDialog(isDestructive: true)` |
-| Marcar default | Estrella en VehicleCard | Animación de transición, actualización inmediata |
-
-### 11.3 Formateo de Datos
-
-| Dato | Formato | Ejemplo |
-|---|---|---|
-| Fecha | `d MMMM yyyy` o `yyyy-MM-dd` (ISO 8601 para BD) | 15 julio 2026 |
-| Moneda | `$X,XXX` (sin decimales) | $1,250 |
-| Kilometraje | `X km` o `X,XXX km` (≥1000) | 15000 km |
-
-Ver `lib/core/utils/formatters.dart` para la implementación completa.
-
----
-
-## 12. Configuración de Tema
-
-### 12.1 Modos de Tema
-
-La app soporta **3 modos** de tema, configurables desde la pantalla de Configuración mediante un `SegmentedButton<ThemeMode>`:
-
-| Modo | Descripción |
-|---|---|
-| `ThemeMode.system` | Sigue el tema del sistema operativo |
-| `ThemeMode.light` | Tema claro forzado |
-| `ThemeMode.dark` | Tema oscuro forzado |
-
-La preferencia se persiste en `SharedPreferences` y se carga al iniciar la app.
-
-### 12.2 ThemeData
-
-Ambos temas (`AppTheme.light` y `AppTheme.dark`) comparten la misma estructura:
-- `useMaterial3: true`
-- Cards: elevación 0, border radius 12px
-- AppBar: centrado, elevación 0, `scrolledUnderElevation: 1`
-- Botones: altura mínima 48px, border radius 8px
-- Inputs: border radius 8px, padding horizontal 16px, vertical 12px
-
-**Archivos clave**:
-- `lib/core/theme/app_colors.dart` — Tokens light + dark
-- `lib/core/theme/app_text_styles.dart` — Escala tipográfica
-- `lib/core/theme/app_theme.dart` — `ThemeData` light y dark
-- `lib/core/theme/theme_mode_provider.dart` — Persistencia del modo
-- `lib/features/settings/screens/settings_screen.dart` — UI del selector
-
----
-
-## 13. Reglas de UX
-
-### 13.1 Touch Targets
-
-| Elemento | Altura mínima |
-|---|---|
-| Botones de acción | 48px |
-| ListTile | 48px (default M3) |
-| IconButton | 48px (default M3) |
-
-### 13.2 Acciones Destructivas
-
-- **Siempre** requieren confirmación mediante `showConfirmDialog`.
-- El botón de confirmación se muestra en rojo (`isDestructive: true`).
-
-### 13.3 Estados Vacíos
-
-- Ícono contextual grande (64px) + título claro + CTA cuando es posible.
-- El CTA debe llevar directamente a la acción que resuelve el vacío.
-
-### 13.4 Estados de Error
-
-- Mensaje descriptivo (no genérico) + botón de "Reintentar".
-- No bloquean al usuario sin opciones.
-
-### 13.5 Formularios
-
-- Campos requeridos marcados con `*` en el label.
-- Teclado numérico para campos de costo/kilometraje (`TextInputType.number`).
-- Botón de guardar full-width con altura 48px.
-- Padding consistente de 16px alrededor.
-
-### 13.6 Idioma
-
-- **Todo el UI está en español**. Sin sistema de localización (i18n).
-- Los textos están hardcodeados en los widgets.
-
----
-
-## 14. Apéndice: Guía Rápida de Uso
-
-### 14.1 Usar Colores
-
-```dart
-import '../../core/theme/app_colors.dart';
-
-// Color primario
-final bg = AppColors.primary;
-
-// Color por tipo de vehículo
-final vehicleColor = AppColors.forVehicleType(vehicle.type);
-
-// Fondo tintado para avatar
-final avatarBg = AppColors.forVehicleType(type).withValues(alpha: 0.15);
-
-// Color de error
-final errorColor = AppColors.error;
-```
-
-### 14.2 Usar Tipografía
-
-```dart
-// Siempre desde el tema (responde a cambios light/dark)
-final title = Theme.of(context).textTheme.titleMedium;
-final body = Theme.of(context).textTheme.bodyMedium;
-```
-
-### 14.3 Usar Componentes Compartidos
-
-```dart
-// Imports relativos desde el feature
-import '../../shared/widgets/loading_indicator.dart';
-import '../../shared/widgets/empty_state.dart';
-import '../../shared/widgets/error_state.dart';
-import '../../shared/widgets/confirm_dialog.dart';
-```
-
-### 14.4 Archivos Clave
+| headlineLarge | 32/40 | Semi Condensed | cabeceras grandes |
+| headlineMedium | 28/36 | Semi Condensed | totales |
+| headlineSmall | 24/32 | Semi Condensed | km y montos |
+| titleLarge | 22/28 | Semi Condensed | título de pantalla |
+| titleMedium | 16/24 | Semi Condensed | títulos de card |
+| titleSmall | 14/20 | Semi Condensed | filas destacadas |
+| bodyLarge | 16/24 | Barlow | cuerpo |
+| bodyMedium | 14/20 | Barlow | secundario |
+| bodySmall | 12/16 | Barlow | helper |
+| labelLarge | 14/20 | Barlow | botones |
+| labelMedium | 12/16 | Barlow | chips |
+| labelSmall | 11/16 | Barlow | badges |
+
+Ningún texto funcional por debajo de 11 px.
+
+## 4. Espaciado, radios y elevación
+
+- Grid de 4 pt: `4, 8, 12, 16, 24, 32, 48`.
+- Radios: cards 16, inputs/botones 12, pills 999.
+- Elevación 0 en cards, botones y FAB. La jerarquía se logra con superficies
+  tonales y bordes.
+
+## 5. Tema
+
+Archivos:
 
 | Archivo | Propósito |
 |---|---|
-| `lib/core/theme/app_colors.dart` | Tokens de color (light + dark) |
-| `lib/core/theme/app_text_styles.dart` | Escala tipográfica |
-| `lib/core/theme/app_theme.dart` | `ThemeData` light + dark |
-| `lib/core/theme/theme_mode_provider.dart` | Persistencia del modo de tema |
-| `lib/shared/widgets/loading_indicator.dart` | Estado de carga |
-| `lib/shared/widgets/empty_state.dart` | Estado vacío |
-| `lib/shared/widgets/error_state.dart` | Estado de error |
-| `lib/shared/widgets/confirm_dialog.dart` | Diálogo de confirmación |
-| `lib/core/utils/formatters.dart` | Formateo de fechas, moneda, kilometraje |
-| `lib/features/maintenance/categories.dart` | Categorías por tipo de vehículo |
+| `core/theme/app_colors.dart` | paleta cruda |
+| `core/theme/app_semantic_colors.dart` | extensión `ThemeExtension` |
+| `core/theme/app_text_styles.dart` | escala Barlow |
+| `core/theme/app_theme.dart` | `ThemeData` y temas de componentes |
+| `core/theme/app_spacing.dart` | espaciado |
+| `core/theme/app_radii.dart` | radios |
 
----
+**Regla:** los widgets consumen `Theme.of(context)` o
+`AppSemanticColors.of(context)`. No se permiten colores literales fuera de
+`core/theme/`.
 
-> **Última actualización**: Julio 26, 2026
-> **Mantenedor**: este documento debe actualizarse cuando se agreguen, modifiquen o eliminen componentes, colores o patrones de diseño.
->
-> **Nota para agentes**: este documento es referenciado por `AGENTS.md`.
-> Si modificas este archivo, verifica que AGENTS.md siga siendo consistente.
+## 6. Componentes compartidos
+
+| Componente | Archivo | Uso |
+|---|---|---|
+| `VehicleAvatar` | `shared/widgets/vehicle_avatar.dart` | avatar por tipo |
+| `StatusChip` | `shared/widgets/status_chip.dart` | estado ok/warning/danger/neutral |
+| `SectionHeader` | `shared/widgets/section_header.dart` | título de sección + acción |
+| `StatTile` | `shared/widgets/stat_tile.dart` | métrica compacta |
+| `FormSection` | `shared/widgets/form_section.dart` | grupo de formulario |
+| `StickyBottomBar` | `shared/widgets/sticky_bottom_bar.dart` | acción fija con safe area |
+| `DateField` | `shared/widgets/date_field.dart` | fecha con selector |
+| `AppSnackBar` | `shared/widgets/app_snack_bar.dart` | feedback global |
+| `EmptyState` | `shared/widgets/empty_state.dart` | vacío con CTA |
+| `ErrorState` | `shared/widgets/error_state.dart` | error con reintento |
+| `LoadingIndicator` | `shared/widgets/loading_indicator.dart` | carga |
+| `showConfirmDialog` | `shared/widgets/confirm_dialog.dart` | confirmación destructiva |
+
+### APIs
+
+```dart
+StatusChip(status: AppStatus.warning, label: 'Vence en 12 días', icon: Icons.schedule)
+VehicleAvatar(type: 'car', size: 48)
+FormSection(title: 'Documentos', icon: Icons.description_outlined, child: ...)
+StickyBottomBar(child: FilledButton(...))
+AppSnackBar.success('Vehículo guardado')
+```
+
+## 7. Pantallas
+
+### Shell
+
+- 4 tabs: Inicio, Mantenimientos, Vehículos, Ajustes.
+- Etiquetas siempre visibles y badge de pendientes en Mantenimientos.
+- AppBar alineada a la izquierda.
+
+### Inicio
+
+Saludo + estado, card del vehículo con documentos, próximos por km,
+documentos por vencer, gasto del mes y actividad reciente. FAB “Registrar”.
+
+### Vehículos
+
+Cards con avatar de tipo, placa/kilometraje, favorito y menú contextual.
+Detalle con editar/eliminar en menú overflow.
+
+### Mantenimientos
+
+Selector de vehículo reutilizando `VehicleSelectorSheet`, secciones por mes
+con total, cards con costo y detalle de items.
+
+### Formularios
+
+Secciones, una columna, validación inline, barra inferior fija, guardia de
+cambios sin guardar y snackbar de éxito.
+
+### Ajustes
+
+Apariencia, catálogos y acerca de, agrupados en cards.
+
+## 8. Localización y formatos
+
+- `flutter_localizations` con `locale: es_CO`.
+- Moneda: `$ 1.250` (`NumberFormat.currency` con patrón propio).
+- Kilometraje: `15.000 km` (`decimalPattern('es_CO')`).
+- Fechas: `15 de julio de 2026`.
+- Date pickers y textos de Material en español.
+
+## 9. Accesibilidad
+
+- Contraste mínimo 4.5:1 en texto y 3:1 en componentes.
+- Targets de 48×48 dp con 8 dp de separación.
+- No se comunica información solo con color.
+- Iconos decorativos con `Semantics` o tooltip cuando son acciones.
+- Soporte de text scale hasta 2.0 sin overflow.
+- Respeto a `MediaQuery.disableAnimations`.
+
+## 10. Verificación
+
+```bash
+flutter analyze
+flutter test --concurrency 1
+flutter test test/core/theme/contrast_test.dart
+```
+
+Prueba manual: 360×800 y 412×915, light/dark, text scale 1.0/1.3/2.0,
+teclado abierto, date picker en español y ventana Linux 420×880.
+
+> Este documento es la fuente de verdad visual. Si cambias tokens o
+> componentes, actualiza también `AGENTS.md`.

@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/formatters.dart';
 import '../settings/providers.dart';
@@ -140,13 +139,6 @@ class UpcomingMaintenance {
     this.isWarning = false,
   });
 
-  Color statusColor() {
-    if (category.intervalKm == null) return Colors.grey;
-    if (isOverdue) return Colors.red;
-    if (isWarning) return Colors.orange;
-    return Colors.green;
-  }
-
   String statusLabel() {
     if (category.intervalKm == null) return 'Sin frecuencia';
     if (lastMileage == null) return 'Sin registro previo';
@@ -171,6 +163,22 @@ final maintenanceCategoryHistoryProvider =
       final repository = ref.watch(maintenanceRepositoryProvider);
       return repository.getCategoryHistory(args.vehicleId, args.category);
     });
+
+/// Cantidad de mantenimientos vencidos o próximos a vencer en todos los
+/// vehículos. Se usa para el badge de la barra de navegación.
+final maintenanceAttentionCountProvider = FutureProvider<int>((ref) async {
+  final vehicles = await ref.watch(vehiclesProvider.future);
+  var count = 0;
+
+  for (final vehicle in vehicles) {
+    final id = vehicle.id;
+    if (id == null) continue;
+    final upcoming = await ref.watch(upcomingMaintenanceProvider(id).future);
+    count += upcoming.where((item) => item.isOverdue || item.isWarning).length;
+  }
+
+  return count;
+});
 
 final upcomingMaintenanceProvider =
     FutureProvider.family<List<UpcomingMaintenance>, int>((

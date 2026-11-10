@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../core/utils/formatters.dart';
 import '../../features/maintenance/categories.dart';
 import '../../features/maintenance/providers.dart';
@@ -10,6 +10,7 @@ import '../../features/vehicles/models/vehicle.dart';
 import 'empty_state.dart';
 import 'error_state.dart';
 import 'loading_indicator.dart';
+import 'status_chip.dart';
 
 class CategoryHistorySheet extends ConsumerWidget {
   final Vehicle vehicle;
@@ -55,7 +56,7 @@ class CategoryHistorySheet extends ConsumerWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: Theme.of(context).colorScheme.outline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -245,7 +246,13 @@ class _AlertCard extends StatelessWidget {
     if (upcoming == null) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
-    final color = upcoming!.statusColor();
+    final status = upcoming!.category.intervalKm == null
+        ? AppStatus.neutral
+        : upcoming!.isOverdue
+        ? AppStatus.danger
+        : upcoming!.isWarning
+        ? AppStatus.warning
+        : AppStatus.ok;
     final label = upcoming!.statusLabel();
     final hasInterval = upcoming!.category.intervalKm != null;
     final hasLastMileage = upcoming!.lastMileage != null;
@@ -261,32 +268,19 @@ class _AlertCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.notifications_outlined, size: 22, color: color),
-                const SizedBox(width: 10),
+                Icon(
+                  Icons.notifications_outlined,
+                  size: 22,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
                     'Próximo mantenimiento',
                     style: theme.textTheme.titleSmall,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: color,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+                StatusChip(status: status, label: label, icon: Icons.schedule),
               ],
             ),
             if (!hasInterval) ...[
@@ -295,7 +289,7 @@ class _AlertCard extends StatelessWidget {
                 'Configura la frecuencia en kilómetros en Categorías '
                 'para saber cuándo toca el próximo mantenimiento',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ] else if (!hasLastMileage) ...[
@@ -303,7 +297,7 @@ class _AlertCard extends StatelessWidget {
               Text(
                 'Aún no hay registro previo de este item en este vehículo',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ] else ...[
@@ -348,7 +342,11 @@ class _AlertCard extends StatelessWidget {
               const SizedBox(height: 6),
               Row(
                 children: [
-                  Icon(Icons.history, size: 14, color: theme.disabledColor),
+                  Icon(
+                    Icons.history,
+                    size: 14,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'Último: ${formatMileage(upcoming!.lastMileage)}',
@@ -373,7 +371,7 @@ class _HistoryTable extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final headerStyle = theme.textTheme.labelSmall?.copyWith(
-      color: AppColors.onSurfaceVariant,
+      color: theme.colorScheme.onSurfaceVariant,
       fontWeight: FontWeight.w600,
     );
 
@@ -484,7 +482,7 @@ class _InfoLine extends StatelessWidget {
     final theme = Theme.of(context);
     return Row(
       children: [
-        Icon(icon, size: 16, color: theme.disabledColor),
+        Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
         const SizedBox(width: 6),
         Text('$label: ', style: theme.textTheme.bodyMedium),
         Text(
@@ -515,7 +513,7 @@ class _MiniInfo extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: theme.disabledColor),
+        Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
         const SizedBox(width: 4),
         Text('$label: ', style: theme.textTheme.bodySmall),
         Text(

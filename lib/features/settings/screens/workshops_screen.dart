@@ -60,7 +60,9 @@ class WorkshopsScreen extends ConsumerWidget {
                               Icon(
                                 Icons.location_on_outlined,
                                 size: 14,
-                                color: Theme.of(context).disabledColor,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                               const SizedBox(width: 4),
                               Text(w.location!),
@@ -87,15 +89,21 @@ class WorkshopsScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'delete',
                           child: Row(
                             children: [
-                              Icon(Icons.delete, size: 20, color: Colors.red),
-                              SizedBox(width: 8),
+                              Icon(
+                                Icons.delete_outline,
+                                size: 20,
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                              const SizedBox(width: 8),
                               Text(
                                 'Eliminar',
-                                style: TextStyle(color: Colors.red),
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
                               ),
                             ],
                           ),

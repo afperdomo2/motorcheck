@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_semantic_colors.dart';
+import '../../core/theme/app_spacing.dart';
+
 class ErrorState extends StatelessWidget {
   final String message;
   final VoidCallback? onRetry;
@@ -8,30 +11,46 @@ class ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final semantic = AppSemanticColors.of(context);
+
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
-            const SizedBox(height: 16),
+            Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                color: semantic.dangerContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.error_outline,
+                size: 40,
+                color: semantic.onDangerContainer,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
             Text(
               'Algo salió mal',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: theme.textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               message,
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: theme.textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: 24),
-              OutlinedButton(
+              const SizedBox(height: AppSpacing.xl),
+              OutlinedButton.icon(
                 onPressed: onRetry,
-                child: const Text('Reintentar'),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Reintentar'),
               ),
             ],
           ],

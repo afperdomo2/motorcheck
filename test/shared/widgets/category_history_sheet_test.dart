@@ -73,18 +73,18 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Kilometraje actual'), findsOneWidget);
-      expect(find.text('6,790 km'), findsOneWidget);
+      expect(find.text('6.790 km'), findsOneWidget);
 
       expect(find.text('En 10 km'), findsOneWidget);
-      expect(find.text('6,800 km'), findsOneWidget);
+      expect(find.text('6.800 km'), findsOneWidget);
       expect(find.text('10 km'), findsOneWidget);
-      expect(find.text('Último: 5,800 km'), findsOneWidget);
+      expect(find.text('Último: 5.800 km'), findsOneWidget);
 
       expect(find.text('Historial'), findsOneWidget);
       expect(find.text('Sintético'), findsOneWidget);
       expect(find.text('Cambio de aceite'), findsOneWidget);
-      expect(find.text('5,800 km'), findsOneWidget);
-      expect(find.text('4,500 km'), findsOneWidget);
+      expect(find.text('5.800 km'), findsOneWidget);
+      expect(find.text('4.500 km'), findsOneWidget);
 
       expect(
         tester.getTopLeft(find.text('Sintético')).dy,

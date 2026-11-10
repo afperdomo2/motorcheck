@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/stat_tile.dart';
 import '../providers.dart';
 
 class QuickStats extends StatelessWidget {
@@ -11,92 +11,35 @@ class QuickStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: IntrinsicHeight(
+        child: Row(
           children: [
-            InkWell(
-              onTap: () => context.go('/vehicles'),
-              borderRadius: BorderRadius.circular(8),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.garage,
-                      size: 40,
-                      color: AppColors.primary.withValues(alpha: 0.7),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${summary.totalVehicles} vehículo${summary.totalVehicles == 1 ? '' : 's'}',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ],
-                ),
+            Expanded(
+              child: StatTile(
+                icon: Icons.build_outlined,
+                value: '${summary.totalMaintenances}',
+                label: 'Mantenimientos',
+                onTap: () => context.go('/maintenance'),
               ),
             ),
-            const Divider(height: 32),
-            Row(
-              children: [
-                _StatItem(
-                  label: 'Mantenimientos',
-                  value: '${summary.totalMaintenances}',
-                  icon: Icons.build,
-                  onTap: () => context.go('/maintenance'),
-                ),
-                _StatItem(
-                  label: 'Total ${summary.currentMonthLabel}',
-                  value: formatCurrency(summary.currentMonthSpent),
-                  icon: Icons.payments,
-                ),
-              ],
+            VerticalDivider(
+              width: 1,
+              thickness: 1,
+              color: scheme.outlineVariant,
+            ),
+            Expanded(
+              child: StatTile(
+                icon: Icons.payments_outlined,
+                value: formatCurrency(summary.currentMonthSpent),
+                label: 'Gasto ${summary.currentMonthLabel}',
+              ),
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _StatItem extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  const _StatItem({
-    required this.label,
-    required this.value,
-    required this.icon,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final content = Column(
-      children: [
-        Icon(icon, size: 28, color: AppColors.primary),
-        const SizedBox(height: 8),
-        Text(value, style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium,
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-
-    return Expanded(
-      child: onTap == null
-          ? content
-          : InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(8),
-              child: content,
-            ),
     );
   }
 }

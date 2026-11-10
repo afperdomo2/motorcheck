@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_semantic_colors.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/status_chip.dart';
+import '../../../shared/widgets/vehicle_avatar.dart';
 import '../../maintenance/providers.dart';
 import '../models/vehicle.dart';
 import '../providers.dart';
@@ -15,22 +19,6 @@ class VehicleDetailScreen extends ConsumerWidget {
   final int vehicleId;
 
   const VehicleDetailScreen({super.key, required this.vehicleId});
-
-  static IconData _typeIcon(String type) => switch (type) {
-    'car' => Icons.directions_car,
-    'motorcycle' => Icons.motorcycle,
-    'bike' => Icons.pedal_bike,
-    'truck' => Icons.local_shipping,
-    _ => Icons.help_outline,
-  };
-
-  static String _typeLabel(String type) => switch (type) {
-    'car' => 'Carro',
-    'motorcycle' => 'Moto',
-    'bike' => 'Bicicleta',
-    'truck' => 'Camión',
-    _ => 'Otro',
-  };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,18 +29,49 @@ class VehicleDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalle'),
+        title: const Text('Vehículo'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () =>
-                context.pushReplacement('/vehicles/$vehicleId/edit'),
-            tooltip: 'Editar',
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () => _deleteVehicle(context, ref),
-            tooltip: 'Eliminar',
+          PopupMenuButton<_VehicleAction>(
+            tooltip: 'Opciones',
+            onSelected: (action) {
+              switch (action) {
+                case _VehicleAction.edit:
+                  context.pushReplacement('/vehicles/$vehicleId/edit');
+                case _VehicleAction.delete:
+                  _deleteVehicle(context, ref);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: _VehicleAction.edit,
+                child: Row(
+                  children: [
+                    Icon(Icons.edit_outlined, size: 20),
+                    SizedBox(width: 12),
+                    Text('Editar'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: _VehicleAction.delete,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.delete_outline,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Eliminar',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -67,8 +86,6 @@ class VehicleDetailScreen extends ConsumerWidget {
             return const ErrorState(message: 'Vehículo no encontrado');
           }
 
-          final typeColor = AppColors.forVehicleType(vehicle.type);
-
           return RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(selectedVehicleProvider(vehicleId));
@@ -82,12 +99,12 @@ class VehicleDetailScreen extends ConsumerWidget {
             },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               children: [
-                _VehicleHeader(vehicle: vehicle, typeColor: typeColor),
-                const SizedBox(height: 16),
+                _VehicleHeader(vehicle: vehicle),
+                const SizedBox(height: AppSpacing.lg),
                 _InfoCard(vehicle: vehicle),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 summaryAsync.when(
                   loading: () => const LoadingIndicator(),
                   error: (err, _) => const SizedBox.shrink(),
@@ -96,8 +113,9 @@ class VehicleDetailScreen extends ConsumerWidget {
                     vehicleId: vehicleId,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 _MetadataCard(vehicle: vehicle),
+                const SizedBox(height: AppSpacing.xxl),
               ],
             ),
           );
@@ -118,59 +136,62 @@ class VehicleDetailScreen extends ConsumerWidget {
     );
     if (confirmed == true && context.mounted) {
       ref.read(vehiclesNotifierProvider.notifier).remove(vehicleId);
+      AppSnackBar.success('Vehículo eliminado');
       context.pop();
     }
   }
 }
 
+enum _VehicleAction { edit, delete }
+
 class _VehicleHeader extends StatelessWidget {
   final Vehicle vehicle;
-  final Color typeColor;
 
-  const _VehicleHeader({required this.vehicle, required this.typeColor});
+  const _VehicleHeader({required this.vehicle});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final semantic = AppSemanticColors.of(context);
+    final typeColor = semantic.vehicleColor(vehicle.type);
+
     return Column(
       children: [
-        CircleAvatar(
-          radius: 40,
-          backgroundColor: typeColor.withValues(alpha: 0.15),
-          child: Icon(
-            VehicleDetailScreen._typeIcon(vehicle.type),
-            size: 40,
-            color: typeColor,
-          ),
-        ),
-        const SizedBox(height: 12),
+        VehicleAvatar(type: vehicle.type, size: 88),
+        const SizedBox(height: AppSpacing.md),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Flexible(
               child: Text(
                 vehicle.name,
-                style: Theme.of(context).textTheme.headlineSmall,
+                style: theme.textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
             ),
             if (vehicle.isDefault) ...[
               const SizedBox(width: 6),
-              Icon(Icons.star, color: Colors.amber[600], size: 22),
+              Icon(Icons.star, color: theme.colorScheme.primary, size: 22),
             ],
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.sm),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: typeColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            color: typeColor.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(999),
           ),
-          child: Text(
-            VehicleDetailScreen._typeLabel(vehicle.type),
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium?.copyWith(color: typeColor),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(vehicleTypeIcon(vehicle.type), size: 14, color: typeColor),
+              const SizedBox(width: 5),
+              Text(
+                vehicleTypeLabel(vehicle.type),
+                style: theme.textTheme.labelMedium?.copyWith(color: typeColor),
+              ),
+            ],
           ),
         ),
       ],
@@ -277,16 +298,16 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: Theme.of(context).disabledColor),
-          const SizedBox(width: 8),
-          Text('$label: ', style: Theme.of(context).textTheme.bodyMedium),
-          Flexible(
-            child: Text(value, style: Theme.of(context).textTheme.bodyLarge),
-          ),
+          Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: AppSpacing.sm),
+          Text('$label: ', style: theme.textTheme.bodyMedium),
+          Flexible(child: Text(value, style: theme.textTheme.bodyLarge)),
         ],
       ),
     );
@@ -306,44 +327,56 @@ class _ExpiryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = expiryColor(date);
-    final daysText = formatDaysRemaining(date);
+    final theme = Theme.of(context);
+    final days = _daysUntil(date);
+    final status = days < 0
+        ? AppStatus.danger
+        : days <= 30
+        ? AppStatus.warning
+        : AppStatus.ok;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 20, color: Theme.of(context).disabledColor),
-              const SizedBox(width: 8),
-              Text('$label: ', style: Theme.of(context).textTheme.bodyMedium),
+              Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: AppSpacing.sm),
+              Text('$label: ', style: theme.textTheme.bodyMedium),
               Flexible(
                 child: Text(
                   formatDisplayDate(date),
-                  style: Theme.of(context).textTheme.bodyLarge,
+                  style: theme.textTheme.bodyLarge,
                 ),
               ),
             ],
           ),
           Padding(
-            padding: const EdgeInsets.only(left: 28, top: 4),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                daysText,
-                style: TextStyle(fontSize: 12, color: color),
-              ),
+            padding: const EdgeInsets.only(left: 28, top: AppSpacing.xs),
+            child: StatusChip(
+              status: status,
+              label: _daysLabel(days),
+              icon: Icons.schedule,
             ),
           ),
         ],
       ),
     );
+  }
+
+  static int _daysUntil(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(date.year, date.month, date.day);
+    return target.difference(today).inDays;
+  }
+
+  static String _daysLabel(int days) {
+    if (days < 0) return 'Vencido hace ${-days} días';
+    if (days == 0) return 'Vence hoy';
+    return 'Vence en $days días';
   }
 }
 
@@ -369,7 +402,7 @@ class _MaintenanceSummaryCard extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.build_outlined,
-                    color: Theme.of(context).disabledColor,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 12),
                   const Text('Sin mantenimientos registrados'),

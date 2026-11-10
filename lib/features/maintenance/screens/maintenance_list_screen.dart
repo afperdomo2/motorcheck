@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
-import '../../../core/utils/formatters.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../settings/providers.dart';
+import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../settings/models/maintenance_category.dart';
-import '../../vehicles/providers.dart';
+import '../../settings/providers.dart';
 import '../../vehicles/models/vehicle.dart';
+import '../../vehicles/providers.dart';
 import '../models/maintenance.dart';
 import '../models/workshop.dart';
 import '../providers.dart';
@@ -25,14 +26,6 @@ class MaintenanceListScreen extends ConsumerStatefulWidget {
 }
 
 class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
-  IconData _vehicleIcon(String type) => switch (type) {
-    'motorcycle' => Icons.motorcycle,
-    'bike' => Icons.pedal_bike,
-    'truck' => Icons.local_shipping,
-    'other' => Icons.help_outline,
-    _ => Icons.directions_car,
-  };
-
   @override
   Widget build(BuildContext context) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
@@ -46,15 +39,17 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () => context.push('/maintenance/search'),
+            tooltip: 'Buscar',
           ),
         ],
       ),
       floatingActionButton: selectedVehicleId != null
-          ? FloatingActionButton(
+          ? FloatingActionButton.extended(
               onPressed: () =>
                   context.push('/maintenance/add?vehicleId=$selectedVehicleId'),
-              tooltip: 'Agregar mantenimiento',
-              child: const Icon(Icons.build),
+              tooltip: 'Registrar mantenimiento',
+              icon: const Icon(Icons.add),
+              label: const Text('Registrar'),
             )
           : null,
       body: Column(
@@ -76,26 +71,36 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
                 final vehicles = vehiclesAsync.valueOrNull ?? [];
 
                 if (vehicles.isEmpty) {
-                  return const EmptyState(
+                  return EmptyState(
                     icon: Icons.directions_car,
                     title: 'No hay vehículos',
-                    subtitle: 'Agrega un vehículo primero',
+                    subtitle:
+                        'Agrega un vehículo para registrar mantenimientos',
+                    onAction: () => context.push('/vehicles/add'),
+                    actionLabel: 'Agregar vehículo',
                   );
                 }
 
                 if (selectedVehicleId == null) {
-                  return const EmptyState(
+                  return EmptyState(
                     icon: Icons.touch_app,
                     title: 'Selecciona un vehículo',
                     subtitle: 'Elige un vehículo para ver sus mantenimientos',
+                    onAction: () => context.go('/vehicles'),
+                    actionLabel: 'Ir a vehículos',
                   );
                 }
 
                 if (filtered.isEmpty) {
-                  return const EmptyState(
-                    icon: Icons.build,
+                  return EmptyState(
+                    icon: Icons.build_outlined,
                     title: 'Sin mantenimientos',
-                    subtitle: 'Registra el primer mantenimiento',
+                    subtitle:
+                        'Registra el primer mantenimiento de este vehículo',
+                    onAction: () => context.push(
+                      '/maintenance/add?vehicleId=$selectedVehicleId',
+                    ),
+                    actionLabel: 'Registrar mantenimiento',
                   );
                 }
 
@@ -109,18 +114,17 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
   }
 
   Widget _buildCardList(List<Maintenance> maintenances) {
-    final workshopsAsync = ref.watch(workshopsProvider);
-    final workshops = workshopsAsync.valueOrNull ?? [];
+    final workshops = ref.watch(workshopsProvider).valueOrNull ?? [];
     final maintenanceIds = maintenances.map((m) => m.id!).toList()..sort();
-    final itemsAsync = ref.watch(
-      workshopItemsProvider(maintenanceIds.join(',')),
-    );
-    final itemsByMaintenance = itemsAsync.valueOrNull ?? {};
-    final categoriesAsync = ref.watch(maintenanceCategoriesProvider);
+    final itemsByMaintenance =
+        ref
+            .watch(workshopItemsProvider(maintenanceIds.join(',')))
+            .valueOrNull ??
+        {};
+    final categories =
+        ref.watch(maintenanceCategoriesProvider).valueOrNull ?? [];
     final categoryMap = <String, MaintenanceCategory>{
-      for (final c
-          in (categoriesAsync.valueOrNull ?? []).cast<MaintenanceCategory>())
-        c.key: c,
+      for (final c in categories) c.key: c,
     };
 
     final flat = _buildGroupedItems(maintenances);
@@ -130,7 +134,13 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
           .read(maintenancesNotifierProvider.notifier)
           .loadMaintenances,
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.lg,
+          AppSpacing.xxl * 2,
+        ),
         itemCount: flat.length,
         itemBuilder: (context, index) {
           final item = flat[index];
@@ -141,11 +151,10 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
 
           final maintenance = item as Maintenance;
           final workshop = _findWorkshop(workshops, maintenance.workshopId);
-          final items = itemsByMaintenance[maintenance.id] ?? [];
 
           return MaintenanceCard(
             maintenance: maintenance,
-            items: items,
+            items: itemsByMaintenance[maintenance.id] ?? [],
             workshopName: workshop?.name,
             workshopLocation: workshop?.location,
             categoryMap: categoryMap,
@@ -173,7 +182,11 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
     final flat = <Object>[];
     for (final key in monthKeys) {
       final items = groups[key]!..sort(_compareMileageThenDate);
-      flat.add(_MonthHeader(year: key.$1, month: key.$2));
+      final total = items.fold<double>(
+        0,
+        (sum, m) => sum + m.maintenanceCost + m.totalPartsCost,
+      );
+      flat.add(_MonthHeader(year: key.$1, month: key.$2, total: total));
       flat.addAll(items);
     }
     return flat;
@@ -192,12 +205,10 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
   }
 
   Widget _buildVehicleSelector(BuildContext context) {
-    final vehiclesAsync = ref.watch(vehiclesProvider);
-    final vehicles = vehiclesAsync.valueOrNull ?? [];
+    final vehicles = ref.watch(vehiclesProvider).valueOrNull ?? [];
     if (vehicles.isEmpty) return const SizedBox.shrink();
 
     final selectedVehicleId = ref.watch(selectedVehicleIdProvider);
-
     Vehicle? selectedVehicle;
     for (final v in vehicles) {
       if (v.id == selectedVehicleId) {
@@ -209,116 +220,70 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
     final theme = Theme.of(context);
 
     if (selectedVehicle == null) {
-      return InkWell(
-        onTap: () => _showVehicleSheet(context, vehicles),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: theme.colorScheme.primary.withValues(
-                  alpha: 0.12,
+      return Card(
+        margin: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.lg,
+          0,
+        ),
+        child: InkWell(
+          onTap: () => _selectVehicle(context),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.directions_car_outlined,
+                    color: theme.colorScheme.onPrimaryContainer,
+                  ),
                 ),
-                child: Icon(
-                  Icons.directions_car,
-                  color: theme.colorScheme.primary,
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Text(
+                    'Selecciona un vehículo',
+                    style: theme.textTheme.titleMedium,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Selecciona un vehículo',
-                  style: theme.textTheme.titleMedium,
+                Icon(
+                  Icons.expand_more,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
-              ),
-              Icon(Icons.expand_more, color: theme.disabledColor),
-            ],
+              ],
+            ),
           ),
         ),
       );
     }
 
-    return VehicleFicha(
-      vehicle: selectedVehicle,
-      onTap: () => _showVehicleSheet(context, vehicles),
+    return Card(
+      margin: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        0,
+      ),
+      child: VehicleFicha(
+        vehicle: selectedVehicle,
+        onTap: () => _selectVehicle(context),
+      ),
     );
   }
 
-  Future<void> _showVehicleSheet(
-    BuildContext context,
-    List<Vehicle> vehicles,
-  ) async {
-    final selectedVehicleId = ref.read(selectedVehicleIdProvider);
-
-    final sorted = List<Vehicle>.from(vehicles)
-      ..sort((a, b) {
-        if (a.isDefault && !b.isDefault) return -1;
-        if (!a.isDefault && b.isDefault) return 1;
-        return a.name.compareTo(b.name);
-      });
-
-    final result = await showModalBottomSheet<Vehicle>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Text(
-                  'Selecciona un vehículo',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              ...sorted.map((v) {
-                final isSelected = v.id == selectedVehicleId;
-                final typeColor = AppColors.forVehicleType(v.type);
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: typeColor.withValues(alpha: 0.15),
-                    child: Icon(_vehicleIcon(v.type), color: typeColor),
-                  ),
-                  title: Text(v.name),
-                  subtitle: _vehicleSubtitle(v) != null
-                      ? Text(_vehicleSubtitle(v)!)
-                      : null,
-                  trailing: isSelected
-                      ? Icon(
-                          Icons.check_circle,
-                          color: Theme.of(context).colorScheme.primary,
-                        )
-                      : null,
-                  onTap: () => Navigator.of(context).pop(v),
-                );
-              }),
-            ],
-          ),
-        );
-      },
-    );
-
+  Future<void> _selectVehicle(BuildContext context) async {
+    final result = await VehicleSelectorSheet.show(context);
     if (result != null) {
       await ref
           .read(vehiclesNotifierProvider.notifier)
           .selectVehicle(result.id!);
     }
-  }
-
-  String? _vehicleSubtitle(Vehicle v) {
-    final parts = <String>[];
-    if (v.plate != null) parts.add(v.plate!);
-    if (v.currentMileage != null) parts.add(formatMileage(v.currentMileage));
-    if (parts.isEmpty) return null;
-    return parts.join(' · ');
   }
 
   Workshop? _findWorkshop(List<Workshop> workshops, int? workshopId) {
@@ -333,8 +298,13 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
 class _MonthHeader extends StatelessWidget {
   final int year;
   final int month;
+  final double total;
 
-  const _MonthHeader({required this.year, required this.month});
+  const _MonthHeader({
+    required this.year,
+    required this.month,
+    required this.total,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -342,25 +312,26 @@ class _MonthHeader extends StatelessWidget {
     final label = formatMonthYearLong(DateTime(year, month));
 
     return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 8),
+      padding: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.sm),
       child: Row(
         children: [
           Container(
-            width: 6,
+            width: 4,
             height: 18,
             decoration: BoxDecoration(
               color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(child: Text(label, style: theme.textTheme.titleMedium)),
+          if (total > 0)
+            Text(
+              formatCurrency(total),
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
-          ),
         ],
       ),
     );

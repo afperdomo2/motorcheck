@@ -95,19 +95,33 @@ Ver `docs/code-style.md` para ejemplos de modelos freezed y estado asíncrono.
 | Volver atrás | `context.pop()` |
 | Cambiar tab | `context.go('/ruta')` |
 
+### Tema, formato y localización
+
+- Los widgets **no usan colores literales**: consumen `Theme.of(context)` o
+  `AppSemanticColors.of(context)`. La paleta cruda vive solo en
+  `lib/core/theme/`.
+- Identidad visual: grafito + ámbar industrial. El azul está reservado para el
+  tipo de vehículo “carro”; no se usa como color de marca.
+- Tipografía: Barlow y Barlow Semi Condensed empaquetadas en `assets/fonts/`.
+- Estados siempre con icono + texto + color (`StatusChip`), nunca solo color.
+- Formatos `es_CO`: moneda `$ 1.250` y kilometraje `15.000 km`.
+- `MaterialApp.router` usa `locale: es_CO` y `flutter_localizations`.
+- Formularios: `FormSection`, `StickyBottomBar`, validación inline y guardia de
+  cambios sin guardar.
+
 ## Arquitectura
 
 ```
 lib/
 ├── main.dart / app.dart         # Entry + MaterialApp.router
 ├── core/
-│   ├── theme/                   # Colores, tipografía, temas light+dark
+│   ├── theme/                   # Tokens, Barlow, temas light+dark, ThemeExtension
 │   ├── database/                # SQLite helper + DDL (v12) + factory FFI
-│   └── utils/                   # Formateadores, extensiones
+│   └── utils/                   # Formateadores es_CO, extensiones
 ├── features/
 │   ├── vehicles/                # CRUD vehículos + selección default
 │   ├── maintenance/             # CRUD mantenimientos + items (categorías por tipo)
-│   ├── dashboard/               # Resumen + alertas SOAT/RTM
+│   ├── dashboard/               # Resumen, próximos por km + alertas SOAT/RTM
 │   └── settings/                # Tema (system/light/dark) + CRUD talleres
 ├── shared/widgets/              # Dumb widgets reutilizables
 └── routes/                      # GoRouter (StatefulShellRoute, 4 tabs)
@@ -155,6 +169,31 @@ flutter test --concurrency 1              # SQLite sin race conditions
 - No ejecutar `flutter test` ni `flutter analyze` tras cambios solo en `.md`
 - No comandos destructivos sin confirmación explícita
 - **Consistencia docs**: tras cambios estructurales (modelos, providers, features), verifica que AGENTS.md y `docs/` estén sincronizados con el código real
+
+## Planes y resúmenes de cambios
+
+### Cuánto detalle
+- **Cambio pequeño** (1-2 archivos, sin UI, datos ni flujo nuevo): resumen de 3 líneas, sin diagramas.
+- **Cambio mediano o grande** (UI nueva, flujo nuevo, cambios en datos o API, 3+ archivos): presenta un plan antes de escribir código y espera mi aprobación.
+
+### Formato del plan
+Incluye solo las secciones que apliquen al cambio:
+1. **Objetivo**: qué se logra, en 2 líneas.
+2. **Interfaz** (si hay UI web, móvil o de escritorio): wireframe ASCII del antes y del después, y los estados relevantes (cargando, vacío, error).
+3. **Flujo**: diagrama ASCII del recorrido de punta a punta, según la arquitectura del proyecto (por ejemplo: pantalla → estado → servicio → API → lógica → base de datos; o evento → proceso → resultado).
+4. **Datos y contratos**: esquema de datos antes/después; endpoints o interfaces nuevas con entrada y salida.
+5. **Archivos**: tabla `archivo | qué cambia | por qué`. Explica el efecto del cambio, no solo el nombre del archivo.
+6. **Decisiones y riesgos**: si hay dos o más formas razonables, preséntalas con pros y contras y espera mi decisión. Señala qué podría romperse.
+7. **Verificación**: cómo comprobar que funciona (pruebas, pasos manuales).
+
+### Reglas para los diagramas
+- Usa ASCII (máximo 80 columnas). No uses Mermaid en la terminal.
+- Marca `[NUEVO]` lo que se agrega y `[CAMBIA]` lo que se modifica; lo demás es existente.
+- Un diagrama por idea; no dibujes lo que no cambia ni lo que es obvio.
+- Si el plan es grande, guárdalo también en `docs/plans/<nombre>.md` con diagramas Mermaid y dime la ruta.
+
+### Al terminar
+Resume lo hecho con un diagrama del flujo resultante, qué cambió en la UI o en los datos, las diferencias respecto al plan y lo que falta por verificar.
 
 ## Skills y MCPs
 
