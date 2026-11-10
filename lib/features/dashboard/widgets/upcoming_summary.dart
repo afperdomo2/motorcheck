@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../../shared/widgets/status_chip.dart';
-import '../../vehicles/providers.dart';
 import '../providers.dart';
 
 class UpcomingSummary extends ConsumerWidget {
@@ -15,10 +15,7 @@ class UpcomingSummary extends ConsumerWidget {
     final entries = ref.watch(dashboardUpcomingProvider).valueOrNull ?? [];
     if (entries.isEmpty) return const SizedBox.shrink();
 
-    final vehicles = ref.watch(vehiclesProvider).valueOrNull ?? [];
-    final defaultVehicle = ref.watch(defaultVehicleProvider).valueOrNull;
-    final target =
-        defaultVehicle ?? (vehicles.isNotEmpty ? vehicles.first : null);
+    final target = ref.watch(dashboardVehicleProvider).valueOrNull;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +84,9 @@ class _UpcomingRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    entry.vehicle.name,
+                    item.lastMileage != null
+                        ? 'Último: ${formatMileage(item.lastMileage)}'
+                        : 'Sin registro previo',
                     style: theme.textTheme.bodySmall,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

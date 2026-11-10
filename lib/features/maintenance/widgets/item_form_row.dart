@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/utils/formatters.dart';
 import '../categories.dart';
 import '../models/maintenance_item.dart';
 import '../../settings/models/maintenance_category.dart';
@@ -64,20 +65,21 @@ class _ItemFormRowState extends State<ItemFormRow> {
               children: [
                 Expanded(
                   child: Text(
-                    'Item ${widget.index + 1}',
+                    'Ítem ${widget.index + 1}',
                     style: theme.textTheme.titleSmall,
                   ),
                 ),
                 if (widget.canRemove)
                   IconButton(
                     onPressed: widget.onRemove,
-                    tooltip: 'Quitar item',
+                    tooltip: 'Quitar ítem',
                     icon: const Icon(Icons.close, size: 20),
                   ),
               ],
             ),
             const SizedBox(height: AppSpacing.xs),
             DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue:
                   widget.categories.any((c) => c.key == widget.item.category)
                   ? widget.item.category
@@ -115,10 +117,13 @@ class _ItemFormRowState extends State<ItemFormRow> {
             const SizedBox(height: AppSpacing.md),
             TextFormField(
               controller: _costController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Repuestos',
-                prefixIcon: Icon(Icons.attach_money),
+                prefixIcon: const Icon(Icons.attach_money),
                 suffixText: 'COP',
+                helperText: widget.item.partsCost > 0
+                    ? formatCurrency(widget.item.partsCost)
+                    : null,
               ),
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -130,7 +135,7 @@ class _ItemFormRowState extends State<ItemFormRow> {
             TextFormField(
               controller: _notesController,
               decoration: const InputDecoration(
-                labelText: 'Nota del item',
+                labelText: 'Nota del ítem',
                 prefixIcon: Icon(Icons.note_alt_outlined),
                 hintText: 'Ej: Compré el filtro original',
               ),

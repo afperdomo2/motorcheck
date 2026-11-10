@@ -62,7 +62,7 @@ class MaintenancesNotifier extends Notifier<AsyncValue<List<Maintenance>>> {
       await _repo.insert(maintenance, items);
       return _repo.getAll();
     });
-    ref.invalidate(workshopItemsProvider);
+    _invalidateDependentProviders();
   }
 
   Future<void> update(
@@ -74,16 +74,30 @@ class MaintenancesNotifier extends Notifier<AsyncValue<List<Maintenance>>> {
       await _repo.update(maintenance, items);
       return _repo.getAll();
     });
-    ref.invalidate(workshopItemsProvider);
+    _invalidateDependentProviders();
   }
 
   Future<void> remove(int id) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await _repo.delete(id);
-      return _repo.getAll();
-    });
+    await _repo.delete(id);
+    state = AsyncValue.data(await _repo.getAll());
+    _invalidateDependentProviders();
+  }
+
+  void _invalidateDependentProviders() {
+    ref.invalidate(maintenancesProvider);
     ref.invalidate(workshopItemsProvider);
+    ref.invalidate(maintenanceByIdProvider);
+    ref.invalidate(maintenanceItemsProvider);
+    ref.invalidate(vehicleMaintenanceSummaryProvider);
+    ref.invalidate(upcomingMaintenanceProvider);
+    ref.invalidate(maintenanceAttentionCountProvider);
+    ref.invalidate(vehicleNamesProvider);
+
+    // El repositorio pudo subir el kilometraje del vehículo.
+    ref.invalidate(vehiclesNotifierProvider);
+    ref.invalidate(vehiclesProvider);
+    ref.invalidate(defaultVehicleProvider);
+    ref.invalidate(selectedVehicleProvider);
   }
 }
 
@@ -185,8 +199,9 @@ final upcomingMaintenanceProvider =
       ref,
       vehicleId,
     ) async {
-      final vehicleRepo = ref.read(vehicleRepositoryProvider);
-      final vehicle = await vehicleRepo.getById(vehicleId);
+      final vehicle = await ref.watch(
+        selectedVehicleProvider(vehicleId).future,
+      );
       if (vehicle == null || vehicle.currentMileage == null) return [];
 
       final currentMileage = vehicle.currentMileage!;

@@ -128,7 +128,7 @@ class CategoryHistoryView extends ConsumerWidget {
             child: LoadingIndicator(),
           ),
           error: (err, _) => ErrorState(
-            message: err.toString(),
+            message: 'No se pudo cargar el historial',
             onRetry: () => ref.invalidate(
               maintenanceCategoryHistoryProvider((
                 vehicleId: vehicleId,
@@ -141,7 +141,7 @@ class CategoryHistoryView extends ConsumerWidget {
               return const EmptyState(
                 icon: Icons.history,
                 title: 'Sin registros previos',
-                subtitle: 'Este item aún no se ha realizado en este vehículo',
+                subtitle: 'Este ítem aún no se ha realizado en este vehículo',
               );
             }
             return _HistoryTable(entries: entries);
@@ -283,7 +283,7 @@ class _AlertCard extends StatelessWidget {
             ] else if (!hasLastMileage) ...[
               const SizedBox(height: 8),
               Text(
-                'Aún no hay registro previo de este item en este vehículo',
+                'Aún no hay registro previo de este ítem en este vehículo',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

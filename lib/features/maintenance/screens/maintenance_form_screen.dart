@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/date_field.dart';
@@ -37,6 +39,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
   final List<MaintenanceItem> _items = [];
   bool _isLoading = false;
   bool _dirty = false;
+  bool _mileageBelowLast = false;
   DateTime? _originalCreatedAt;
   int? _vehicleCurrentMileage;
   DateTime? _vehicleMileageUpdatedAt;
@@ -142,6 +145,15 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     });
   }
 
+  void _updateMileageWarning() {
+    final km = int.tryParse(_mileageController.text.trim());
+    final last = _vehicleCurrentMileage;
+    final below = !_isEditing && km != null && last != null && km < last;
+    if (below != _mileageBelowLast) {
+      setState(() => _mileageBelowLast = below);
+    }
+  }
+
   double get _totalParts =>
       _items.fold<double>(0, (sum, i) => sum + i.partsCost);
 
@@ -204,9 +216,15 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
       await Future<void>.delayed(Duration.zero);
       if (mounted) context.pop();
     } catch (error) {
+      logError('guardar mantenimiento', error, StackTrace.current);
       if (!mounted) return;
       setState(() => _isLoading = false);
-      AppSnackBar.error('No se pudo guardar el mantenimiento');
+      AppSnackBar.error(
+        friendlyErrorMessage(
+          error,
+          fallback: 'No se pudo guardar el mantenimiento',
+        ),
+      );
     }
   }
 
@@ -242,27 +260,33 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
   }
 
   Future<void> _addWorkshop() async {
+    final formKey = GlobalKey<FormState>();
     final result = await showDialog<({String name, String? location})>(
       context: context,
       builder: (ctx) {
         String name = '';
         String location = '';
-        return StatefulBuilder(
-          builder: (ctx, setDialogState) => AlertDialog(
-            title: const Text('Nuevo taller'),
-            content: Column(
+        return AlertDialog(
+          title: const Text('Nuevo taller'),
+          scrollable: true,
+          content: Form(
+            key: formKey,
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
+                TextFormField(
                   autofocus: true,
                   onChanged: (v) => name = v,
                   decoration: const InputDecoration(
                     labelText: 'Nombre del taller *',
                     hintText: 'Ej: Taller Juan, Concesionario Toyota',
                   ),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Ingresa un nombre'
+                      : null,
                 ),
-                const SizedBox(height: 12),
-                TextField(
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
                   onChanged: (v) => location = v,
                   decoration: const InputDecoration(
                     labelText: 'Ciudad / Ubicación',
@@ -272,30 +296,29 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                 ),
               ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancelar'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  if (name.trim().isNotEmpty) {
-                    Navigator.pop(ctx, (
-                      name: name.trim(),
-                      location: location.trim().isEmpty
-                          ? null
-                          : location.trim(),
-                    ));
-                  }
-                },
-                child: const Text('Guardar'),
-              ),
-            ],
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (!formKey.currentState!.validate()) return;
+                Navigator.pop(ctx, (
+                  name: name.trim(),
+                  location: location.trim().isEmpty ? null : location.trim(),
+                ));
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
         );
       },
     );
-    if (result != null && mounted) {
+    if (result == null || !mounted) return;
+
+    try {
       final id = await ref
           .read(workshopRepositoryProvider)
           .insert(result.name, location: result.location);
@@ -304,6 +327,13 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
         _workshopId = id;
         _dirty = true;
       });
+    } catch (error) {
+      logError('crear taller desde mantenimiento', error, StackTrace.current);
+      if (mounted) {
+        AppSnackBar.error(
+          friendlyErrorMessage(error, fallback: 'No se pudo crear el taller'),
+        );
+      }
     }
   }
 
@@ -320,6 +350,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
             Expanded(
               child: DropdownButtonFormField<int?>(
                 key: ValueKey('workshop-$_workshopId-${workshops.length}'),
+                isExpanded: true,
                 initialValue: workshops.any((w) => w.id == _workshopId)
                     ? _workshopId
                     : null,
@@ -339,6 +370,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                         w.location != null && w.location!.isNotEmpty
                             ? '${w.name} · ${w.location}'
                             : w.name,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -372,6 +404,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
         .where((c) => c.vehicleType == vehicleType)
         .toList();
     final theme = Theme.of(context);
+    final semantic = AppSemanticColors.of(context);
 
     return PopScope(
       canPop: !_dirty && !_isLoading,
@@ -421,6 +454,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                               inputFormatters: [
                                 FilteringTextInputFormatter.digitsOnly,
                               ],
+                              onChanged: (_) => _updateMileageWarning(),
                               validator: (v) {
                                 final isRequired =
                                     _vehicleCurrentMileage != null;
@@ -444,15 +478,41 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                                 ),
                               ),
                             ],
+                            if (_mileageBelowLast) ...[
+                              const SizedBox(height: AppSpacing.xs),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.warning_amber_rounded,
+                                    size: 14,
+                                    color: semantic.warning,
+                                  ),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  Expanded(
+                                    child: Text(
+                                      'Es menor al último registro '
+                                      '(${formatMileage(_vehicleCurrentMileage)}). '
+                                      'Verifica el dato.',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(color: semantic.warning),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                             const SizedBox(height: AppSpacing.lg),
                             _buildWorkshopField(workshopsAsync),
                             const SizedBox(height: AppSpacing.lg),
                             TextFormField(
                               controller: _maintenanceCostController,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: 'Mano de obra',
-                                prefixIcon: Icon(Icons.attach_money),
+                                prefixIcon: const Icon(Icons.attach_money),
                                 suffixText: 'COP',
+                                helperText: _maintenanceCost > 0
+                                    ? formatCurrency(_maintenanceCost)
+                                    : null,
                               ),
                               keyboardType: TextInputType.number,
                               inputFormatters: [
@@ -476,7 +536,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       FormSection(
-                        title: 'Items del mantenimiento',
+                        title: 'Ítems del mantenimiento',
                         icon: Icons.build_outlined,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -486,8 +546,8 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                                 Expanded(
                                   child: Text(
                                     _items.isEmpty
-                                        ? 'Sin items'
-                                        : '${_items.length} item${_items.length == 1 ? '' : 's'}',
+                                        ? 'Sin ítems'
+                                        : '${_items.length} ítem${_items.length == 1 ? '' : 's'}',
                                     style: theme.textTheme.bodyMedium,
                                   ),
                                 ),

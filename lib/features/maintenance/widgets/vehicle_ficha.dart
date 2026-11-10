@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/utils/date_status.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/status_chip.dart';
 import '../../../shared/widgets/vehicle_avatar.dart';
@@ -102,30 +103,17 @@ class VehicleFicha extends StatelessWidget {
   }
 
   Widget _statusPill(String label, DateTime date) {
-    final days = _daysUntil(date);
-    final status = days < 0
-        ? AppStatus.danger
-        : days <= 30
-        ? AppStatus.warning
-        : AppStatus.ok;
+    final status = dateStatus(date);
+    final appStatus = switch (status.level) {
+      ExpiryLevel.danger => AppStatus.danger,
+      ExpiryLevel.warning => AppStatus.warning,
+      ExpiryLevel.ok => AppStatus.ok,
+    };
     return StatusChip(
-      status: status,
-      label: '$label · ${_daysShort(days)}',
+      status: appStatus,
+      label: '$label · ${status.shortLabel}',
       icon: Icons.shield_outlined,
     );
-  }
-
-  static int _daysUntil(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final target = DateTime(date.year, date.month, date.day);
-    return target.difference(today).inDays;
-  }
-
-  static String _daysShort(int days) {
-    if (days < 0) return 'hace ${-days} d';
-    if (days == 0) return 'hoy';
-    return 'en $days d';
   }
 }
 

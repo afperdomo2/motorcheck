@@ -62,6 +62,11 @@ class VehicleRepository {
     );
   }
 
+  Future<void> clearDefault() async {
+    final db = await _db.database;
+    await db.update('vehicles', {'is_default': 0, 'updated_at': _now});
+  }
+
   Future<void> markLastSelected(int id) async {
     final db = await _db.database;
     await db.update(

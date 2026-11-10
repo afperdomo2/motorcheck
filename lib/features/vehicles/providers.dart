@@ -52,7 +52,7 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
     });
   }
 
-  /// Prioriza el último vehículo seleccionado, luego el favorito y, por
+  /// Prioriza el último vehículo seleccionado, luego el predeterminado y, por
   /// último, el primero de la lista.
   int? _resolveInitialVehicleId(List<Vehicle> vehicles, int? lastSelectedId) {
     if (lastSelectedId != null && vehicles.any((v) => v.id == lastSelectedId)) {
@@ -79,6 +79,7 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
     });
     ref.invalidate(vehiclesProvider);
     ref.invalidate(defaultVehicleProvider);
+    ref.invalidate(selectedVehicleProvider);
   }
 
   Future<void> update(Vehicle vehicle) async {
@@ -92,26 +93,39 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
     });
     ref.invalidate(vehiclesProvider);
     ref.invalidate(defaultVehicleProvider);
+    ref.invalidate(selectedVehicleProvider(vehicle.id!));
   }
 
   Future<void> remove(int id) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await _repo.delete(id);
-      final vehicles = await _repo.getAll();
-      final selectedId = ref.read(selectedVehicleIdProvider);
-      if (vehicles.isEmpty) {
-        ref.read(selectedVehicleIdProvider.notifier).state = null;
-      } else if (selectedId == id) {
-        ref.read(selectedVehicleIdProvider.notifier).state = vehicles.first.id;
-      }
-      return vehicles;
+    await _repo.delete(id);
+    final vehicles = await _repo.getAll();
+    final selectedId = ref.read(selectedVehicleIdProvider);
+    if (vehicles.isEmpty) {
+      ref.read(selectedVehicleIdProvider.notifier).state = null;
+    } else if (selectedId == id) {
+      ref.read(selectedVehicleIdProvider.notifier).state = vehicles.first.id;
+    }
+    state = AsyncValue.data(vehicles);
+    ref.invalidate(vehiclesProvider);
+    ref.invalidate(defaultVehicleProvider);
+    ref.invalidate(selectedVehicleProvider);
+  }
+
+  Future<void> clearDefault() async {
+    await _repo.clearDefault();
+    state.whenData((vehicles) {
+      final updated = vehicles
+          .map((v) => v.copyWith(isDefault: false))
+          .toList();
+      updated.sort(_compareVehicles);
+      state = AsyncValue.data(updated);
     });
     ref.invalidate(vehiclesProvider);
     ref.invalidate(defaultVehicleProvider);
   }
 
   Future<void> setDefault(int id) async {
+    await _repo.setDefault(id);
     state.whenData((vehicles) {
       final updated = vehicles
           .map((v) => v.copyWith(isDefault: v.id == id))
@@ -119,8 +133,6 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
       updated.sort(_compareVehicles);
       state = AsyncValue.data(updated);
     });
-
-    await _repo.setDefault(id);
     ref.invalidate(vehiclesProvider);
     ref.invalidate(defaultVehicleProvider);
   }

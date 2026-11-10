@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../../shared/widgets/vehicle_avatar.dart';
 import '../../maintenance/models/maintenance.dart';
@@ -45,15 +46,29 @@ class RecentActivity extends ConsumerWidget {
         c.key: c,
     };
 
-    final theme = Theme.of(context);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
           title: 'Actividad reciente',
           actionLabel: 'Ver todo',
-          onAction: () => context.go('/maintenance'),
+          onAction: () async {
+            try {
+              final target = await ref.read(dashboardVehicleProvider.future);
+              if (target?.id != null) {
+                await ref
+                    .read(vehiclesNotifierProvider.notifier)
+                    .selectVehicle(target!.id!);
+              }
+            } catch (error) {
+              logError(
+                'abrir mantenimientos desde inicio',
+                error,
+                StackTrace.current,
+              );
+            }
+            if (context.mounted) context.go('/maintenance');
+          },
         ),
         Card(
           child: Column(
@@ -74,11 +89,6 @@ class RecentActivity extends ConsumerWidget {
               ],
             ],
           ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          'Toca un registro para ver el detalle',
-          style: theme.textTheme.bodySmall,
         ),
       ],
     );

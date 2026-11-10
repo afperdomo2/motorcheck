@@ -14,10 +14,11 @@
 test/                           # Espejo de lib/
 ├── core/
 │   ├── database/               # Pruebas de SQLite con sqflite_common_ffi
-│   └── utils/                  # Pruebas de formateadores
+│   └── utils/                  # Formateadores, fechas y normalización de búsqueda
 ├── features/
-│   ├── vehicles/               # Modelos, repositorios
-│   └── maintenance/            # Modelos
+│   ├── settings/               # Repositorio de categorías (clave, orden, duplicados)
+│   ├── vehicles/               # Modelos, repositorios, notifier
+│   └── maintenance/            # Modelos y repositorios
 └── shared/widgets/             # Widgets dumb
 ```
 
@@ -99,9 +100,17 @@ void main() {
 ## Objetivo de Cobertura
 
 - Repositorios: >90% (todas las consultas SQL cubiertas)
-- Providers: >80% (transiciones de estado)
+- Providers: >80% (transiciones de estado y refresco de caché)
 - Widgets: >60% (casos felices + estados vacío/error)
 - Utils/Formateadores: 100%
+
+### Cobertura clave por comportamiento
+
+- `maintenance_repository_test.dart`: kilometraje monotónico (un registro menor
+  no baja el vehículo; uno mayor sí lo sube; editar no lo baja).
+- `vehicles_notifier_test.dart`: `setDefault`/`clearDefault` y refresco de
+  `selectedVehicleProvider` tras actualizar el vehículo.
+- `category_repository_test.dart`: clave estable, orden y duplicados.
 
 ---
 

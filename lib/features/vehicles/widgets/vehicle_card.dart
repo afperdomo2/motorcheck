@@ -95,8 +95,8 @@ class VehicleCard extends StatelessWidget {
                         onSetDefault!.call();
                       },
                 tooltip: vehicle.isDefault
-                    ? 'Quitar de favoritos'
-                    : 'Marcar como favorito',
+                    ? 'Quitar como vehículo por defecto'
+                    : 'Usar como vehículo por defecto',
                 icon: Icon(
                   vehicle.isDefault ? Icons.star_rounded : Icons.star_border,
                   color: vehicle.isDefault

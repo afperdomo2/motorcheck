@@ -103,7 +103,7 @@ Siempre usar `AsyncValue.when()` con los 3 estados:
 vehiclesAsync.when(
   loading: () => const LoadingIndicator(),
   error: (err, _) => ErrorState(
-    message: err.toString(),
+    message: 'No se pudieron cargar los vehículos',
     onRetry: () => ref.invalidate(provider),
   ),
   data: (vehicles) {
@@ -114,14 +114,30 @@ vehiclesAsync.when(
 ```
 
 - `valueOrNull` solo para acceso síncrono rápido sin necesidad de loading/error.
-- `AsyncValue.guard()` en notifiers para capturar excepciones.
+- `AsyncValue.guard()` en notifiers para lecturas y guardados.
+- Los mensajes de `ErrorState` son contextuales: nunca mostrar `err.toString()`.
 
 ## Manejo de Errores
 
-- Usar `AsyncValue.guard()` en notifiers para capturar excepciones automáticamente
-- Mostrar `ErrorState` widget con botón de reintentar en la UI
-- **Nunca** usar `try/catch` vacío; siempre mostrar feedback al usuario
-- Verificar `context.mounted` después de `await` antes de usar `context`
+- Usar `AsyncValue.guard()` en notifiers para lecturas y guardados.
+- Mostrar `ErrorState` con un mensaje contextual y botón de reintentar.
+- Nunca exponer `err.toString()` ni `e.toString()` al usuario. Usar
+  `friendlyErrorMessage(error, fallback: ...)` y `logError()` solo en debug.
+- Excepciones de dominio tipadas: `CategoryInUseException` y
+  `CategoryKeyExistsException` muestran su propio mensaje.
+- **Borrados**: el notifier hace `await repo.delete(id)`, actualiza la lista
+  solo si tuvo éxito y relanza el error. La pantalla captura, muestra snackbar
+  y conserva la lista. No usar `AsyncValue.loading` durante un borrado.
+- **Nunca** usar `try/catch` vacío; siempre mostrar feedback al usuario.
+- Verificar `context.mounted` después de `await` antes de usar `context`.
+
+## Formularios
+
+- Contenedor: `Form` + `FormSection` + `StickyBottomBar`.
+- Botón primario: `FilledButton`, con spinner mientras guarda.
+- Cambios sin guardar: `PopScope` + `_dirty` y `showConfirmDialog`.
+- Validación inline; los errores van junto al campo, no solo en un snackbar.
+- Éxito: `AppSnackBar.success` antes de `context.pop()`.
 
 ## Navegación
 

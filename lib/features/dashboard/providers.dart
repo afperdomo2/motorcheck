@@ -5,13 +5,19 @@ import '../vehicles/providers.dart';
 import '../maintenance/providers.dart';
 import '../maintenance/models/maintenance.dart';
 
-final dashboardSummaryProvider = FutureProvider<DashboardSummary>((ref) async {
-  final vehicles = await ref.read(vehicleRepositoryProvider).getAll();
-  final repository = ref.read(maintenanceRepositoryProvider);
+final dashboardVehicleProvider = FutureProvider<Vehicle?>((ref) async {
+  final vehicles = await ref.watch(vehiclesProvider.future);
+  final defaultVehicle = await ref.watch(defaultVehicleProvider.future);
+  return defaultVehicle ?? (vehicles.isNotEmpty ? vehicles.first : null);
+});
 
-  final allMaintenances = vehicles.isNotEmpty
-      ? await repository.getAll()
-      : <Maintenance>[];
+final dashboardSummaryProvider = FutureProvider<DashboardSummary>((ref) async {
+  final vehicle = await ref.watch(dashboardVehicleProvider.future);
+  final maintenances = await ref.watch(maintenancesProvider.future);
+
+  final allMaintenances = vehicle?.id == null
+      ? <Maintenance>[]
+      : maintenances.where((m) => m.vehicleId == vehicle!.id).toList();
 
   final totalMaintenances = allMaintenances.length;
 
@@ -29,7 +35,7 @@ final dashboardSummaryProvider = FutureProvider<DashboardSummary>((ref) async {
   final recentMaintenances = sorted.take(5).toList();
 
   return DashboardSummary(
-    totalVehicles: vehicles.length,
+    totalVehicles: vehicle == null ? 0 : 1,
     totalMaintenances: totalMaintenances,
     recentMaintenances: recentMaintenances,
     currentMonthSpent: currentMonthSpent,
@@ -60,23 +66,21 @@ class DashboardUpcomingEntry {
   const DashboardUpcomingEntry({required this.vehicle, required this.item});
 }
 
-/// Próximos mantenimientos por kilometraje de todos los vehículos,
+/// Próximos mantenimientos por kilometraje del vehículo por defecto,
 /// ordenados por severidad y distancia restante.
 final dashboardUpcomingProvider = FutureProvider<List<DashboardUpcomingEntry>>((
   ref,
 ) async {
-  final vehicles = await ref.watch(vehiclesProvider.future);
-  final entries = <DashboardUpcomingEntry>[];
+  final vehicle = await ref.watch(dashboardVehicleProvider.future);
+  if (vehicle?.id == null) return [];
 
-  for (final vehicle in vehicles) {
-    final id = vehicle.id;
-    if (id == null) continue;
-    final upcoming = await ref.watch(upcomingMaintenanceProvider(id).future);
-    for (final item in upcoming) {
-      if (item.category.intervalKm == null) continue;
-      entries.add(DashboardUpcomingEntry(vehicle: vehicle, item: item));
-    }
-  }
+  final upcoming = await ref.watch(
+    upcomingMaintenanceProvider(vehicle!.id!).future,
+  );
+  final entries = upcoming
+      .where((item) => item.category.intervalKm != null)
+      .map((item) => DashboardUpcomingEntry(vehicle: vehicle, item: item))
+      .toList();
 
   entries.sort((a, b) {
     final severityA = a.item.isOverdue ? 0 : (a.item.isWarning ? 1 : 2);

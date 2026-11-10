@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/category_history_sheet.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
@@ -109,7 +110,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
       body: maintenanceAsync.when(
         loading: () => const LoadingIndicator(),
         error: (err, _) => ErrorState(
-          message: err.toString(),
+          message: 'No se pudo cargar el mantenimiento',
           onRetry: () => ref.invalidate(maintenanceByIdProvider(maintenanceId)),
         ),
         data: (maintenance) {
@@ -120,7 +121,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
           return itemsAsync.when(
             loading: () => const LoadingIndicator(),
             error: (err, _) => ErrorState(
-              message: err.toString(),
+              message: 'No se pudieron cargar los ítems',
               onRetry: () =>
                   ref.invalidate(maintenanceItemsProvider(maintenanceId)),
             ),
@@ -213,14 +214,30 @@ class MaintenanceDetailScreen extends ConsumerWidget {
       context,
       title: 'Eliminar mantenimiento',
       message:
-          '¿Estás seguro de eliminar este mantenimiento y todos sus items?',
+          '¿Estás seguro de eliminar este mantenimiento y todos sus ítems?',
       confirmLabel: 'Eliminar',
       isDestructive: true,
     );
-    if (confirmed == true && context.mounted) {
-      ref.read(maintenancesNotifierProvider.notifier).remove(maintenanceId);
-      AppSnackBar.success('Mantenimiento eliminado');
-      context.pop();
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await ref
+          .read(maintenancesNotifierProvider.notifier)
+          .remove(maintenanceId);
+      if (context.mounted) {
+        AppSnackBar.success('Mantenimiento eliminado');
+        context.pop();
+      }
+    } catch (error) {
+      logError('eliminar mantenimiento', error, StackTrace.current);
+      if (context.mounted) {
+        AppSnackBar.error(
+          friendlyErrorMessage(
+            error,
+            fallback: 'No se pudo eliminar el mantenimiento',
+          ),
+        );
+      }
     }
   }
 }
@@ -390,7 +407,7 @@ class _ItemsCard extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'Items (${items.length})',
+                  'Ítems (${items.length})',
                   style: theme.textTheme.titleSmall,
                 ),
                 const Spacer(),
@@ -406,7 +423,7 @@ class _ItemsCard extends StatelessWidget {
             if (items.isEmpty) ...[
               const SizedBox(height: AppSpacing.md),
               Text(
-                'Sin items registrados',
+                'Sin ítems registrados',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

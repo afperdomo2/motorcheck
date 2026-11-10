@@ -64,18 +64,11 @@ class MaintenanceRepository {
         _maintenanceToMap(maintenance),
       );
       await _insertItems(txn, id, items);
-      if (maintenance.mileage != null) {
-        await txn.update(
-          'vehicles',
-          {
-            'current_mileage': maintenance.mileage,
-            'mileage_updated_at': formatDateTime(DateTime.now()),
-            'updated_at': formatDateTime(DateTime.now()),
-          },
-          where: 'id = ?',
-          whereArgs: [maintenance.vehicleId],
-        );
-      }
+      await _raiseVehicleMileage(
+        txn,
+        maintenance.vehicleId,
+        maintenance.mileage,
+      );
       return id;
     });
   }
@@ -85,18 +78,25 @@ class MaintenanceRepository {
     List<MaintenanceItem> items,
   ) async {
     final db = await _db.database;
-    await db.update(
-      'maintenances',
-      _maintenanceToMap(maintenance),
-      where: 'id = ?',
-      whereArgs: [maintenance.id],
-    );
-    await db.delete(
-      'maintenance_items',
-      where: 'maintenance_id = ?',
-      whereArgs: [maintenance.id],
-    );
-    await _insertItems(db, maintenance.id!, items);
+    await db.transaction((txn) async {
+      await txn.update(
+        'maintenances',
+        _maintenanceToMap(maintenance),
+        where: 'id = ?',
+        whereArgs: [maintenance.id],
+      );
+      await txn.delete(
+        'maintenance_items',
+        where: 'maintenance_id = ?',
+        whereArgs: [maintenance.id],
+      );
+      await _insertItems(txn, maintenance.id!, items);
+      await _raiseVehicleMileage(
+        txn,
+        maintenance.vehicleId,
+        maintenance.mileage,
+      );
+    });
   }
 
   Future<void> delete(int id) async {
@@ -215,6 +215,23 @@ class MaintenanceRepository {
     for (final item in items) {
       await db.insert('maintenance_items', _itemToMap(item, maintenanceId));
     }
+  }
+
+  /// El kilometraje del vehículo solo sube automáticamente.
+  /// Un mantenimiento histórico con menos km no debe bajarlo.
+  Future<void> _raiseVehicleMileage(
+    DatabaseExecutor txn,
+    int vehicleId,
+    int? mileage,
+  ) async {
+    if (mileage == null) return;
+    final now = formatDateTime(DateTime.now());
+    await txn.rawUpdate(
+      'UPDATE vehicles SET current_mileage = ?, mileage_updated_at = ?, '
+      'updated_at = ? WHERE id = ? '
+      'AND (current_mileage IS NULL OR current_mileage < ?)',
+      [mileage, now, now, vehicleId, mileage],
+    );
   }
 
   Map<String, dynamic> _maintenanceToMap(Maintenance m) => {

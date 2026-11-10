@@ -76,6 +76,37 @@ Acción del Usuario → Pantalla (Smart)
                      Repositorio → Notifier (nuevo estado) → Pantalla reconstruye UI
 ```
 
+### Contrato de borrado
+
+```
+Pantalla → confirmación → await notifier.remove(id)
+                              ↓
+                        repo.delete(id)
+                         ├─ error → se relanza, la lista no cambia
+                         └─ ok    → recarga la lista y actualiza el estado
+Pantalla ← snackbar de éxito o error
+```
+
+### Invalidación de caché
+
+Después de una mutación, invalida los providers derivados:
+
+- **Vehículo actualizado:** `selectedVehicleProvider(id)`, `vehiclesProvider`
+  y `defaultVehicleProvider`. Los próximos mantenimientos dependen de
+  `selectedVehicleProvider`, así que se recalculan al cambiar km o tipo.
+- **Mantenimiento creado/editado/borrado:** `maintenancesProvider`, detalle e
+  ítems del mantenimiento, resumen del vehículo, próximos, badge y estado de
+  vehículos (el repositorio pudo subir el km).
+- **Dashboard:** el resumen depende de `maintenancesProvider` para reflejar
+  altas, ediciones y borrados sin refrescar manualmente.
+
+### Inicio
+
+El dashboard muestra el **vehículo por defecto** (o el primero si no hay
+predeterminado): resumen, próximos, actividad y estadísticas. Las alertas de
+documentos (SOAT/RTM) siguen siendo globales por seguridad. El badge de
+navegación también cuenta pendientes de todos los vehículos.
+
 ## Por Qué No Hay Capa de Dominio
 
 Esta es una app local de un solo usuario. Las operaciones CRUD son consultas simples.

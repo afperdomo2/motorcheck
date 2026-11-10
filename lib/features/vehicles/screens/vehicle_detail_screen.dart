@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/utils/date_status.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -78,7 +80,7 @@ class VehicleDetailScreen extends ConsumerWidget {
       body: vehicleAsync.when(
         loading: () => const LoadingIndicator(),
         error: (err, _) => ErrorState(
-          message: err.toString(),
+          message: 'No se pudo cargar el vehículo',
           onRetry: () => ref.invalidate(selectedVehicleProvider(vehicleId)),
         ),
         data: (vehicle) {
@@ -134,10 +136,24 @@ class VehicleDetailScreen extends ConsumerWidget {
       confirmLabel: 'Eliminar',
       isDestructive: true,
     );
-    if (confirmed == true && context.mounted) {
-      ref.read(vehiclesNotifierProvider.notifier).remove(vehicleId);
-      AppSnackBar.success('Vehículo eliminado');
-      context.pop();
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await ref.read(vehiclesNotifierProvider.notifier).remove(vehicleId);
+      if (context.mounted) {
+        AppSnackBar.success('Vehículo eliminado');
+        context.pop();
+      }
+    } catch (error) {
+      logError('eliminar vehículo', error, StackTrace.current);
+      if (context.mounted) {
+        AppSnackBar.error(
+          friendlyErrorMessage(
+            error,
+            fallback: 'No se pudo eliminar el vehículo',
+          ),
+        );
+      }
     }
   }
 }
@@ -331,12 +347,12 @@ class _ExpiryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final days = _daysUntil(date);
-    final status = days < 0
-        ? AppStatus.danger
-        : days <= 30
-        ? AppStatus.warning
-        : AppStatus.ok;
+    final status = dateStatus(date);
+    final appStatus = switch (status.level) {
+      ExpiryLevel.danger => AppStatus.danger,
+      ExpiryLevel.warning => AppStatus.warning,
+      ExpiryLevel.ok => AppStatus.ok,
+    };
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -362,27 +378,14 @@ class _ExpiryRow extends StatelessWidget {
               top: AppSpacing.xs,
             ),
             child: StatusChip(
-              status: status,
-              label: _daysLabel(days),
+              status: appStatus,
+              label: status.longLabel,
               icon: Icons.schedule,
             ),
           ),
         ],
       ),
     );
-  }
-
-  static int _daysUntil(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final target = DateTime(date.year, date.month, date.day);
-    return target.difference(today).inDays;
-  }
-
-  static String _daysLabel(int days) {
-    if (days < 0) return 'Vencido hace ${-days} días';
-    if (days == 0) return 'Vence hoy';
-    return 'Vence en $days días';
   }
 }
 

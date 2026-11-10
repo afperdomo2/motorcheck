@@ -62,6 +62,14 @@ class CategoryInUseException implements Exception {
       '${count == 1 ? '' : 's'}.';
 }
 
+class CategoryKeyExistsException implements Exception {
+  const CategoryKeyExistsException();
+
+  @override
+  String toString() =>
+      'Ya existe una categoría con ese nombre para este tipo de vehículo.';
+}
+
 class MaintenanceCategoryRepository {
   final DatabaseHelper _db = DatabaseHelper.instance;
 
@@ -69,7 +77,7 @@ class MaintenanceCategoryRepository {
     final db = await _db.database;
     final maps = await db.query(
       'maintenance_categories',
-      orderBy: 'vehicle_type ASC, sort_order ASC',
+      orderBy: 'vehicle_type ASC, sort_order ASC, id ASC',
     );
     return maps.map(_catFromMap).toList();
   }
@@ -80,7 +88,7 @@ class MaintenanceCategoryRepository {
       'maintenance_categories',
       where: 'vehicle_type = ?',
       whereArgs: [type],
-      orderBy: 'sort_order ASC',
+      orderBy: 'sort_order ASC, id ASC',
     );
     return maps.map(_catFromMap).toList();
   }
@@ -110,6 +118,7 @@ class MaintenanceCategoryRepository {
   Future<int> insert(MaintenanceCategory category) async {
     final db = await _db.database;
     await _ensureUniqueKey(db, category.key);
+    await _ensureUniqueName(db, category.name, category.vehicleType);
     final maxOrder = Sqflite.firstIntValue(
       await db.rawQuery(
         'SELECT MAX(sort_order) FROM maintenance_categories '
@@ -122,7 +131,9 @@ class MaintenanceCategoryRepository {
       'name': category.name,
       'icon_name': category.iconName,
       'vehicle_type': category.vehicleType,
-      'sort_order': (maxOrder ?? 0) + 1,
+      'sort_order': category.sortOrder > 0
+          ? category.sortOrder
+          : (maxOrder ?? 0) + 1,
       'interval_km': category.intervalKm,
       'warning_km': category.warningKm,
       'created_at': formatDateTime(category.createdAt),
@@ -134,21 +145,17 @@ class MaintenanceCategoryRepository {
     final existing = await getById(category.id!);
     if (existing == null) return;
 
-    final maps = await db.query(
-      'maintenance_categories',
-      where: 'key = ? AND id != ?',
-      whereArgs: [category.key, category.id],
+    await _ensureUniqueName(
+      db,
+      category.name,
+      category.vehicleType,
+      excludeId: category.id,
     );
-    if (maps.isNotEmpty) {
-      throw Exception(
-        'Ya existe una categoría con la clave "${category.key}".',
-      );
-    }
 
+    // La clave es inmutable: los items históricos la referencian.
     await db.update(
       'maintenance_categories',
       {
-        'key': category.key,
         'name': category.name,
         'icon_name': category.iconName,
         'sort_order': category.sortOrder,
@@ -185,7 +192,25 @@ class MaintenanceCategoryRepository {
       whereArgs: [key],
     );
     if (maps.isNotEmpty) {
-      throw Exception('Ya existe una categoría con la clave "$key".');
+      throw const CategoryKeyExistsException();
+    }
+  }
+
+  Future<void> _ensureUniqueName(
+    Database db,
+    String name,
+    String vehicleType, {
+    int? excludeId,
+  }) async {
+    final maps = await db.query(
+      'maintenance_categories',
+      where:
+          'vehicle_type = ? AND LOWER(name) = LOWER(?)'
+          '${excludeId != null ? ' AND id != ?' : ''}',
+      whereArgs: [vehicleType, name.trim(), ?excludeId],
+    );
+    if (maps.isNotEmpty) {
+      throw const CategoryKeyExistsException();
     }
   }
 

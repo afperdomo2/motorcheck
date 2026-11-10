@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
@@ -21,6 +22,17 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
     final summaryAsync = ref.watch(dashboardSummaryProvider);
+    final targetAsync = ref.watch(dashboardVehicleProvider);
+    final target = targetAsync.valueOrNull;
+    final subtitle = targetAsync.isLoading
+        ? 'Cargando…'
+        : target == null
+        ? 'Agrega tu primer vehículo'
+        : [
+            target.name,
+            if (target.currentMileage != null)
+              formatMileage(target.currentMileage),
+          ].join(' · ');
 
     return Scaffold(
       appBar: AppBar(
@@ -29,7 +41,9 @@ class DashboardScreen extends ConsumerWidget {
           children: [
             Text(_greeting(DateTime.now().hour)),
             Text(
-              'Tu vehículo al día',
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -46,7 +60,7 @@ class DashboardScreen extends ConsumerWidget {
       body: vehiclesAsync.when(
         loading: () => const LoadingIndicator(),
         error: (err, _) => ErrorState(
-          message: err.toString(),
+          message: 'No se pudieron cargar los vehículos',
           onRetry: () => ref.invalidate(vehiclesProvider),
         ),
         data: (vehicles) {
@@ -63,7 +77,7 @@ class DashboardScreen extends ConsumerWidget {
           return summaryAsync.when(
             loading: () => const LoadingIndicator(),
             error: (err, _) => ErrorState(
-              message: err.toString(),
+              message: 'No se pudo cargar el resumen',
               onRetry: () => ref.invalidate(dashboardSummaryProvider),
             ),
             data: (summary) {
@@ -95,6 +109,8 @@ class DashboardScreen extends ConsumerWidget {
 
   Future<void> _refresh(WidgetRef ref) async {
     ref.invalidate(vehiclesProvider);
+    ref.invalidate(defaultVehicleProvider);
+    ref.invalidate(dashboardVehicleProvider);
     ref.invalidate(dashboardSummaryProvider);
     ref.invalidate(dashboardUpcomingProvider);
     await ref.read(dashboardSummaryProvider.future);

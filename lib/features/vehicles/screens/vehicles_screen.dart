@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
@@ -37,7 +38,7 @@ class VehiclesScreen extends ConsumerWidget {
       body: vehiclesAsync.when(
         loading: () => const LoadingIndicator(),
         error: (err, _) => ErrorState(
-          message: err.toString(),
+          message: 'No se pudieron cargar los vehículos',
           onRetry: () =>
               ref.read(vehiclesNotifierProvider.notifier).loadVehicles(),
         ),
@@ -45,7 +46,7 @@ class VehiclesScreen extends ConsumerWidget {
           if (vehicles.isEmpty) {
             return EmptyState(
               icon: Icons.directions_car,
-              title: 'No hay vehículos',
+              title: 'Sin vehículos',
               subtitle: 'Agrega tu primer vehículo para comenzar',
               onAction: () => context.push('/vehicles/add'),
               actionLabel: 'Agregar vehículo',
@@ -67,22 +68,40 @@ class VehiclesScreen extends ConsumerWidget {
               itemCount: sorted.length,
               itemBuilder: (context, index) {
                 final vehicle = sorted[index];
-                final wasFavorite = vehicle.isDefault;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                   child: VehicleCard(
                     vehicle: vehicle,
                     onTap: () => context.push('/vehicles/${vehicle.id}'),
-                    onSetDefault: () {
-                      ref
-                          .read(vehiclesNotifierProvider.notifier)
-                          .setDefault(vehicle.id!);
-                      AppSnackBar.success(
-                        wasFavorite
-                            ? 'Quitado de favoritos'
-                            : 'Marcado como favorito',
+                    onSetDefault: () async {
+                      final notifier = ref.read(
+                        vehiclesNotifierProvider.notifier,
                       );
+                      try {
+                        if (vehicle.isDefault) {
+                          await notifier.clearDefault();
+                          AppSnackBar.success('Vehículo por defecto eliminado');
+                        } else {
+                          await notifier.setDefault(vehicle.id!);
+                          AppSnackBar.success(
+                            'Ahora es tu vehículo por defecto',
+                          );
+                        }
+                      } catch (error) {
+                        logError(
+                          'cambiar vehículo por defecto',
+                          error,
+                          StackTrace.current,
+                        );
+                        AppSnackBar.error(
+                          friendlyErrorMessage(
+                            error,
+                            fallback:
+                                'No se pudo actualizar el vehículo por defecto',
+                          ),
+                        );
+                      }
                     },
                   ),
                 );

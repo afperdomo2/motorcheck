@@ -128,6 +128,7 @@ Archivos:
 | `StatTile` | `shared/widgets/stat_tile.dart` | métrica compacta |
 | `FormSection` | `shared/widgets/form_section.dart` | grupo de formulario |
 | `StickyBottomBar` | `shared/widgets/sticky_bottom_bar.dart` | acción fija con safe area |
+| `MonthHeader` | `features/maintenance/widgets/month_header.dart` | cabecera de mes con total |
 | `DateField` | `shared/widgets/date_field.dart` | fecha con selector |
 | `AppSnackBar` | `shared/widgets/app_snack_bar.dart` | feedback global |
 | `EmptyState` | `shared/widgets/empty_state.dart` | vacío con CTA |
@@ -155,8 +156,10 @@ AppSnackBar.success('Vehículo guardado')
 
 ### Inicio
 
-Saludo + estado, card del vehículo con documentos, próximos por km,
-documentos por vencer, gasto del mes y actividad reciente. FAB “Registrar”.
+Saludo + estado del **vehículo por defecto** (o el primero si no hay
+predeterminado): card del vehículo con documentos, próximos por km,
+documentos por vencer (globales), gasto del mes y actividad reciente. FAB
+“Registrar”.
 
 ### Vehículos
 

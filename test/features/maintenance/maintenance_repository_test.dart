@@ -104,4 +104,104 @@ void main() {
       expect(history.last.notes, 'Sintético');
     },
   );
+
+  test(
+    'un mantenimiento con km menor no baja el kilometraje del vehículo',
+    () async {
+      final now = DateTime(2024, 1, 1);
+      final vehicleId = await vehicleRepo.insert(
+        Vehicle(
+          name: 'test-mileage-low',
+          type: 'car',
+          currentMileage: 88000,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      addTearDown(() => vehicleRepo.delete(vehicleId));
+
+      await maintRepo.insert(
+        Maintenance(
+          vehicleId: vehicleId,
+          date: DateTime(2024, 2, 1),
+          mileage: 85000,
+          createdAt: now,
+          updatedAt: now,
+        ),
+        [],
+      );
+
+      final vehicle = await vehicleRepo.getById(vehicleId);
+      expect(vehicle!.currentMileage, 88000);
+    },
+  );
+
+  test(
+    'un mantenimiento con km mayor sube el kilometraje del vehículo',
+    () async {
+      final now = DateTime(2024, 1, 1);
+      final vehicleId = await vehicleRepo.insert(
+        Vehicle(
+          name: 'test-mileage-high',
+          type: 'car',
+          currentMileage: 88000,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      addTearDown(() => vehicleRepo.delete(vehicleId));
+
+      await maintRepo.insert(
+        Maintenance(
+          vehicleId: vehicleId,
+          date: DateTime(2024, 2, 1),
+          mileage: 90000,
+          createdAt: now,
+          updatedAt: now,
+        ),
+        [],
+      );
+
+      final vehicle = await vehicleRepo.getById(vehicleId);
+      expect(vehicle!.currentMileage, 90000);
+    },
+  );
+
+  test('editar un mantenimiento sube el km pero no lo baja', () async {
+    final now = DateTime(2024, 1, 1);
+    final vehicleId = await vehicleRepo.insert(
+      Vehicle(
+        name: 'test-mileage-edit',
+        type: 'car',
+        currentMileage: 88000,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    addTearDown(() => vehicleRepo.delete(vehicleId));
+
+    final maintenanceId = await maintRepo.insert(
+      Maintenance(
+        vehicleId: vehicleId,
+        date: DateTime(2024, 2, 1),
+        mileage: 90000,
+        createdAt: now,
+        updatedAt: now,
+      ),
+      [],
+    );
+    final maintenance = await maintRepo.getById(maintenanceId);
+
+    await maintRepo.update(
+      maintenance!.copyWith(mileage: 95000, updatedAt: now),
+      [],
+    );
+    expect((await vehicleRepo.getById(vehicleId))!.currentMileage, 95000);
+
+    await maintRepo.update(
+      maintenance.copyWith(mileage: 80000, updatedAt: now),
+      [],
+    );
+    expect((await vehicleRepo.getById(vehicleId))!.currentMileage, 95000);
+  });
 }

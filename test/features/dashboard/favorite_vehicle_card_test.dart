@@ -94,7 +94,7 @@ void main() {
     await initializeDateFormatting('es');
   });
 
-  testWidgets('muestra el vehículo favorito', (tester) async {
+  testWidgets('muestra el vehículo predeterminado', (tester) async {
     final vehicle = _vehicle(isDefault: true);
 
     await _pump(tester, _overrides(vehicle, [vehicle]));
@@ -105,7 +105,7 @@ void main() {
     expect(find.text('Próximos'), findsOneWidget);
   });
 
-  testWidgets('usa el primer vehículo como respaldo sin favorito', (
+  testWidgets('usa el primer vehículo como respaldo sin predeterminado', (
     tester,
   ) async {
     final vehicles = [

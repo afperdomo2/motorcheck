@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/utils/formatters.dart';
+import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
+import '../../../shared/widgets/date_field.dart';
 import '../../../shared/widgets/form_section.dart';
 import '../../../shared/widgets/sticky_bottom_bar.dart';
 import '../models/vehicle.dart';
@@ -38,8 +40,6 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
   DateTime? _originalMileageUpdatedAt;
 
   final _vinController = TextEditingController();
-  final _soatController = TextEditingController();
-  final _rtmController = TextEditingController();
   DateTime? _soatDate;
   DateTime? _rtmDate;
 
@@ -75,13 +75,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
       _mileageController.text = vehicle.currentMileage?.toString() ?? '';
       _vinController.text = vehicle.vin ?? '';
       _soatDate = vehicle.soatExpiresAt;
-      _soatController.text = vehicle.soatExpiresAt != null
-          ? formatDisplayDate(vehicle.soatExpiresAt!)
-          : '';
       _rtmDate = vehicle.rtmExpiresAt;
-      _rtmController.text = vehicle.rtmExpiresAt != null
-          ? formatDisplayDate(vehicle.rtmExpiresAt!)
-          : '';
       setState(() {
         _type = vehicle.type;
         _isDefault = vehicle.isDefault;
@@ -103,8 +97,6 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
     _colorController.dispose();
     _mileageController.dispose();
     _vinController.dispose();
-    _soatController.dispose();
-    _rtmController.dispose();
     super.dispose();
   }
 
@@ -177,9 +169,12 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
       await Future<void>.delayed(Duration.zero);
       if (mounted) context.pop();
     } catch (error) {
+      logError('guardar vehículo', error, StackTrace.current);
       if (!mounted) return;
       setState(() => _isLoading = false);
-      AppSnackBar.error('No se pudo guardar el vehículo');
+      AppSnackBar.error(
+        friendlyErrorMessage(error, fallback: 'No se pudo guardar el vehículo'),
+      );
     }
   }
 
@@ -210,7 +205,6 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
     if (date != null) {
       setState(() {
         _soatDate = date;
-        _soatController.text = formatDisplayDate(date);
         _dirty = true;
       });
     }
@@ -222,12 +216,11 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
       initialDate: _rtmDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
-      helpText: 'Vencimiento RTM',
+      helpText: 'Vencimiento tecnomecánica',
     );
     if (date != null) {
       setState(() {
         _rtmDate = date;
-        _rtmController.text = formatDisplayDate(date);
         _dirty = true;
       });
     }
@@ -316,6 +309,9 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                                 prefixIcon: Icon(Icons.calendar_month_outlined),
                               ),
                               keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) return null;
                                 final year = int.tryParse(v.trim());
@@ -375,31 +371,27 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                                 return null;
                               },
                             ),
-                            const SizedBox(height: AppSpacing.sm),
-                            TextFormField(
-                              controller: _soatController,
-                              readOnly: true,
-                              decoration: const InputDecoration(
-                                labelText: 'Vencimiento SOAT',
-                                hintText: 'Selecciona la fecha',
-                                prefixIcon: Icon(
-                                  Icons.health_and_safety_outlined,
-                                ),
-                                suffixIcon: Icon(Icons.calendar_month_outlined),
-                              ),
+                            const SizedBox(height: AppSpacing.lg),
+                            DateField(
+                              label: 'Vencimiento SOAT',
+                              value: _soatDate,
                               onTap: _pickSoatDate,
+                              onClear: () => setState(() {
+                                _soatDate = null;
+                                _dirty = true;
+                              }),
+                              prefixIcon: Icons.health_and_safety_outlined,
                             ),
                             const SizedBox(height: AppSpacing.lg),
-                            TextFormField(
-                              controller: _rtmController,
-                              readOnly: true,
-                              decoration: const InputDecoration(
-                                labelText: 'Revisión técnico-mecánica',
-                                hintText: 'Selecciona la fecha',
-                                prefixIcon: Icon(Icons.engineering_outlined),
-                                suffixIcon: Icon(Icons.calendar_month_outlined),
-                              ),
+                            DateField(
+                              label: 'Tecnomecánica (RTM)',
+                              value: _rtmDate,
                               onTap: _pickRtmDate,
+                              onClear: () => setState(() {
+                                _rtmDate = null;
+                                _dirty = true;
+                              }),
+                              prefixIcon: Icons.engineering_outlined,
                             ),
                           ],
                         ),
@@ -419,6 +411,17 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                                 suffixText: 'km',
                               ),
                               keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) return null;
+                                final km = int.tryParse(v.trim());
+                                if (km == null || km < 0) {
+                                  return 'Ingresa un kilometraje válido';
+                                }
+                                return null;
+                              },
                             ),
                             const SizedBox(height: AppSpacing.sm),
                             SwitchListTile(

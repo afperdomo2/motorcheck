@@ -35,12 +35,18 @@ class AppSnackBar {
       _Tone.neutral => (scheme.inverseSurface, scheme.onInverseSurface),
     };
 
+    final duration = switch (tone) {
+      _Tone.success => const Duration(seconds: 2),
+      _Tone.danger => const Duration(seconds: 4),
+      _Tone.neutral => const Duration(seconds: 3),
+    };
+
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           backgroundColor: background,
-          duration: const Duration(seconds: 2),
+          duration: duration,
           content: Row(
             children: [
               Icon(icon, color: foreground, size: 20),

@@ -75,6 +75,19 @@
 | notes | TEXT | |
 | created_at | TEXT | NOT NULL (ISO 8601) |
 
+## Regla de kilometraje
+
+`vehicles.current_mileage` es la fuente de verdad y **solo sube
+automáticamente**:
+
+- Registrar o editar un mantenimiento con un km mayor actualiza el vehículo.
+- Un mantenimiento con un km menor se permite (puede ser histórico) pero no
+  baja el vehículo.
+- Eliminar un mantenimiento no baja el kilometraje.
+- `mileage_updated_at` y `updated_at` del vehículo se actualizan solo cuando el
+  km sube.
+- La corrección manual se hace desde Editar vehículo.
+
 ## DDL
 
 ```sql

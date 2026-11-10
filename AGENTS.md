@@ -61,11 +61,12 @@ pre-commit:
 6. **Imports**: relativos para código propio; `package:` solo para dependencias externas. **Tests**: `package:motorcheck/...`
 7. **Riverpod**: `ConsumerWidget`/`ConsumerStatefulWidget` para UI; `Notifier`/`AsyncNotifier` para estado
 8. **Modelos**: `@freezed` (inmutabilidad, `copyWith`, JSON). `int? id` nullable, timestamps `required`
-9. **AsyncValue**: usar `.when(loading:, error:, data:)` siempre. `AsyncValue.guard()` en notifiers. `valueOrNull` solo para acceso síncrono
-10. **Errores**: nunca `try/catch` vacío; siempre feedback al usuario
+9. **AsyncValue y caché**: usar `.when(loading:, error:, data:)` siempre. `AsyncValue.guard()` en notifiers. `valueOrNull` solo para acceso síncrono. Tras una mutación, invalida los providers derivados (detalle, próximos, dashboard, resumen del vehículo)
+10. **Errores**: nunca `try/catch` vacío; usar `friendlyErrorMessage()` y `logError()`, nunca `err.toString()` en UI; borrados con `await` + snackbar
 11. **`context.mounted`**: verificar tras `await` antes de usar `context`
 12. **UI**: todo en español (strings, labels, descripciones de test)
 13. **Sincronización AGENTS.md ↔ docs/**: si modificas un archivo en `docs/`, revisa si la sección correspondiente en AGENTS.md necesita actualizarse. Tras cualquier cambio en modelos, providers, features o arquitectura, verifica que ambos reflejen el estado real del código.
+14. **Kilometraje**: `vehicles.current_mileage` solo sube automáticamente; un mantenimiento con km menor se permite pero no baja el vehículo; la corrección manual se hace desde Editar vehículo
 
 ## Convenciones de Código
 
@@ -117,11 +118,11 @@ lib/
 ├── core/
 │   ├── theme/                   # Tokens, Barlow, temas light+dark, ThemeExtension
 │   ├── database/                # SQLite helper + DDL (v12) + factory FFI
-│   └── utils/                   # Formateadores es_CO, extensiones
+│   └── utils/                   # Formateadores es_CO, dateStatus, búsqueda y errores
 ├── features/
 │   ├── vehicles/                # CRUD vehículos + selección default
 │   ├── maintenance/             # CRUD mantenimientos + items (categorías por tipo)
-│   ├── dashboard/               # Resumen, próximos por km + alertas SOAT/RTM
+│   ├── dashboard/               # Vehículo por defecto, próximos km + alertas globales
 │   └── settings/                # Tema (system/light/dark) + CRUD talleres
 ├── shared/widgets/              # Dumb widgets reutilizables
 └── routes/                      # GoRouter (StatefulShellRoute, 4 tabs)

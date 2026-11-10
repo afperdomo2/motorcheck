@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/utils/date_status.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/status_chip.dart';
 import '../../vehicles/models/vehicle.dart';
@@ -33,7 +34,12 @@ class ExpiryAlerts extends ConsumerWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                Text('Documentos', style: theme.textTheme.titleMedium),
+                Text(
+                  vehicles.length > 1
+                      ? 'Documentos · todos tus vehículos'
+                      : 'Documentos',
+                  style: theme.textTheme.titleMedium,
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
@@ -49,7 +55,7 @@ class ExpiryAlerts extends ConsumerWidget {
 
     for (final vehicle in vehicles) {
       if (vehicle.soatExpiresAt != null) {
-        final days = _daysUntil(vehicle.soatExpiresAt!);
+        final days = dateStatus(vehicle.soatExpiresAt!).days;
         if (days < 0 || days <= 30) {
           alertData.add(
             _AlertData(
@@ -64,7 +70,7 @@ class ExpiryAlerts extends ConsumerWidget {
       }
 
       if (vehicle.rtmExpiresAt != null) {
-        final days = _daysUntil(vehicle.rtmExpiresAt!);
+        final days = dateStatus(vehicle.rtmExpiresAt!).days;
         if (days < 0 || days <= 30) {
           alertData.add(
             _AlertData(
@@ -79,7 +85,9 @@ class ExpiryAlerts extends ConsumerWidget {
       }
     }
 
-    alertData.sort((a, b) => _daysUntil(a.date).compareTo(_daysUntil(b.date)));
+    alertData.sort(
+      (a, b) => dateStatus(a.date).days.compareTo(dateStatus(b.date).days),
+    );
 
     return alertData
         .map(
@@ -92,19 +100,6 @@ class ExpiryAlerts extends ConsumerWidget {
           ),
         )
         .toList();
-  }
-
-  static int _daysUntil(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final target = DateTime(date.year, date.month, date.day);
-    return target.difference(today).inDays;
-  }
-
-  static String _daysShort(int days) {
-    if (days < 0) return 'Vencido ${-days} d';
-    if (days == 0) return 'Vence hoy';
-    return 'En $days d';
   }
 }
 
@@ -142,8 +137,10 @@ class _AlertItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final days = ExpiryAlerts._daysUntil(date);
-    final status = days < 0 ? AppStatus.danger : AppStatus.warning;
+    final status = dateStatus(date);
+    final appStatus = status.level == ExpiryLevel.danger
+        ? AppStatus.danger
+        : AppStatus.warning;
 
     return InkWell(
       onTap: () => context.push('/vehicles/$vehicleId'),
@@ -185,11 +182,11 @@ class _AlertItem extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Semantics(
-              label: formatDaysRemaining(date),
+              label: status.longLabel,
               excludeSemantics: true,
               child: StatusChip(
-                status: status,
-                label: ExpiryAlerts._daysShort(days),
+                status: appStatus,
+                label: status.shortLabel,
                 icon: Icons.schedule,
               ),
             ),

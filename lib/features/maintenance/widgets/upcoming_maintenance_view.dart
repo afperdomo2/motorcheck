@@ -23,7 +23,7 @@ class UpcomingMaintenanceView extends ConsumerWidget {
     return vehicleAsync.when(
       loading: () => const LoadingIndicator(),
       error: (err, _) => ErrorState(
-        message: err.toString(),
+        message: 'No se pudo cargar el vehículo',
         onRetry: () => ref.invalidate(selectedVehicleProvider(vehicleId)),
       ),
       data: (vehicle) {
@@ -34,7 +34,7 @@ class UpcomingMaintenanceView extends ConsumerWidget {
         return upcomingAsync.when(
           loading: () => const LoadingIndicator(),
           error: (err, _) => ErrorState(
-            message: err.toString(),
+            message: 'No se pudieron calcular los próximos mantenimientos',
             onRetry: () =>
                 ref.invalidate(upcomingMaintenanceProvider(vehicleId)),
           ),

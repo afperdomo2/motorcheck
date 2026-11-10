@@ -48,11 +48,8 @@ class WorkshopsNotifier extends Notifier<AsyncValue<List<Workshop>>> {
   }
 
   Future<void> remove(int id) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await _repo.delete(id);
-      return _repo.getAll();
-    });
+    await _repo.delete(id);
+    state = AsyncValue.data(await _repo.getAll());
     ref.invalidate(maint.workshopsProvider);
   }
 }
@@ -97,6 +94,7 @@ class MaintenanceCategoriesNotifier
       await _repo.insert(category);
       return _repo.getAll();
     });
+    ref.invalidate(maintenanceCategoriesProvider);
   }
 
   Future<void> update(MaintenanceCategory category) async {
@@ -105,14 +103,13 @@ class MaintenanceCategoriesNotifier
       await _repo.update(category);
       return _repo.getAll();
     });
+    ref.invalidate(maintenanceCategoriesProvider);
   }
 
   Future<void> remove(int id) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await _repo.delete(id);
-      return _repo.getAll();
-    });
+    await _repo.delete(id);
+    state = AsyncValue.data(await _repo.getAll());
+    ref.invalidate(maintenanceCategoriesProvider);
   }
 }
 

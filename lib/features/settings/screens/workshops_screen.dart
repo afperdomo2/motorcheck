@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/utils/user_error.dart';
+import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
+import '../../maintenance/models/workshop.dart';
 import '../providers.dart';
 
 class WorkshopsScreen extends ConsumerWidget {
@@ -25,7 +28,7 @@ class WorkshopsScreen extends ConsumerWidget {
       body: workshopsAsync.when(
         loading: () => const LoadingIndicator(),
         error: (err, _) => ErrorState(
-          message: err.toString(),
+          message: 'No se pudieron cargar los talleres',
           onRetry: () =>
               ref.read(workshopsNotifierProvider.notifier).loadWorkshops(),
         ),
@@ -130,10 +133,10 @@ class WorkshopsScreen extends ConsumerWidget {
     );
   }
 
-  void _confirmDelete(
+  Future<void> _confirmDelete(
     BuildContext context,
     WidgetRef ref,
-    dynamic workshop,
+    Workshop workshop,
   ) async {
     final confirmed = await showConfirmDialog(
       context,
@@ -142,8 +145,21 @@ class WorkshopsScreen extends ConsumerWidget {
       confirmLabel: 'Eliminar',
       isDestructive: true,
     );
-    if (confirmed == true && context.mounted) {
-      ref.read(workshopsNotifierProvider.notifier).remove(workshop.id);
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await ref.read(workshopsNotifierProvider.notifier).remove(workshop.id!);
+      if (context.mounted) AppSnackBar.success('Taller eliminado');
+    } catch (error) {
+      logError('eliminar taller', error, StackTrace.current);
+      if (context.mounted) {
+        AppSnackBar.error(
+          friendlyErrorMessage(
+            error,
+            fallback: 'No se pudo eliminar el taller',
+          ),
+        );
+      }
     }
   }
 }

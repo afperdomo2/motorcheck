@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
@@ -15,6 +14,7 @@ import '../models/maintenance.dart';
 import '../models/workshop.dart';
 import '../providers.dart';
 import '../widgets/maintenance_card.dart';
+import '../widgets/month_header.dart';
 import '../widgets/vehicle_ficha.dart';
 
 class MaintenanceListScreen extends ConsumerStatefulWidget {
@@ -59,7 +59,7 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
             child: maintenancesAsync.when(
               loading: () => const LoadingIndicator(),
               error: (err, _) => ErrorState(
-                message: err.toString(),
+                message: 'No se pudieron cargar los mantenimientos',
                 onRetry: () => ref
                     .read(maintenancesNotifierProvider.notifier)
                     .loadMaintenances(),
@@ -73,7 +73,7 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
                 if (vehicles.isEmpty) {
                   return EmptyState(
                     icon: Icons.directions_car,
-                    title: 'No hay vehículos',
+                    title: 'Sin vehículos',
                     subtitle:
                         'Agrega un vehículo para registrar mantenimientos',
                     onAction: () => context.push('/vehicles/add'),
@@ -145,7 +145,7 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
         itemBuilder: (context, index) {
           final item = flat[index];
 
-          if (item is _MonthHeader) {
+          if (item is MonthHeader) {
             return item;
           }
 
@@ -186,7 +186,7 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
         0,
         (sum, m) => sum + m.maintenanceCost + m.totalPartsCost,
       );
-      flat.add(_MonthHeader(year: key.$1, month: key.$2, total: total));
+      flat.add(MonthHeader(year: key.$1, month: key.$2, total: total));
       flat.addAll(items);
     }
     return flat;
@@ -292,48 +292,5 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
       if (w.id == workshopId) return w;
     }
     return null;
-  }
-}
-
-class _MonthHeader extends StatelessWidget {
-  final int year;
-  final int month;
-  final double total;
-
-  const _MonthHeader({
-    required this.year,
-    required this.month,
-    required this.total,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final label = formatMonthYearLong(DateTime(year, month));
-
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.sm),
-      child: Row(
-        children: [
-          Container(
-            width: 4,
-            height: 18,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(child: Text(label, style: theme.textTheme.titleMedium)),
-          if (total > 0)
-            Text(
-              formatCurrency(total),
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-        ],
-      ),
-    );
   }
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/utils/user_error.dart';
+import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
@@ -33,7 +35,7 @@ class CategoriesScreen extends ConsumerWidget {
       body: categoriesAsync.when(
         loading: () => const LoadingIndicator(),
         error: (err, _) => ErrorState(
-          message: err.toString(),
+          message: 'No se pudieron cargar las categorías',
           onRetry: () => ref
               .read(maintenanceCategoriesNotifierProvider.notifier)
               .loadCategories(),
@@ -118,11 +120,18 @@ class CategoriesScreen extends ConsumerWidget {
       await ref
           .read(maintenanceCategoriesNotifierProvider.notifier)
           .remove(category.id!);
+      if (context.mounted) AppSnackBar.success('Categoría eliminada');
     } on CategoryInUseException catch (e) {
+      if (context.mounted) AppSnackBar.error(e.toString());
+    } catch (error) {
+      logError('eliminar categoría', error, StackTrace.current);
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        AppSnackBar.error(
+          friendlyErrorMessage(
+            error,
+            fallback: 'No se pudo eliminar la categoría',
+          ),
+        );
       }
     }
   }
