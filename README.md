@@ -187,3 +187,14 @@ lefthook install
 ```
 
 Los hooks ejecutan `dart format`, `flutter analyze` y `flutter test` automáticamente antes de cada commit.
+
+## Licencia
+
+MotorCheck se distribuye bajo la **PolyForm Noncommercial License 1.0.0** (ver
+[`LICENSE`](LICENSE)). Puedes leer el código, compilarlo y usarlo para fines
+personales, de estudio o educativos. **No** puedes vender la app ni usarla con
+fines comerciales. Cualquier otro permiso debe solicitarlo el titular.
+
+Las fuentes Barlow se distribuyen bajo la SIL Open Font License 1.1
+([`assets/fonts/OFL.txt`](assets/fonts/OFL.txt)) y su texto se muestra dentro de
+la app en **Ajustes → Licencias y términos**.

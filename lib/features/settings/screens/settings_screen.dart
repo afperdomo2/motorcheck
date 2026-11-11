@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/app_info.dart';
 import '../../../core/backup/backup_providers.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/theme_mode_provider.dart';
@@ -154,21 +155,31 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xl),
           Text('Acerca de', style: theme.textTheme.titleMedium),
           const SizedBox(height: AppSpacing.sm),
-          const Card(
+          Card(
             child: Column(
               children: [
-                ListTile(
+                const ListTile(
                   leading: _TonalIcon(icon: Icons.info_outline),
-                  title: Text('MotorCheck'),
-                  subtitle: Text('Seguimiento de mantenimiento · v0.2.0'),
+                  title: Text(AppInfo.name),
+                  subtitle: Text(
+                    'Seguimiento de mantenimiento · v${AppInfo.version}',
+                  ),
                 ),
-                Divider(indent: 72),
-                ListTile(
+                const Divider(indent: 72),
+                const ListTile(
                   leading: _TonalIcon(icon: Icons.storage_outlined),
                   title: Text('Datos locales'),
                   subtitle: Text(
                     'Tu información se guarda solo en este dispositivo',
                   ),
+                ),
+                const Divider(indent: 72),
+                ListTile(
+                  leading: const _TonalIcon(icon: Icons.gavel_outlined),
+                  title: const Text('Licencias y términos'),
+                  subtitle: const Text('Uso personal y créditos de terceros'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/settings/licenses'),
                 ),
               ],
             ),

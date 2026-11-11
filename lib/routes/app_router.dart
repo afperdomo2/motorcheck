@@ -18,6 +18,7 @@ import '../features/settings/screens/workshop_form_screen.dart';
 import '../features/settings/screens/categories_screen.dart';
 import '../features/settings/screens/category_form_screen.dart';
 import '../features/settings/screens/data_backup_screen.dart';
+import '../features/settings/screens/licenses_screen.dart';
 import '../features/settings/screens/notification_settings_screen.dart';
 import '../features/documents/screens/documents_screen.dart';
 import '../features/documents/screens/document_form_screen.dart';
@@ -212,6 +213,10 @@ final appRouter = GoRouter(
                   path: 'notifications',
                   builder: (context, state) =>
                       const NotificationSettingsScreen(),
+                ),
+                GoRoute(
+                  path: 'licenses',
+                  builder: (context, state) => const LicensesScreen(),
                 ),
                 GoRoute(
                   path: 'documents',

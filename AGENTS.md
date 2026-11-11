@@ -189,6 +189,7 @@ flutter test --concurrency 1              # SQLite sin race conditions
 - No ejecutar `flutter test` ni `flutter analyze` tras cambios solo en `.md`
 - No comandos destructivos sin confirmación explícita
 - **Consistencia docs**: tras cambios estructurales (modelos, providers, features), verifica que AGENTS.md y `docs/` estén sincronizados con el código real
+- **Licencia**: PolyForm Noncommercial 1.0.0 (`LICENSE`). Uso personal permitido; venta y uso comercial prohibidos. Solo el titular la cambia: no migrar a MIT/GPL/Apache sin autorización explícita. La pantalla `Ajustes → Licencias y términos` muestra la licencia y el OFL de Barlow.
 
 ## Planes y resúmenes de cambios
 
