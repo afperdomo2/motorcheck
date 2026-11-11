@@ -19,10 +19,16 @@ import '../models/vehicle_document.dart';
 import '../providers.dart';
 
 class DocumentFormScreen extends ConsumerStatefulWidget {
-  const DocumentFormScreen({super.key, this.vehicleId, this.documentId});
+  const DocumentFormScreen({
+    super.key,
+    this.vehicleId,
+    this.documentId,
+    this.renewFromId,
+  });
 
   final int? vehicleId;
   final int? documentId;
+  final int? renewFromId;
 
   @override
   ConsumerState<DocumentFormScreen> createState() => _DocumentFormScreenState();
@@ -47,6 +53,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
   bool _saved = false;
 
   bool get _isEditing => widget.documentId != null;
+  bool get _isRenewing => widget.renewFromId != null;
 
   @override
   void initState() {
@@ -55,7 +62,10 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
     if (widget.vehicleId == null) {
       _type = 'license';
     }
-    if (_isEditing) {
+    if (_isRenewing) {
+      _loading = true;
+      Future.microtask(_loadRenewSource);
+    } else if (_isEditing) {
       _loading = true;
       Future.microtask(_loadDocument);
     }
@@ -95,6 +105,31 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
     _numberController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadRenewSource() async {
+    final source = await ref
+        .read(documentsRepositoryProvider)
+        .getById(widget.renewFromId!);
+    if (!mounted) return;
+    if (source == null) {
+      setState(() => _loading = false);
+      return;
+    }
+    _nameController.text = source.name ?? '';
+    _numberController.text = source.number ?? '';
+    _notesController.text = source.notes ?? '';
+    setState(() {
+      _type = source.type;
+      _vehicleId = widget.vehicleId ?? source.vehicleId;
+      _issuedAt = DateTime.now();
+      _expiresAt = null;
+      _filePath = null;
+      _originalFilePath = null;
+      _originalCreatedAt = null;
+      _loading = false;
+      _dirty = false;
+    });
   }
 
   Future<void> _pickFile() async {
@@ -213,7 +248,11 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
         _dirty = false;
       });
       AppSnackBar.success(
-        _isEditing ? 'Documento actualizado' : 'Documento agregado',
+        _isEditing
+            ? 'Documento actualizado'
+            : _isRenewing
+            ? 'Documento renovado'
+            : 'Documento agregado',
       );
       await Future<void>.delayed(Duration.zero);
       if (mounted) context.pop();
@@ -258,7 +297,13 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(_isEditing ? 'Editar documento' : 'Nuevo documento'),
+          title: Text(
+            _isEditing
+                ? 'Editar documento'
+                : _isRenewing
+                ? 'Renovar documento'
+                : 'Nuevo documento',
+          ),
         ),
         body: _loading
             ? const LoadingIndicator()

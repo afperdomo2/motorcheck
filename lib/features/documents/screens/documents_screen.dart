@@ -35,19 +35,7 @@ class DocumentsScreen extends ConsumerWidget {
         : vehicleAsync?.valueOrNull?.name ?? 'Documentos';
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title),
-            if (!isGlobal)
-              const Text(
-                'Documentos del vehículo',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
-              ),
-          ],
-        ),
-      ),
+      appBar: AppBar(title: Text(title)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openForm(context),
         icon: const Icon(Icons.add),
@@ -78,6 +66,14 @@ class DocumentsScreen extends ConsumerWidget {
             );
           }
 
+          final seenTypes = <String>{};
+          final currentIds = <int>{};
+          for (final document in documents) {
+            if (seenTypes.add(document.type) && document.id != null) {
+              currentIds.add(document.id!);
+            }
+          }
+
           return ListView(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
@@ -86,20 +82,22 @@ class DocumentsScreen extends ConsumerWidget {
               AppSpacing.xxl * 2,
             ),
             children: [
-              if (!isGlobal)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                  child: Text(
-                    '${documents.length} documento'
-                    '${documents.length == 1 ? '' : 's'}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: Text(
+                  '${documents.length} documento'
+                  '${documents.length == 1 ? '' : 's'}',
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
+              ),
               ...documents.map(
                 (document) => DocumentCard(
                   document: document,
+                  isCurrent:
+                      document.id != null && currentIds.contains(document.id),
                   onTap: () => _openForm(context, documentId: document.id),
                   onEdit: () => _openForm(context, documentId: document.id),
+                  onRenew: () => _openForm(context, renewId: document.id),
                   onDelete: () => _delete(context, ref, document),
                 ),
               ),
@@ -110,17 +108,18 @@ class DocumentsScreen extends ConsumerWidget {
     );
   }
 
-  void _openForm(BuildContext context, {int? documentId}) {
+  void _openForm(BuildContext context, {int? documentId, int? renewId}) {
+    final query = renewId != null ? '?renew=$renewId' : '';
     if (vehicleId == null) {
       if (documentId == null) {
-        context.push('/settings/documents/add');
+        context.push('/settings/documents/add$query');
       } else {
         context.push('/settings/documents/$documentId/edit');
       }
       return;
     }
     if (documentId == null) {
-      context.push('/vehicles/$vehicleId/documents/add');
+      context.push('/vehicles/$vehicleId/documents/add$query');
     } else {
       context.push('/vehicles/$vehicleId/documents/$documentId/edit');
     }

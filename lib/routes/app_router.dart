@@ -120,7 +120,13 @@ final appRouter = GoRouter(
                       path: 'add',
                       builder: (context, state) {
                         final id = int.parse(state.pathParameters['id']!);
-                        return DocumentFormScreen(vehicleId: id);
+                        final renewId = int.tryParse(
+                          state.uri.queryParameters['renew'] ?? '',
+                        );
+                        return DocumentFormScreen(
+                          vehicleId: id,
+                          renewFromId: renewId,
+                        );
                       },
                     ),
                     GoRoute(
@@ -224,7 +230,12 @@ final appRouter = GoRouter(
                   routes: [
                     GoRoute(
                       path: 'add',
-                      builder: (context, state) => const DocumentFormScreen(),
+                      builder: (context, state) {
+                        final renewId = int.tryParse(
+                          state.uri.queryParameters['renew'] ?? '',
+                        );
+                        return DocumentFormScreen(renewFromId: renewId);
+                      },
                     ),
                     GoRoute(
                       path: ':documentId/edit',

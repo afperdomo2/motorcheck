@@ -96,6 +96,14 @@ estimada del próximo mantenimiento.
 Fuente de verdad de SOAT, RTM, impuesto, seguro y licencia. `vehicle_id` es
 nullable para documentos del conductor.
 
+El **vigente** de cada tipo es el de mayor `expires_at`. Los documentos
+anteriores quedan como historial, se muestran con la etiqueta “Histórico” y no
+generan recordatorios. Al borrar un SOAT/RTM se limpia la columna legado
+correspondiente para que no se reconstruya.
+
+Los backfills de documentos y kilometraje se ejecutan solo en las migraciones
+(v13/v14); `_ensureSchemaIntegrity` no los repite en cada apertura.
+
 | Columna | Tipo | Restricciones |
 |--------|------|-------------|
 | id | INTEGER | PRIMARY KEY AUTOINCREMENT |

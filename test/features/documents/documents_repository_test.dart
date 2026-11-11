@@ -119,4 +119,95 @@ void main() {
     expect(documents.where((d) => d.type == 'rtm'), isEmpty);
     expect(documents.where((d) => d.type == 'soat'), hasLength(1));
   });
+
+  test('latest-wins actualiza el vigente y conserva el historial', () async {
+    final vehicleRepo = VehicleRepository();
+    final repo = DocumentsRepository();
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final vehicleId = await vehicleRepo.insert(
+      Vehicle(
+        name: 'SOAT con historial',
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+      ),
+    );
+    addTearDown(() => vehicleRepo.delete(vehicleId));
+    final now = DateTime(2026, 1, 1);
+    final oldId = await repo.insert(
+      VehicleDocument(
+        vehicleId: vehicleId,
+        type: 'soat',
+        name: 'SOAT viejo',
+        expiresAt: DateTime(2025, 1, 1),
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    final currentId = await repo.insert(
+      VehicleDocument(
+        vehicleId: vehicleId,
+        type: 'soat',
+        name: 'SOAT vigente',
+        expiresAt: DateTime(2027, 1, 1),
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    final latest = await repo.getLatestByType(vehicleId, 'soat');
+    expect(latest?.id, currentId);
+
+    await container
+        .read(documentsNotifierProvider.notifier)
+        .syncVehicleDates(vehicleId, soat: DateTime(2028, 1, 1));
+
+    final documents = await repo.getByVehicleId(vehicleId);
+    expect(documents.where((d) => d.type == 'soat'), hasLength(2));
+    expect(
+      documents.singleWhere((d) => d.id == oldId).expiresAt,
+      DateTime(2025, 1, 1),
+    );
+    expect(
+      documents.singleWhere((d) => d.id == currentId).expiresAt,
+      DateTime(2028, 1, 1),
+    );
+    final vehicle = await vehicleRepo.getById(vehicleId);
+    expect(vehicle!.soatExpiresAt, DateTime(2028, 1, 1));
+  });
+
+  test('eliminar el SOAT vigente limpia la columna legado', () async {
+    final vehicleRepo = VehicleRepository();
+    final repo = DocumentsRepository();
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final vehicleId = await vehicleRepo.insert(
+      Vehicle(
+        name: 'SOAT eliminado',
+        soatExpiresAt: DateTime(2027, 1, 1),
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+      ),
+    );
+    addTearDown(() => vehicleRepo.delete(vehicleId));
+    final documentId = await repo.insert(
+      VehicleDocument(
+        vehicleId: vehicleId,
+        type: 'soat',
+        name: 'SOAT',
+        expiresAt: DateTime(2027, 1, 1),
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+      ),
+    );
+
+    await container
+        .read(documentsNotifierProvider.notifier)
+        .remove(documentId, vehicleId: vehicleId);
+
+    final vehicle = await vehicleRepo.getById(vehicleId);
+    expect(vehicle!.soatExpiresAt, isNull);
+  });
 }

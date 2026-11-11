@@ -260,7 +260,15 @@ class BackupService {
     final db = await _db.database;
     final documentsDir = await _documentsDirectory();
 
+    Directory? oldDocuments;
+    var prepared = false;
     try {
+      // Los archivos se preparan antes de la transacción. Si la base falla,
+      // se restauran los adjuntos anteriores; si los archivos fallan, la base
+      // todavía no se ha tocado.
+      oldDocuments = await _prepareDocuments(staging);
+      prepared = true;
+
       await db.execute('PRAGMA foreign_keys = OFF');
       await db.transaction((txn) async {
         for (final table in _tables.reversed) {
@@ -287,11 +295,14 @@ class BackupService {
           }
         }
       });
+    } catch (error) {
+      if (prepared) await _rollbackDocuments(oldDocuments);
+      rethrow;
     } finally {
       await db.execute('PRAGMA foreign_keys = ON');
     }
 
-    await _replaceDocuments(staging, extracted);
+    await _commitDocuments(oldDocuments);
     await _importSettings(data);
 
     await AppPreferences.setLastBackupAt(DateTime.now());
@@ -345,10 +356,9 @@ class BackupService {
     }
   }
 
-  Future<void> _replaceDocuments(
-    Directory staging,
-    Map<String, String> extracted,
-  ) async {
+  /// Mueve los documentos actuales a una carpeta temporal, crea la nueva
+  /// carpeta y copia los adjuntos preparados. Si algo falla, restaura.
+  Future<Directory?> _prepareDocuments(Directory staging) async {
     final documents = await _documentsDirectory();
     final old = Directory(
       p.join(
@@ -357,20 +367,42 @@ class BackupService {
       ),
     );
 
-    if (await documents.exists()) {
-      await documents.rename(old.path);
-    }
-    await documents.create(recursive: true);
+    try {
+      if (await documents.exists()) {
+        await documents.rename(old.path);
+      }
+      await documents.create(recursive: true);
 
-    if (extracted.isNotEmpty) {
-      final files = staging.listSync().whereType<File>();
-      for (final file in files) {
+      for (final file in staging.listSync().whereType<File>()) {
         await file.copy(p.join(documents.path, p.basename(file.path)));
       }
+      return old.existsSync() ? old : null;
+    } catch (error) {
+      await _rollbackDocuments(old.existsSync() ? old : null);
+      rethrow;
     }
+  }
 
-    if (await old.exists()) {
-      await old.delete(recursive: true);
+  Future<void> _rollbackDocuments(Directory? old) async {
+    final documents = await _documentsDirectory();
+    try {
+      if (await documents.exists()) {
+        await documents.delete(recursive: true);
+      }
+      if (old != null && await old.exists()) {
+        await old.rename(documents.path);
+      }
+    } catch (error) {
+      logError('rollback de adjuntos', error, StackTrace.current);
+    }
+  }
+
+  Future<void> _commitDocuments(Directory? old) async {
+    if (old == null) return;
+    try {
+      if (await old.exists()) await old.delete(recursive: true);
+    } catch (error) {
+      logError('limpiar adjuntos anteriores', error, StackTrace.current);
     }
   }
 

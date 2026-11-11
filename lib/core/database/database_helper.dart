@@ -106,8 +106,8 @@ class DatabaseHelper {
     await db.execute(Tables.createDocumentsExpiresIndex);
     await db.execute(Tables.createVehicleRestrictions);
 
-    await _backfillMileageReadings(db);
-    await _backfillDocuments(db);
+    // Los backfills viven solo en `_onUpgrade` (v13/v14). Ejecutarlos en cada
+    // apertura resucitaría documentos o lecturas que el usuario haya borrado.
   }
 
   Future<bool> _hasColumn(Database db, String table, String column) async {

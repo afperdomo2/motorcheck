@@ -117,6 +117,7 @@ Ver `docs/code-style.md` para ejemplos de modelos freezed y estado asíncrono.
 lib/
 ├── main.dart / app.dart         # Entry + MaterialApp.router
 ├── core/
+│   ├── app_info.dart            # Identidad, versión y licencia
 │   ├── theme/                   # Tokens, Barlow, temas light+dark, ThemeExtension
 │   ├── database/                # SQLite helper + DDL (v15) + factory FFI
 │   ├── backup/                  # Copia ZIP (JSON + adjuntos) y exportación CSV
@@ -131,7 +132,7 @@ lib/
 │   ├── restrictions/            # Regla semanal de pico y placa
 │   ├── reminders/               # Bandeja única, salud del vehículo y alertas
 │   ├── reports/                 # Hoja de vida en PDF
-│   └── settings/                # Tema, talleres, categorías, respaldo y avisos
+│   └── settings/                # Tema, talleres, categorías, respaldo, avisos y licencias
 ├── shared/widgets/              # Dumb widgets reutilizables
 └── routes/                      # GoRouter (StatefulShellRoute, 4 tabs)
 ```
@@ -171,6 +172,11 @@ Las columnas `vehicles.soat_expires_at` y `rtm_expires_at` se conservan solo por
 compatibilidad y se migraron a `documents` en la v14. El formulario de vehículo
 sincroniza sus fechas con `documents`; el selector de Mantenimientos no muestra
 esos documentos, solo identidad, placa y kilometraje.
+
+El **documento vigente** es el de mayor `expires_at` por vehículo y tipo (o por
+tipo en documentos globales). Los anteriores se conservan como historial y no
+generan recordatorios ni avisos. Los backfills de documentos y kilometraje se
+ejecutan solo en `_onUpgrade`, nunca en cada apertura.
 
 ## Tests
 

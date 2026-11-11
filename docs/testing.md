@@ -17,7 +17,7 @@ test/                           # Espejo de lib/
 │   ├── database/               # SQLite, migraciones y tablas v13-v15
 │   └── utils/                  # Formateadores, fechas y búsqueda
 ├── features/
-│   ├── settings/               # Repositorio de categorías
+│   ├── settings/               # Categorías, licencias y ajustes
 │   ├── vehicles/               # Modelos, repositorios, km y notifier
 │   ├── maintenance/            # Modelos, repositorios y fechas
 │   ├── documents/              # CRUD de documentos
@@ -118,6 +118,12 @@ void main() {
 - `category_repository_test.dart`: clave estable, orden y duplicados.
 - `maintenance_search_screen_test.dart`: búsqueda por categoría, estado sin
   resultados y ausencia de overflow a 360×640 con text scale 2.0.
+- `documents_repository_test.dart`: latest-wins, actualización del vigente y
+  conservación del historial.
+- `reminders_provider_test.dart`: un solo recordatorio por tipo de documento.
+- `database_backfill_test.dart`: abrir la base no recrea documentos ni lecturas
+  borradas.
+- `documents_screen_test.dart`: chips Vigente/Histórico sin overflow a 200 %.
 - `mileage_repository_test.dart`: lecturas, promedio km/día y kilometraje
   monotónico.
 - `documents_repository_test.dart`: CRUD por vehículo/global y cascada.
@@ -126,8 +132,11 @@ void main() {
 - `backup_service_test.dart`: exportar, inspeccionar, restaurar y rechazar
   archivos inválidos. Usa `DatabaseHelper.useDirectoryForTesting()` para
   aislar SQLite y un directorio temporal para adjuntos.
-- `pdf_report_service_test.dart`: genera un PDF válido con Barlow.
+- `pdf_report_service_test.dart`: genera un PDF válido con Barlow y pagina un
+  historial largo.
 - `reminder_tile_test.dart`: estados visuales de la bandeja.
+- `upcoming_maintenance_view_test.dart`: sin overflow a 360 px con text scale 2.
+- `licenses_screen_test.dart`: pantalla de licencias y texto OFL.
 
 ---
 

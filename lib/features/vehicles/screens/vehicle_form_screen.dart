@@ -43,6 +43,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
   int? _originalMileage;
   DateTime? _originalMileageUpdatedAt;
   int? _maxMaintenanceMileage;
+  int? _createdVehicleId;
 
   final _vinController = TextEditingController();
   DateTime? _soatDate;
@@ -179,13 +180,16 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
     final notifier = ref.read(vehiclesNotifierProvider.notifier);
 
     try {
-      final vehicleId = _isEditing
-          ? widget.vehicleId!
-          : await notifier.add(vehicle);
-
-      if (_isEditing) {
-        await notifier.update(vehicle);
+      // Si el vehículo se creó pero falló la sincronización de documentos,
+      // un reintento debe actualizar ese vehículo en vez de duplicarlo.
+      int? vehicleId = widget.vehicleId ?? _createdVehicleId;
+      if (vehicleId == null) {
+        vehicleId = await notifier.add(vehicle);
+        _createdVehicleId = vehicleId;
+      } else {
+        await notifier.update(vehicle.copyWith(id: vehicleId));
       }
+
       await ref
           .read(documentsNotifierProvider.notifier)
           .syncVehicleDates(vehicleId, soat: _soatDate, rtm: _rtmDate);

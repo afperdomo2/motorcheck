@@ -187,7 +187,7 @@ class _DocumentChips extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final documents =
-        ref.watch(vehicleDocumentsProvider(vehicleId)).valueOrNull ?? [];
+        ref.watch(vehicleCurrentDocumentsProvider(vehicleId)).valueOrNull ?? [];
     final visible =
         documents
             .where(

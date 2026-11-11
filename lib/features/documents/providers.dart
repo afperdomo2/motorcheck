@@ -16,6 +16,19 @@ final vehicleDocumentsProvider =
       return ref.watch(documentsRepositoryProvider).getByVehicleId(vehicleId);
     });
 
+/// Documentos vigentes: el de mayor `expiresAt` por tipo.
+final vehicleCurrentDocumentsProvider =
+    FutureProvider.family<List<VehicleDocument>, int>((ref, vehicleId) async {
+      final documents = await ref.watch(
+        vehicleDocumentsProvider(vehicleId).future,
+      );
+      final seen = <String>{};
+      return [
+        for (final document in documents)
+          if (seen.add(document.type)) document,
+      ];
+    });
+
 final globalDocumentsProvider = FutureProvider<List<VehicleDocument>>((
   ref,
 ) async {
@@ -43,18 +56,26 @@ class DocumentsNotifier extends Notifier<AsyncValue<void>> {
       } else {
         await _repo.update(document);
       }
+      if (document.vehicleId != null) {
+        await _syncLegacyDate(document.vehicleId!, document.type);
+      }
     });
     _invalidate(document.vehicleId);
   }
 
   Future<void> remove(int id, {int? vehicleId}) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _repo.delete(id));
+    state = await AsyncValue.guard(() async {
+      final document = await _repo.getById(id);
+      await _repo.delete(id);
+      final ownerId = document?.vehicleId ?? vehicleId;
+      if (document != null && ownerId != null) {
+        await _syncLegacyDate(ownerId, document.type);
+      }
+    });
     _invalidate(vehicleId);
   }
 
-  /// Mantiene SOAT y RTM alineados con la tabla `documents`, que es la fuente
-  /// de verdad. Se usa al guardar el vehículo desde su formulario.
   Future<void> syncVehicleDates(
     int vehicleId, {
     DateTime? soat,
@@ -62,20 +83,17 @@ class DocumentsNotifier extends Notifier<AsyncValue<void>> {
   }) async {
     state = const AsyncValue.loading();
     try {
-      final existing = await _repo.getByVehicleId(vehicleId);
       await _syncType(
         vehicleId: vehicleId,
         type: 'soat',
         name: 'SOAT',
         date: soat,
-        existing: existing,
       );
       await _syncType(
         vehicleId: vehicleId,
         type: 'rtm',
         name: 'Tecnomecánica',
         date: rtm,
-        existing: existing,
       );
       state = const AsyncValue.data(null);
       _invalidate(vehicleId);
@@ -90,28 +108,19 @@ class DocumentsNotifier extends Notifier<AsyncValue<void>> {
     required String type,
     required String name,
     required DateTime? date,
-    required List<VehicleDocument> existing,
   }) async {
-    VehicleDocument? current;
-    for (final document in existing) {
-      if (document.type == type) {
-        current = document;
-        break;
-      }
-    }
+    final current = await _repo.getLatestByType(vehicleId, type);
 
     if (date == null) {
       // No se elimina un documento con adjuntos o notas desde el formulario
       // del vehículo; eso se hace desde la pantalla de Documentos.
-      final id = current?.id;
-      if (id != null && current!.filePath == null && current.notes == null) {
-        await _repo.delete(id);
+      if (current?.id != null &&
+          current!.filePath == null &&
+          current.notes == null) {
+        await _repo.delete(current.id!);
       }
-      return;
-    }
-
-    final now = DateTime.now();
-    if (current == null) {
+    } else if (current == null) {
+      final now = DateTime.now();
       await _repo.insert(
         VehicleDocument(
           vehicleId: vehicleId,
@@ -123,13 +132,24 @@ class DocumentsNotifier extends Notifier<AsyncValue<void>> {
         ),
       );
     } else {
-      await _repo.update(current.copyWith(expiresAt: date, updatedAt: now));
+      await _repo.update(
+        current.copyWith(expiresAt: date, updatedAt: DateTime.now()),
+      );
     }
+
+    await _syncLegacyDate(vehicleId, type);
+  }
+
+  Future<void> _syncLegacyDate(int vehicleId, String type) async {
+    if (type != 'soat' && type != 'rtm') return;
+    final latest = await _repo.getLatestByType(vehicleId, type);
+    await _repo.setLegacyVehicleDate(vehicleId, type, latest?.expiresAt);
   }
 
   void _invalidate(int? vehicleId) {
     ref.invalidate(allDocumentsProvider);
     ref.invalidate(globalDocumentsProvider);
+    ref.invalidate(vehicleCurrentDocumentsProvider);
     if (vehicleId != null) {
       ref.invalidate(vehicleDocumentsProvider(vehicleId));
     }

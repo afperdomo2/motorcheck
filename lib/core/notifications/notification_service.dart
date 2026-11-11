@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -55,6 +56,21 @@ class NotificationService {
           }
         },
       );
+
+      try {
+        final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+        final initialRoute = launchDetails?.didNotificationLaunchApp == true
+            ? launchDetails?.notificationResponse?.payload
+            : null;
+        if (initialRoute != null && initialRoute.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            appRouter.go(initialRoute);
+          });
+        }
+      } catch (error) {
+        logError('notificación inicial', error, StackTrace.current);
+      }
+
       _initialized = true;
     } catch (error) {
       logError('inicializar notificaciones', error, StackTrace.current);

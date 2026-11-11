@@ -34,6 +34,7 @@ lib/
 ├── main.dart
 ├── app.dart
 ├── core/                    # Infraestructura compartida
+│   ├── app_info.dart        # Nombre, versión y datos de licencia
 │   ├── theme/               # Sistema de diseño (light + dark)
 │   ├── database/            # SQLite v15 + factory FFI (escritorio)
 │   ├── backup/              # ZIP (datos + adjuntos) y CSV
@@ -48,7 +49,7 @@ lib/
 │   ├── restrictions/        # Regla semanal de pico y placa
 │   ├── reminders/           # Bandeja única y salud del vehículo
 │   ├── reports/             # Hoja de vida en PDF
-│   └── settings/            # Tema, talleres, categorías, respaldo y avisos
+│   └── settings/            # Tema, talleres, categorías, respaldo, avisos y licencias
 ├── shared/                  # Widgets reutilizables (dumb)
 │   └── widgets/
 └── routes/                  # Navegación (4 tabs con StatefulShellRoute)
@@ -130,9 +131,14 @@ Datos (mantenimiento, documentos, restricción)
    Linux: solo bandeja (sin scheduler)
 ```
 
-`NotificationSync` escucha `remindersProvider` y `notificationSettingsProvider`
-para reprogramar avisos. Los mantenimientos solo por km usan la fecha estimada
-según el promedio km/día de `mileage_readings`.
+`remindersProvider` usa un solo documento por tipo: el de mayor `expires_at`.
+Los documentos históricos no generan avisos. `NotificationSync` escucha
+`remindersProvider` y `notificationSettingsProvider` para reprogramar avisos.
+Los mantenimientos solo por km usan la fecha estimada según el promedio km/día
+de `mileage_readings`.
+
+Al tocar una notificación con la app cerrada, `NotificationService` lee
+`getNotificationAppLaunchDetails` y navega después del primer frame.
 
 ### Respaldo
 
@@ -153,6 +159,16 @@ adjuntos se guardan en `documents/` dentro del directorio de soporte de la app.
 - Las hojas (`VehicleSelectorSheet`, `CategoryHistorySheet`) usan
   `maxWidth: 640` y scroll interno.
 - El buscador tiene una prueba de widget a 360×640 con text scale 2.0.
+
+### Licencias
+
+- La app se distribuye bajo **PolyForm Noncommercial 1.0.0** (`LICENSE`):
+  uso personal, de estudio o educativo; venta y uso comercial prohibidos.
+- `core/app_info.dart` centraliza nombre, versión, titular y datos de licencia.
+- `Ajustes → Licencias y términos` muestra la licencia, el enlace oficial y el
+  texto OFL de las fuentes Barlow (`assets/fonts/OFL.txt`).
+- La pantalla también abre las licencias de paquetes de Flutter/Dart mediante
+  `showLicensePage`.
 
 ## Por Qué No Hay Capa de Dominio
 

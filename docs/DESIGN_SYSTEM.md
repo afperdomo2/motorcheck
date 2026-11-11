@@ -136,6 +136,14 @@ Archivos:
 | `LoadingIndicator` | `shared/widgets/loading_indicator.dart` | carga |
 | `showConfirmDialog` | `shared/widgets/confirm_dialog.dart` | confirmación destructiva |
 
+### Documentos
+
+- El documento **vigente** de cada tipo se marca con `StatusChip` “Vigente”.
+- Los anteriores se muestran como “Histórico” y no generan recordatorios.
+- La acción **Renovar** crea un documento nuevo y conserva el anterior como
+  historial.
+- El formulario de vehículo sincroniza sus fechas con el documento vigente.
+
 ### APIs
 
 ```dart

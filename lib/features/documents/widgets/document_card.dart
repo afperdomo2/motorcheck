@@ -13,12 +13,16 @@ class DocumentCard extends StatelessWidget {
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
+    this.onRenew,
+    this.isCurrent = true,
   });
 
   final VehicleDocument document;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback? onRenew;
+  final bool isCurrent;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +46,7 @@ class DocumentCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 width: 44,
@@ -98,58 +103,83 @@ class DocumentCard extends StatelessWidget {
                         ],
                       ],
                     ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Wrap(
+                      spacing: AppSpacing.xs,
+                      runSpacing: AppSpacing.xs,
+                      children: [
+                        if (isCurrent) ...[
+                          const StatusChip(
+                            status: AppStatus.info,
+                            label: 'Vigente',
+                            icon: Icons.check_circle_outline,
+                          ),
+                          StatusChip(
+                            status: appStatus,
+                            label: status.shortLabel,
+                            icon: Icons.schedule,
+                          ),
+                        ] else
+                          const StatusChip(
+                            status: AppStatus.neutral,
+                            label: 'Histórico',
+                            icon: Icons.history,
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  StatusChip(
-                    status: appStatus,
-                    label: status.shortLabel,
-                    icon: Icons.schedule,
+              PopupMenuButton<_DocumentAction>(
+                tooltip: 'Opciones',
+                onSelected: (action) {
+                  switch (action) {
+                    case _DocumentAction.renew:
+                      onRenew?.call();
+                    case _DocumentAction.edit:
+                      onEdit();
+                    case _DocumentAction.delete:
+                      onDelete();
+                  }
+                },
+                itemBuilder: (context) => [
+                  if (isCurrent && onRenew != null)
+                    const PopupMenuItem(
+                      value: _DocumentAction.renew,
+                      child: Row(
+                        children: [
+                          Icon(Icons.autorenew, size: 20),
+                          SizedBox(width: 12),
+                          Text('Renovar'),
+                        ],
+                      ),
+                    ),
+                  const PopupMenuItem(
+                    value: _DocumentAction.edit,
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit_outlined, size: 20),
+                        SizedBox(width: 12),
+                        Text('Editar'),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: AppSpacing.xs),
-                  PopupMenuButton<_DocumentAction>(
-                    tooltip: 'Opciones',
-                    onSelected: (action) {
-                      switch (action) {
-                        case _DocumentAction.edit:
-                          onEdit();
-                        case _DocumentAction.delete:
-                          onDelete();
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: _DocumentAction.edit,
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit_outlined, size: 20),
-                            SizedBox(width: 12),
-                            Text('Editar'),
-                          ],
+                  PopupMenuItem(
+                    value: _DocumentAction.delete,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.delete_outline,
+                          size: 20,
+                          color: theme.colorScheme.error,
                         ),
-                      ),
-                      PopupMenuItem(
-                        value: _DocumentAction.delete,
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.delete_outline,
-                              size: 20,
-                              color: theme.colorScheme.error,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Eliminar',
-                              style: TextStyle(color: theme.colorScheme.error),
-                            ),
-                          ],
+                        const SizedBox(width: 12),
+                        Text(
+                          'Eliminar',
+                          style: TextStyle(color: theme.colorScheme.error),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -161,4 +191,4 @@ class DocumentCard extends StatelessWidget {
   }
 }
 
-enum _DocumentAction { edit, delete }
+enum _DocumentAction { renew, edit, delete }

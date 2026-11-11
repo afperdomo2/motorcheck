@@ -53,7 +53,10 @@ final remindersProvider = FutureProvider<List<Reminder>>((ref) async {
     final documents = await ref.watch(
       vehicleDocumentsProvider(vehicleId).future,
     );
+    final seenDocumentTypes = <String>{};
     for (final document in documents) {
+      // Latest-wins: el primero por tipo (orden DESC) es el vigente.
+      if (!seenDocumentTypes.add(document.type)) continue;
       final reminder = _documentReminder(
         document,
         vehicleId: vehicleId,
@@ -66,7 +69,9 @@ final remindersProvider = FutureProvider<List<Reminder>>((ref) async {
   }
 
   final globalDocuments = await ref.watch(globalDocumentsProvider.future);
+  final seenGlobalTypes = <String>{};
   for (final document in globalDocuments) {
+    if (!seenGlobalTypes.add(document.type)) continue;
     final reminder = _documentReminder(
       document,
       vehicleId: 0,

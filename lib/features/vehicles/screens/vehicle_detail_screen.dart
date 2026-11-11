@@ -35,7 +35,9 @@ class VehicleDetailScreen extends ConsumerWidget {
     final summaryAsync = ref.watch(
       vehicleMaintenanceSummaryProvider(vehicleId),
     );
-    final documentsAsync = ref.watch(vehicleDocumentsProvider(vehicleId));
+    final documentsAsync = ref.watch(
+      vehicleCurrentDocumentsProvider(vehicleId),
+    );
     final restrictionAsync = ref.watch(
       vehicleRestrictionStatusProvider(vehicleId),
     );
@@ -106,6 +108,7 @@ class VehicleDetailScreen extends ConsumerWidget {
               ref.invalidate(vehicleMaintenanceSummaryProvider(vehicleId));
               ref.invalidate(upcomingMaintenanceProvider(vehicleId));
               ref.invalidate(vehicleDocumentsProvider(vehicleId));
+              ref.invalidate(vehicleCurrentDocumentsProvider(vehicleId));
               ref.invalidate(vehicleRestrictionStatusProvider(vehicleId));
               ref.invalidate(vehicleHealthProvider(vehicleId));
               await Future.wait([
@@ -113,6 +116,7 @@ class VehicleDetailScreen extends ConsumerWidget {
                 ref.read(vehicleMaintenanceSummaryProvider(vehicleId).future),
                 ref.read(upcomingMaintenanceProvider(vehicleId).future),
                 ref.read(vehicleDocumentsProvider(vehicleId).future),
+                ref.read(vehicleCurrentDocumentsProvider(vehicleId).future),
                 ref.read(vehicleRestrictionStatusProvider(vehicleId).future),
                 ref.read(vehicleHealthProvider(vehicleId).future),
               ]);
@@ -374,9 +378,7 @@ class _DocumentsCard extends StatelessWidget {
                 ),
               )
             else
-              ...documents
-                  .take(3)
-                  .map((document) => _DocumentRow(document: document)),
+              ...documents.map((document) => _DocumentRow(document: document)),
           ],
         ),
       ),

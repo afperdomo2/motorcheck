@@ -7,7 +7,10 @@ class DocumentsRepository {
 
   Future<List<VehicleDocument>> getAll() async {
     final db = await _db.database;
-    final maps = await db.query('documents', orderBy: 'expires_at ASC');
+    final maps = await db.query(
+      'documents',
+      orderBy: 'expires_at DESC, id DESC',
+    );
     return maps.map(_fromMap).toList();
   }
 
@@ -17,7 +20,7 @@ class DocumentsRepository {
       'documents',
       where: 'vehicle_id = ?',
       whereArgs: [vehicleId],
-      orderBy: 'expires_at ASC',
+      orderBy: 'expires_at DESC, id DESC',
     );
     return maps.map(_fromMap).toList();
   }
@@ -27,9 +30,22 @@ class DocumentsRepository {
     final maps = await db.query(
       'documents',
       where: 'vehicle_id IS NULL',
-      orderBy: 'expires_at ASC',
+      orderBy: 'expires_at DESC, id DESC',
     );
     return maps.map(_fromMap).toList();
+  }
+
+  Future<VehicleDocument?> getLatestByType(int vehicleId, String type) async {
+    final db = await _db.database;
+    final maps = await db.query(
+      'documents',
+      where: 'vehicle_id = ? AND type = ?',
+      whereArgs: [vehicleId, type],
+      orderBy: 'expires_at DESC, id DESC',
+      limit: 1,
+    );
+    if (maps.isEmpty) return null;
+    return _fromMap(maps.first);
   }
 
   Future<VehicleDocument?> getById(int id) async {
@@ -57,6 +73,28 @@ class DocumentsRepository {
   Future<void> delete(int id) async {
     final db = await _db.database;
     await db.delete('documents', where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Mantiene las columnas legado de SOAT/RTM alineadas solo por
+  /// compatibilidad. La fuente de verdad sigue siendo `documents`.
+  Future<void> setLegacyVehicleDate(
+    int vehicleId,
+    String type,
+    DateTime? date,
+  ) async {
+    final column = switch (type) {
+      'soat' => 'soat_expires_at',
+      'rtm' => 'rtm_expires_at',
+      _ => null,
+    };
+    if (column == null) return;
+    final db = await _db.database;
+    await db.update(
+      'vehicles',
+      {column: date != null ? formatDateTime(date) : null},
+      where: 'id = ?',
+      whereArgs: [vehicleId],
+    );
   }
 
   Future<int> count() async {
