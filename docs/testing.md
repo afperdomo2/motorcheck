@@ -153,6 +153,10 @@ void main() {
 - `budget_repository_test.dart`: upsert y borrado mensual.
 - `mileage_history_screen_test.dart` y `checklists_screen_test.dart`: 360 px
   con text scale 2.0.
+- `budget_status_test.dart`: umbrales ok/80/100 y etiquetas.
+- `maintenance_reading_date_test.dart`: la lectura usa la fecha del mantenimiento.
+- `vehicle_mileage_reading_test.dart`: crear/editar vehículo agrega lecturas.
+- `attachment_preview_test.dart`: archivo faltante en la previsualización.
 
 ---
 

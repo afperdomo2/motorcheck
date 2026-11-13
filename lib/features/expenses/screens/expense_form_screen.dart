@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
@@ -16,6 +17,7 @@ import '../../../shared/widgets/date_field.dart';
 import '../../../shared/widgets/form_section.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/sticky_bottom_bar.dart';
+import '../../finance/budget_alert_service.dart';
 import '../../vehicles/providers.dart';
 import '../models/expense.dart';
 import '../providers.dart';
@@ -194,6 +196,9 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     setState(() => _saving = true);
     try {
       await ref.read(expensesNotifierProvider.notifier).save(expense);
+      if (expense.vehicleId != null) {
+        unawaited(BudgetAlertService().check(expense.vehicleId!));
+      }
       _saved = true;
       if (_originalReceiptPath != null &&
           _originalReceiptPath != _receiptPath) {

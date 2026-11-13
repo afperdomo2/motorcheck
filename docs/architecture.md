@@ -163,10 +163,11 @@ Gastos (5.ª pestaña)
 - **Historial de kilometraje:** `Vehículos → Kilometraje`, con gráfica y
   lecturas manuales, de mantenimiento o de combustible.
 - **Adjuntos:** facturas o fotos en el detalle del mantenimiento, guardadas en
-  `core/files/` y incluidas en el ZIP de respaldo.
+  `core/files/` y incluidas en el ZIP de respaldo. Se previsualizan imágenes y PDF.
 - **Checklists:** plantilla pre-viaje global con 8 items; cada inspección guarda
   respuestas (`ok`, `attention`, `fail`), kilometraje y notas.
-- **Presupuesto:** límite mensual por vehículo con progreso al 80 % y 100 %.
+- **Presupuesto:** límite mensual por vehículo con chip en Inicio y notificación
+  local al cruzar el 80 % o el 100 %.
 
 
 `fuel_logs` y `expenses` actualizan el kilometraje cuando corresponde. Los

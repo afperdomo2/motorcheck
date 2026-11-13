@@ -15,7 +15,8 @@ Aplicación Flutter para el seguimiento del mantenimiento personal de vehículos
 - Checklists e inspecciones pre-viaje
 - Bitácora de combustible con consumo real y costo por km
 - Gastos por vehículo o globales, con categorías y recibos
-- Resumen financiero mensual, presupuesto y gráfica de los últimos 6 meses
+- Resumen financiero mensual, presupuesto con alertas y gráfica de los últimos 6 meses
+- Previsualización de adjuntos de mantenimiento (imagen y PDF)
 - Recordatorios de mantenimiento, SOAT, RTM, impuesto, seguro y licencia
 - Documentos con adjuntos (PDF o imagen)
 - Pico y placa semanal con aviso en el inicio

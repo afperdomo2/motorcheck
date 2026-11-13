@@ -68,6 +68,7 @@ class MaintenanceRepository {
         txn,
         maintenance.vehicleId,
         maintenance.mileage,
+        maintenance.date,
       );
       return id;
     });
@@ -95,6 +96,7 @@ class MaintenanceRepository {
         txn,
         maintenance.vehicleId,
         maintenance.mileage,
+        maintenance.date,
       );
     });
   }
@@ -256,12 +258,13 @@ class MaintenanceRepository {
     DatabaseExecutor txn,
     int vehicleId,
     int? mileage,
+    DateTime date,
   ) async {
     if (mileage == null) return;
     final now = formatDateTime(DateTime.now());
     await txn.insert('mileage_readings', {
       'vehicle_id': vehicleId,
-      'date': formatDate(DateTime.now()),
+      'date': formatDate(date),
       'mileage': mileage,
       'source': 'maintenance',
       'created_at': now,

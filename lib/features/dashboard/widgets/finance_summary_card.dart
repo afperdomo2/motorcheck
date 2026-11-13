@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../finance/budget_status.dart';
 import '../../finance/providers.dart';
+import '../../../shared/widgets/status_chip.dart';
 import '../providers.dart';
 
 class FinanceSummaryCard extends ConsumerWidget {
@@ -16,6 +18,7 @@ class FinanceSummaryCard extends ConsumerWidget {
     if (vehicle?.id == null) return const SizedBox.shrink();
 
     final financeAsync = ref.watch(vehicleFinanceProvider(vehicle!.id!));
+    final budget = ref.watch(budgetForVehicleProvider(vehicle.id!)).valueOrNull;
     final theme = Theme.of(context);
 
     return Card(
@@ -93,6 +96,13 @@ class FinanceSummaryCard extends ConsumerWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  if (budget != null && budget.amount > 0) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    _BudgetChip(
+                      spent: finance.currentMonthTotal,
+                      amount: budget.amount,
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.xs),
                   Wrap(
                     spacing: AppSpacing.md,
@@ -135,6 +145,30 @@ class FinanceSummaryCard extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _BudgetChip extends StatelessWidget {
+  const _BudgetChip({required this.spent, required this.amount});
+
+  final double spent;
+  final double amount;
+
+  @override
+  Widget build(BuildContext context) {
+    final status = budgetStatusFor(spent: spent, amount: amount);
+    if (status == BudgetStatus.ok) return const SizedBox.shrink();
+    final appStatus = status == BudgetStatus.exceeded
+        ? AppStatus.danger
+        : AppStatus.warning;
+    final percent = ((spent / amount) * 100).round();
+    return StatusChip(
+      status: appStatus,
+      label: status == BudgetStatus.exceeded
+          ? 'Presupuesto excedido'
+          : 'Presupuesto $percent %',
+      icon: Icons.savings_outlined,
     );
   }
 }

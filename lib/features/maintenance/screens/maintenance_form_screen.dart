@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +15,7 @@ import '../../../shared/widgets/form_section.dart';
 import '../../../shared/widgets/sticky_bottom_bar.dart';
 import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../vehicles/providers.dart';
+import '../../finance/budget_alert_service.dart';
 import '../../vehicles/models/vehicle.dart';
 import '../../settings/providers.dart';
 import '../models/maintenance.dart';
@@ -229,6 +232,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
       } else {
         await notifier.add(maintenance, items);
       }
+      unawaited(BudgetAlertService().check(vehicleId));
 
       if (!mounted) return;
       setState(() {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:motorcheck/features/dashboard/providers.dart';
 import 'package:motorcheck/features/dashboard/widgets/finance_summary_card.dart';
+import 'package:motorcheck/features/finance/models/budget.dart';
 import 'package:motorcheck/features/finance/providers.dart';
 import 'package:motorcheck/features/fuel/repository.dart';
 import 'package:motorcheck/features/vehicles/models/vehicle.dart';
@@ -49,6 +50,15 @@ void main() {
         overrides: [
           dashboardVehicleProvider.overrideWith((ref) async => vehicle),
           vehicleFinanceProvider(1).overrideWith((ref) async => summary),
+          budgetForVehicleProvider(1).overrideWith(
+            (ref) async => Budget(
+              vehicleId: 1,
+              period: '2026-11',
+              amount: 700000,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          ),
         ],
         child: const MaterialApp(
           home: MediaQuery(

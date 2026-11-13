@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +14,7 @@ import '../../../shared/widgets/date_field.dart';
 import '../../../shared/widgets/form_section.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/sticky_bottom_bar.dart';
+import '../../finance/budget_alert_service.dart';
 import '../../vehicles/providers.dart';
 import '../models/fuel_log.dart';
 import '../providers.dart';
@@ -178,6 +181,7 @@ class _FuelFormScreenState extends ConsumerState<FuelFormScreen> {
 
     try {
       await ref.read(fuelLogsNotifierProvider.notifier).save(log);
+      unawaited(BudgetAlertService().check(vehicleId));
       if (!mounted) return;
       setState(() {
         _saving = false;

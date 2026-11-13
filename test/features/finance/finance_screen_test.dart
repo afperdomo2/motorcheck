@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:motorcheck/features/expenses/models/expense.dart';
 import 'package:motorcheck/features/expenses/models/expense_category.dart';
 import 'package:motorcheck/features/expenses/providers.dart';
+import 'package:motorcheck/features/finance/models/budget.dart';
 import 'package:motorcheck/features/finance/providers.dart';
 import 'package:motorcheck/features/finance/screens/finance_screen.dart';
 import 'package:motorcheck/features/fuel/models/fuel_log.dart';
@@ -92,7 +93,15 @@ void main() {
           vehiclesProvider.overrideWith((ref) async => [vehicle]),
           selectedVehicleIdProvider.overrideWith((ref) => 1),
           vehicleFinanceProvider(1).overrideWith((ref) async => summary),
-          budgetForVehicleProvider(1).overrideWith((ref) async => null),
+          budgetForVehicleProvider(1).overrideWith(
+            (ref) async => Budget(
+              vehicleId: 1,
+              period: '2026-11',
+              amount: 700000,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          ),
           fuelLogsProvider(1).overrideWith((ref) async => [fuelLog]),
           fuelStatsProvider(1).overrideWith((ref) async => summary.fuelStats),
           expensesForVehicleProvider(1).overrideWith((ref) async => [expense]),

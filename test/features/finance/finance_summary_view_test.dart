@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:motorcheck/features/finance/models/budget.dart';
 import 'package:motorcheck/features/finance/providers.dart';
 import 'package:motorcheck/features/finance/screens/finance_summary_view.dart';
 import 'package:motorcheck/features/fuel/repository.dart';
 
 void main() {
   testWidgets('no desborda a 360 px con texto al 200 %', (tester) async {
+    final now = DateTime(2026, 11, 1);
     final summary = VehicleFinanceSummary(
       vehicleId: 1,
       monthLabel: 'Noviembre 2026',
@@ -46,7 +48,15 @@ void main() {
       ProviderScope(
         overrides: [
           vehicleFinanceProvider(1).overrideWith((ref) async => summary),
-          budgetForVehicleProvider(1).overrideWith((ref) async => null),
+          budgetForVehicleProvider(1).overrideWith(
+            (ref) async => Budget(
+              vehicleId: 1,
+              period: '2026-11',
+              amount: 700000,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          ),
         ],
         child: const MaterialApp(
           home: MediaQuery(

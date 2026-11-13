@@ -86,6 +86,15 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
     state = const AsyncValue.loading();
     try {
       final id = await _repo.insert(vehicle);
+      if (vehicle.currentMileage != null) {
+        await ref
+            .read(mileageRepositoryProvider)
+            .addReading(
+              vehicleId: id,
+              mileage: vehicle.currentMileage!,
+              source: 'manual',
+            );
+      }
       final vehicles = await _repo.getAll();
       if (vehicles.length == 1) {
         ref.read(selectedVehicleIdProvider.notifier).state = id;
@@ -97,6 +106,8 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
       ref.invalidate(vehiclesProvider);
       ref.invalidate(defaultVehicleProvider);
       ref.invalidate(selectedVehicleProvider);
+      ref.invalidate(vehicleMileageReadingsProvider(id));
+      ref.invalidate(mileageStatsProvider(id));
       return id;
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -107,7 +118,18 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
   Future<void> update(Vehicle vehicle) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
+      final previous = await _repo.getById(vehicle.id!);
       await _repo.update(vehicle);
+      if (vehicle.currentMileage != null &&
+          vehicle.currentMileage != previous?.currentMileage) {
+        await ref
+            .read(mileageRepositoryProvider)
+            .addReading(
+              vehicleId: vehicle.id!,
+              mileage: vehicle.currentMileage!,
+              source: 'manual',
+            );
+      }
       if (vehicle.isDefault) {
         await _repo.setDefault(vehicle.id!);
       }
@@ -116,6 +138,8 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
     ref.invalidate(vehiclesProvider);
     ref.invalidate(defaultVehicleProvider);
     ref.invalidate(selectedVehicleProvider(vehicle.id!));
+    ref.invalidate(vehicleMileageReadingsProvider(vehicle.id!));
+    ref.invalidate(mileageStatsProvider(vehicle.id!));
   }
 
   Future<void> updateMileage(int vehicleId, int mileage) async {

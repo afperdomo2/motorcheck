@@ -179,26 +179,39 @@ class NotificationService {
     }).toList();
   }
 
-  Future<void> showTest() async {
+  Future<void> showNow({
+    required int id,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
     await initialize();
     try {
       await _plugin.show(
-        id: 42,
-        title: 'MotorCheck',
-        body: 'Las notificaciones están funcionando.',
+        id: id,
+        title: title,
+        body: body,
+        payload: payload,
         notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'motorcheck_reminders',
             'Recordatorios MotorCheck',
-            channelDescription:
-                'Vencimientos de mantenimiento, documentos y pico y placa',
+            channelDescription: 'Vencimientos, documentos y pico y placa',
             importance: Importance.high,
             priority: Priority.high,
           ),
         ),
       );
     } catch (error) {
-      logError('notificación de prueba', error, StackTrace.current);
+      logError('notificación inmediata', error, StackTrace.current);
     }
+  }
+
+  Future<void> showTest() async {
+    await showNow(
+      id: 42,
+      title: 'MotorCheck',
+      body: 'Las notificaciones están funcionando.',
+    );
   }
 }

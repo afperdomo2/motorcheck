@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/status_chip.dart';
+import '../budget_alert_service.dart';
+import '../budget_status.dart';
 import '../providers.dart';
 import '../widgets/monthly_spend_chart.dart';
 
@@ -278,13 +282,23 @@ class _BudgetCard extends ConsumerWidget {
         }
 
         final progress = (spent / budget.amount).clamp(0.0, 1.5);
-        final exceeded = spent > budget.amount;
-        final warning = !exceeded && progress >= 0.8;
-        final color = exceeded
-            ? theme.colorScheme.error
-            : warning
-            ? theme.colorScheme.tertiary
-            : theme.colorScheme.primary;
+        final status = budgetStatusFor(spent: spent, amount: budget.amount);
+        final semantic = AppSemanticColors.of(context);
+        final color = switch (status) {
+          BudgetStatus.ok => semantic.success,
+          BudgetStatus.warning => semantic.warning,
+          BudgetStatus.exceeded => semantic.danger,
+        };
+        final appStatus = switch (status) {
+          BudgetStatus.ok => AppStatus.ok,
+          BudgetStatus.warning => AppStatus.warning,
+          BudgetStatus.exceeded => AppStatus.danger,
+        };
+        final statusLabel = budgetStatusLabel(
+          status: status,
+          spent: spent,
+          amount: budget.amount,
+        );
 
         return Card(
           child: Padding(
@@ -307,6 +321,12 @@ class _BudgetCard extends ConsumerWidget {
                       child: const Text('Editar'),
                     ),
                   ],
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                StatusChip(
+                  status: appStatus,
+                  label: statusLabel,
+                  icon: Icons.savings_outlined,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Row(
@@ -335,10 +355,11 @@ class _BudgetCard extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  exceeded
+                  spent > budget.amount
                       ? 'Superado por ${formatCurrency(spent - budget.amount)}'
-                      : 'Disponible ${formatCurrency(budget.amount - spent)}'
-                            '${warning ? ' · cerca del límite' : ''}',
+                      : status == BudgetStatus.exceeded
+                      ? 'Límite alcanzado'
+                      : 'Disponible ${formatCurrency(budget.amount - spent)}',
                   style: theme.textTheme.bodySmall?.copyWith(color: color),
                 ),
               ],
@@ -392,6 +413,8 @@ class _BudgetCard extends ConsumerWidget {
 
     try {
       await ref.read(budgetNotifierProvider.notifier).save(vehicleId, amount);
+      await BudgetAlertService().reset(vehicleId);
+      await BudgetAlertService().check(vehicleId);
       if (!context.mounted) return;
       AppSnackBar.success('Presupuesto actualizado');
     } catch (error) {

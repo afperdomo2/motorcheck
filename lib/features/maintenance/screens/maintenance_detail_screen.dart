@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path/path.dart' as p;
+import '../../../core/files/attachment_preview_screen.dart';
 import '../../../core/files/file_storage.dart';
 import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -564,6 +565,7 @@ class _AttachmentsCard extends ConsumerWidget {
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         dense: true,
+                        onTap: () => _open(context, attachment),
                         leading: Icon(
                           _attachmentIcon(attachment.name),
                           color: theme.colorScheme.onSurfaceVariant,
@@ -574,10 +576,21 @@ class _AttachmentsCard extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         subtitle: Text(formatDisplayDate(attachment.createdAt)),
-                        trailing: IconButton(
-                          tooltip: 'Eliminar adjunto',
-                          icon: const Icon(Icons.close),
-                          onPressed: () => _delete(context, ref, attachment),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: 'Ver adjunto',
+                              icon: const Icon(Icons.visibility_outlined),
+                              onPressed: () => _open(context, attachment),
+                            ),
+                            IconButton(
+                              tooltip: 'Eliminar adjunto',
+                              icon: const Icon(Icons.close),
+                              onPressed: () =>
+                                  _delete(context, ref, attachment),
+                            ),
+                          ],
                         ),
                       ),
                   ],
@@ -603,6 +616,21 @@ class _AttachmentsCard extends ConsumerWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _open(BuildContext context, MaintenanceAttachment attachment) {
+    if (!File(attachment.filePath).existsSync()) {
+      AppSnackBar.error('El archivo ya no existe en este dispositivo');
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => AttachmentPreviewScreen(
+          filePath: attachment.filePath,
+          name: attachment.name,
         ),
       ),
     );

@@ -403,6 +403,15 @@ Cada entrega debe incluir:
 - [x] Pruebas.
 - [x] Docs.
 
+#### Ajustes posteriores de Fase 2
+
+- [x] Fecha de lectura de mantenimiento = fecha del mantenimiento.
+- [x] Crear/editar vehículo agrega lectura de kilometraje.
+- [x] Colores de presupuesto: verde/ámbar/rojo.
+- [x] Chip de presupuesto en Inicio al 80 %/100 %.
+- [x] Previsualización de adjuntos de imagen y PDF.
+- [x] Notificación local al cruzar 80 %/100 %, con deduplicación mensual.
+
 ### Fase 3
 
 - [ ] Modelo de componentes.
