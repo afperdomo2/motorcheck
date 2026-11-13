@@ -202,4 +202,101 @@ CREATE INDEX IF NOT EXISTS idx_expenses_vehicle_date
 CREATE INDEX IF NOT EXISTS idx_expenses_category
   ON expenses(category_key)
 ''';
+
+  static const createMaintenanceAttachments = '''
+CREATE TABLE IF NOT EXISTS maintenance_attachments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  maintenance_id INTEGER NOT NULL,
+  item_id INTEGER,
+  name TEXT NOT NULL,
+  file_path TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (maintenance_id) REFERENCES maintenances(id) ON DELETE CASCADE,
+  FOREIGN KEY (item_id) REFERENCES maintenance_items(id) ON DELETE CASCADE
+)
+''';
+
+  static const createMaintenanceAttachmentsIndex = '''
+CREATE INDEX IF NOT EXISTS idx_maintenance_attachments_maintenance
+  ON maintenance_attachments(maintenance_id)
+''';
+
+  static const createChecklists = '''
+CREATE TABLE IF NOT EXISTS checklists (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER,
+  vehicle_type TEXT,
+  name TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+)
+''';
+
+  static const createChecklistItems = '''
+CREATE TABLE IF NOT EXISTS checklist_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  checklist_id INTEGER NOT NULL,
+  label TEXT NOT NULL,
+  sort_order INTEGER DEFAULT 0,
+  FOREIGN KEY (checklist_id) REFERENCES checklists(id) ON DELETE CASCADE
+)
+''';
+
+  static const createChecklistItemsIndex = '''
+CREATE INDEX IF NOT EXISTS idx_checklist_items_checklist
+  ON checklist_items(checklist_id)
+''';
+
+  static const createInspectionRuns = '''
+CREATE TABLE IF NOT EXISTS inspection_runs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER NOT NULL,
+  checklist_id INTEGER NOT NULL,
+  date TEXT NOT NULL,
+  odometer INTEGER,
+  notes TEXT,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE,
+  FOREIGN KEY (checklist_id) REFERENCES checklists(id) ON DELETE CASCADE
+)
+''';
+
+  static const createInspectionRunsIndex = '''
+CREATE INDEX IF NOT EXISTS idx_inspection_runs_vehicle_date
+  ON inspection_runs(vehicle_id, date DESC)
+''';
+
+  static const createInspectionAnswers = '''
+CREATE TABLE IF NOT EXISTS inspection_answers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  run_id INTEGER NOT NULL,
+  item_id INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'ok',
+  notes TEXT,
+  FOREIGN KEY (run_id) REFERENCES inspection_runs(id) ON DELETE CASCADE,
+  FOREIGN KEY (item_id) REFERENCES checklist_items(id) ON DELETE CASCADE
+)
+''';
+
+  static const createInspectionAnswersIndex = '''
+CREATE INDEX IF NOT EXISTS idx_inspection_answers_run
+  ON inspection_answers(run_id)
+''';
+
+  static const createBudgets = '''
+CREATE TABLE IF NOT EXISTS budgets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER,
+  period TEXT NOT NULL,
+  amount REAL NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+)
+''';
+
+  static const createBudgetsUniqueIndex = '''
+CREATE UNIQUE INDEX IF NOT EXISTS idx_budgets_vehicle_period
+  ON budgets(vehicle_id, period)
+''';
 }

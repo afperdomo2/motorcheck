@@ -8,8 +8,14 @@ import 'package:motorcheck/features/documents/models/vehicle_document.dart';
 import 'package:motorcheck/features/documents/repository.dart';
 import 'package:motorcheck/features/expenses/models/expense.dart';
 import 'package:motorcheck/features/expenses/repository.dart';
+import 'package:motorcheck/features/finance/budget_repository.dart';
+import 'package:motorcheck/features/finance/models/budget.dart';
 import 'package:motorcheck/features/fuel/models/fuel_log.dart';
 import 'package:motorcheck/features/fuel/repository.dart';
+import 'package:motorcheck/features/maintenance/maintenance_attachment_repository.dart';
+import 'package:motorcheck/features/maintenance/models/maintenance.dart';
+import 'package:motorcheck/features/maintenance/models/maintenance_attachment.dart';
+import 'package:motorcheck/features/maintenance/repository.dart';
 import 'package:motorcheck/features/vehicles/models/vehicle.dart';
 import 'package:motorcheck/features/vehicles/repository.dart';
 import 'package:path/path.dart' as p;
@@ -103,20 +109,55 @@ void main() {
       ),
     );
 
+    final maintenanceId = await MaintenanceRepository().insert(
+      Maintenance(
+        vehicleId: vehicleId,
+        date: now,
+        mileage: 10100,
+        createdAt: now,
+        updatedAt: now,
+      ),
+      const [],
+    );
+    final invoice = File(p.join(baseDir.path, 'factura.pdf'));
+    await invoice.writeAsBytes([9, 10, 11, 12]);
+    final attachmentRepo = MaintenanceAttachmentRepository();
+    await attachmentRepo.insert(
+      MaintenanceAttachment(
+        maintenanceId: maintenanceId,
+        name: 'factura.pdf',
+        filePath: invoice.path,
+        createdAt: now,
+      ),
+    );
+    final budgetRepo = BudgetRepository();
+    await budgetRepo.upsert(
+      Budget(
+        vehicleId: vehicleId,
+        period: budgetRepo.currentPeriod,
+        amount: 800000,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
     final result = await service.createBackup();
     expect(await result.file.exists(), isTrue);
     expect(result.counts['vehicles'], 1);
     expect(result.counts['documents'], 1);
     expect(result.counts['fuel_logs'], 1);
     expect(result.counts['expenses'], 1);
+    expect(result.counts['maintenance_attachments'], 1);
+    expect(result.counts['budgets'], 1);
     expect(result.counts['expense_categories'], greaterThanOrEqualTo(8));
-    expect(result.attachments, 2);
+    expect(result.attachments, 3);
 
     final preview = await service.inspect(result.file);
     expect(preview.counts['vehicles'], 1);
     expect(preview.counts['fuel_logs'], 1);
     expect(preview.counts['expenses'], 1);
-    expect(preview.attachments, 2);
+    expect(preview.counts['maintenance_attachments'], 1);
+    expect(preview.attachments, 3);
 
     await vehicleRepo.delete(vehicleId);
     expect(await documentsRepo.getAll(), isEmpty);
@@ -144,6 +185,19 @@ void main() {
     expect(restoredExpenses, hasLength(1));
     expect(restoredExpenses.first.receiptPath, isNotNull);
     expect(await File(restoredExpenses.first.receiptPath!).exists(), isTrue);
+
+    final restoredAttachments = await attachmentRepo.getByMaintenanceId(
+      maintenanceId,
+    );
+    expect(restoredAttachments, hasLength(1));
+    expect(await File(restoredAttachments.first.filePath).exists(), isTrue);
+
+    final restoredBudget = await budgetRepo.getForVehiclePeriod(
+      vehicleId,
+      budgetRepo.currentPeriod,
+    );
+    expect(restoredBudget, isNotNull);
+    expect(restoredBudget!.amount, 800000);
   });
 
   test('rechaza un archivo que no es de MotorCheck', () async {

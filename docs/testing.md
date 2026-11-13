@@ -14,13 +14,14 @@
 test/                           # Espejo de lib/
 ├── core/
 │   ├── backup/                 # Round-trip del ZIP con datos y adjuntos
-│   ├── database/               # SQLite, migraciones y tablas v13-v16
+│   ├── database/               # SQLite, migraciones y tablas v13-v19
 │   └── utils/                  # Formateadores, fechas y búsqueda
 ├── features/
 │   ├── settings/               # Categorías, licencias y ajustes
 │   ├── vehicles/               # Modelos, repositorios, km y notifier
 │   ├── maintenance/            # Modelos, repositorios y fechas
 │   ├── documents/              # CRUD de documentos
+│   ├── checklists/             # Checklists e inspecciones
 │   ├── fuel/                   # Tanqueadas y consumo real
 │   ├── expenses/               # Gastos y categorías
 │   ├── finance/                # Resumen y gráfica mensual
@@ -147,6 +148,11 @@ void main() {
 - `finance_summary_view_test.dart` y `finance_summary_card_test.dart`: sin
   overflow con text scale 2.0.
 - `navigation_bar_test.dart`: cinco pestañas a 360 px con text scale 2.0.
+- `checklist_repository_test.dart`: seed pre-viaje, run y respuestas.
+- `maintenance_attachment_repository_test.dart`: CRUD de adjuntos.
+- `budget_repository_test.dart`: upsert y borrado mensual.
+- `mileage_history_screen_test.dart` y `checklists_screen_test.dart`: 360 px
+  con text scale 2.0.
 
 ---
 

@@ -189,6 +189,77 @@ Gastos del vehículo o globales (`vehicle_id` nullable).
 | created_at | TEXT | NOT NULL (ISO 8601) |
 | updated_at | TEXT | NOT NULL (ISO 8601) |
 
+### maintenance_attachments
+
+Facturas, fotos o garantías asociadas a un mantenimiento.
+
+| Columna | Tipo | Restricciones |
+|--------|------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
+| maintenance_id | INTEGER | NOT NULL, FK → maintenances(id) ON DELETE CASCADE |
+| item_id | INTEGER | FK → maintenance_items(id) ON DELETE CASCADE |
+| name | TEXT | NOT NULL |
+| file_path | TEXT | NOT NULL |
+| created_at | TEXT | NOT NULL (ISO 8601) |
+
+### checklists
+
+Plantillas de inspección globales o por vehículo.
+
+| Columna | Tipo | Restricciones |
+|--------|------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
+| vehicle_id | INTEGER | FK → vehicles(id) ON DELETE CASCADE |
+| vehicle_type | TEXT | |
+| name | TEXT | NOT NULL |
+| created_at | TEXT | NOT NULL (ISO 8601) |
+
+### checklist_items
+
+| Columna | Tipo | Restricciones |
+|--------|------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
+| checklist_id | INTEGER | NOT NULL, FK → checklists(id) ON DELETE CASCADE |
+| label | TEXT | NOT NULL |
+| sort_order | INTEGER | DEFAULT 0 |
+
+### inspection_runs
+
+| Columna | Tipo | Restricciones |
+|--------|------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
+| vehicle_id | INTEGER | NOT NULL, FK → vehicles(id) ON DELETE CASCADE |
+| checklist_id | INTEGER | NOT NULL, FK → checklists(id) ON DELETE CASCADE |
+| date | TEXT | NOT NULL (ISO 8601) |
+| odometer | INTEGER | |
+| notes | TEXT | |
+| created_at | TEXT | NOT NULL (ISO 8601) |
+
+### inspection_answers
+
+| Columna | Tipo | Restricciones |
+|--------|------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
+| run_id | INTEGER | NOT NULL, FK → inspection_runs(id) ON DELETE CASCADE |
+| item_id | INTEGER | NOT NULL, FK → checklist_items(id) ON DELETE CASCADE |
+| status | TEXT | NOT NULL DEFAULT 'ok' (ok, attention, fail) |
+| notes | TEXT | |
+
+### budgets
+
+Presupuesto mensual por vehículo.
+
+| Columna | Tipo | Restricciones |
+|--------|------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
+| vehicle_id | INTEGER | FK → vehicles(id) ON DELETE CASCADE |
+| period | TEXT | NOT NULL (YYYY-MM) |
+| amount | REAL | NOT NULL DEFAULT 0 |
+| created_at | TEXT | NOT NULL (ISO 8601) |
+| updated_at | TEXT | NOT NULL (ISO 8601) |
+
+Índice único `(vehicle_id, period)`.
+
 ## Regla de kilometraje
 
 `vehicles.current_mileage` es la fuente de verdad y **solo sube
@@ -362,6 +433,74 @@ CREATE INDEX idx_expenses_vehicle_date
   ON expenses(vehicle_id, date DESC);
 CREATE INDEX idx_expenses_category
   ON expenses(category_key);
+
+CREATE TABLE maintenance_attachments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  maintenance_id INTEGER NOT NULL,
+  item_id INTEGER,
+  name TEXT NOT NULL,
+  file_path TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (maintenance_id) REFERENCES maintenances(id) ON DELETE CASCADE,
+  FOREIGN KEY (item_id) REFERENCES maintenance_items(id) ON DELETE CASCADE
+);
+
+CREATE TABLE checklists (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER,
+  vehicle_type TEXT,
+  name TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+);
+
+CREATE TABLE checklist_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  checklist_id INTEGER NOT NULL,
+  label TEXT NOT NULL,
+  sort_order INTEGER DEFAULT 0,
+  FOREIGN KEY (checklist_id) REFERENCES checklists(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_checklist_items_checklist
+  ON checklist_items(checklist_id);
+
+CREATE TABLE inspection_runs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER NOT NULL,
+  checklist_id INTEGER NOT NULL,
+  date TEXT NOT NULL,
+  odometer INTEGER,
+  notes TEXT,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE,
+  FOREIGN KEY (checklist_id) REFERENCES checklists(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_inspection_runs_vehicle_date
+  ON inspection_runs(vehicle_id, date DESC);
+
+CREATE TABLE inspection_answers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  run_id INTEGER NOT NULL,
+  item_id INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'ok',
+  notes TEXT,
+  FOREIGN KEY (run_id) REFERENCES inspection_runs(id) ON DELETE CASCADE,
+  FOREIGN KEY (item_id) REFERENCES checklist_items(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_inspection_answers_run
+  ON inspection_answers(run_id);
+
+CREATE TABLE budgets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER,
+  period TEXT NOT NULL,
+  amount REAL NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX idx_budgets_vehicle_period
+  ON budgets(vehicle_id, period);
 ```
 
 ## Relaciones
@@ -373,8 +512,13 @@ vehicles (1) ──────┼──< (N) mileage_readings
                     ├──< (N) documents
                     ├──< (N) fuel_logs
                     ├──< (N) expenses
+                    ├──< (N) inspection_runs ──< (N) inspection_answers
+                    ├──< (N) budgets
                     └──(1) vehicle_restrictions
 
+maintenances (1) ────< (N) maintenance_attachments
+checklists (1) ──────< (N) checklist_items
+inspection_runs (1) ─< (N) inspection_answers
 expense_categories (1) ────< (N) expenses
 ```
 
@@ -436,7 +580,7 @@ El borrado es hard-delete, pero el repositorio verifica que la categoría no est
 
 ## Versión de Base de Datos
 
-Versión actual: **16**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
+Versión actual: **19**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
 - v2: agregó `current_mileage`
 - v3: agregó `workshops` + `maintenance_cost` + `workshop_id` en maintenances
 - v4: reestructuró `maintenance_items` (renombró columnas)
@@ -452,12 +596,16 @@ Versión actual: **16**. Migraciones incrementales vía `onUpgrade` en `Database
 - v14: agregó tabla `documents` + backfill de SOAT/RTM desde `vehicles`
 - v15: agregó tabla `vehicle_restrictions`
 - v16: agregó `fuel_logs`, `expense_categories` y `expenses` + seed de categorías
+- v17: agregó `maintenance_attachments`
+- v18: agregó checklists, items, inspecciones y respuestas + seed pre-viaje
+- v19: agregó `budgets`
 
 ## Respaldo
 
 `BackupService` genera un ZIP con `data.json` (todas las tablas y preferencias),
-`manifest.json` y `attachments/` con los archivos adjuntos de documentos y
-gastos. Restaurar reemplaza todos los datos y crea una copia de seguridad previa.
+`manifest.json` y `attachments/` con los archivos adjuntos de documentos,
+gastos y mantenimientos. Restaurar reemplaza todos los datos y crea una copia
+de seguridad previa.
 La exportación CSV genera un ZIP con un archivo por tabla.
 
 ---

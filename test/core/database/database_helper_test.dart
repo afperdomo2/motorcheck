@@ -33,6 +33,12 @@ void main() {
       'fuel_logs',
       'expenses',
       'expense_categories',
+      'maintenance_attachments',
+      'checklists',
+      'checklist_items',
+      'inspection_runs',
+      'inspection_answers',
+      'budgets',
     ]) {
       final result = await db.rawQuery(
         "SELECT name FROM sqlite_master WHERE type='table' AND name=?",

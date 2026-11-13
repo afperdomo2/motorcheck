@@ -1,27 +1,14 @@
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:motorcheck/core/database/database_helper.dart';
+import '../../helpers/database_test_helper.dart';
 import 'package:motorcheck/features/expenses/models/expense.dart';
 import 'package:motorcheck/features/expenses/repository.dart';
 import 'package:motorcheck/features/vehicles/models/vehicle.dart';
 import 'package:motorcheck/features/vehicles/repository.dart';
-import 'package:path/path.dart' as p;
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  setUpAll(() async {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-    await DatabaseHelper.instance.close();
-    final dir = await getDatabasesPath();
-    final file = File(p.join(dir, 'motorcheck.db'));
-    if (await file.exists()) await file.delete();
-  });
+  setUpAll(TestDatabase.setUp);
 
-  tearDownAll(() async {
-    await DatabaseHelper.instance.close();
-  });
+  tearDownAll(TestDatabase.tearDown);
 
   test('categorías, gastos por vehículo y globales', () async {
     final vehicleRepo = VehicleRepository();

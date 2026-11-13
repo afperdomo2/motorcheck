@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/user_error.dart';
+import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../providers.dart';
@@ -40,6 +42,8 @@ class FinanceSummaryView extends ConsumerWidget {
             _MonthCard(finance: finance),
             const SizedBox(height: AppSpacing.md),
             _TotalsCard(finance: finance),
+            const SizedBox(height: AppSpacing.md),
+            _BudgetCard(vehicleId: vehicleId, spent: finance.currentMonthTotal),
             const SizedBox(height: AppSpacing.md),
             MonthlySpendChart(points: finance.monthlyPoints),
           ],
@@ -214,6 +218,187 @@ class _TotalsCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _BudgetCard extends ConsumerWidget {
+  const _BudgetCard({required this.vehicleId, required this.spent});
+
+  final int vehicleId;
+  final double spent;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final budgetAsync = ref.watch(budgetForVehicleProvider(vehicleId));
+    final theme = Theme.of(context);
+
+    return budgetAsync.when(
+      loading: () => const Card(
+        child: Padding(
+          padding: EdgeInsets.all(AppSpacing.lg),
+          child: LinearProgressIndicator(),
+        ),
+      ),
+      error: (error, _) => const SizedBox.shrink(),
+      data: (budget) {
+        if (budget == null || budget.amount <= 0) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.savings_outlined,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Sin presupuesto mensual',
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        Text(
+                          'Define un límite para controlar el gasto',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => _edit(context, ref),
+                    child: const Text('Definir'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final progress = (spent / budget.amount).clamp(0.0, 1.5);
+        final exceeded = spent > budget.amount;
+        final warning = !exceeded && progress >= 0.8;
+        final color = exceeded
+            ? theme.colorScheme.error
+            : warning
+            ? theme.colorScheme.tertiary
+            : theme.colorScheme.primary;
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.savings_outlined, color: color),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        'Presupuesto mensual',
+                        style: theme.textTheme.titleMedium,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => _edit(context, ref, budget.amount),
+                      child: const Text('Editar'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Límite ${formatCurrency(budget.amount)}',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                    Text(
+                      'Gastado ${formatCurrency(spent)}',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: progress.clamp(0.0, 1.0),
+                    minHeight: 8,
+                    backgroundColor: theme.colorScheme.surfaceContainer,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  exceeded
+                      ? 'Superado por ${formatCurrency(spent - budget.amount)}'
+                      : 'Disponible ${formatCurrency(budget.amount - spent)}'
+                            '${warning ? ' · cerca del límite' : ''}',
+                  style: theme.textTheme.bodySmall?.copyWith(color: color),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _edit(
+    BuildContext context,
+    WidgetRef ref, [
+    double? current,
+  ]) async {
+    final controller = TextEditingController(
+      text: current != null ? current.toStringAsFixed(0) : '',
+    );
+    final amount = await showDialog<double>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Presupuesto mensual'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: 'Límite del mes',
+            prefixIcon: Icon(Icons.attach_money),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = double.tryParse(
+                controller.text.trim().replaceAll(',', '.'),
+              );
+              Navigator.of(context).pop(value);
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (amount == null || amount <= 0) return;
+
+    try {
+      await ref.read(budgetNotifierProvider.notifier).save(vehicleId, amount);
+      if (!context.mounted) return;
+      AppSnackBar.success('Presupuesto actualizado');
+    } catch (error) {
+      logError('guardar presupuesto', error, StackTrace.current);
+      if (!context.mounted) return;
+      AppSnackBar.error('No se pudo guardar el presupuesto');
+    }
   }
 }
 

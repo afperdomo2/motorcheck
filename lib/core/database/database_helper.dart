@@ -35,7 +35,7 @@ class DatabaseHelper {
 
     return openDatabase(
       path,
-      version: 16,
+      version: 19,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onOpen: _ensureSchemaIntegrity,
@@ -111,6 +111,17 @@ class DatabaseHelper {
     await db.execute(Tables.createExpenses);
     await db.execute(Tables.createExpensesVehicleDateIndex);
     await db.execute(Tables.createExpensesCategoryIndex);
+    await db.execute(Tables.createMaintenanceAttachments);
+    await db.execute(Tables.createMaintenanceAttachmentsIndex);
+    await db.execute(Tables.createChecklists);
+    await db.execute(Tables.createChecklistItems);
+    await db.execute(Tables.createChecklistItemsIndex);
+    await db.execute(Tables.createInspectionRuns);
+    await db.execute(Tables.createInspectionRunsIndex);
+    await db.execute(Tables.createInspectionAnswers);
+    await db.execute(Tables.createInspectionAnswersIndex);
+    await db.execute(Tables.createBudgets);
+    await db.execute(Tables.createBudgetsUniqueIndex);
 
     // Los backfills viven solo en `_onUpgrade` (v13/v14). Ejecutarlos en cada
     // apertura resucitaría documentos o lecturas que el usuario haya borrado.
@@ -180,9 +191,21 @@ class DatabaseHelper {
     batch.execute(Tables.createExpenses);
     batch.execute(Tables.createExpensesVehicleDateIndex);
     batch.execute(Tables.createExpensesCategoryIndex);
+    batch.execute(Tables.createMaintenanceAttachments);
+    batch.execute(Tables.createMaintenanceAttachmentsIndex);
+    batch.execute(Tables.createChecklists);
+    batch.execute(Tables.createChecklistItems);
+    batch.execute(Tables.createChecklistItemsIndex);
+    batch.execute(Tables.createInspectionRuns);
+    batch.execute(Tables.createInspectionRunsIndex);
+    batch.execute(Tables.createInspectionAnswers);
+    batch.execute(Tables.createInspectionAnswersIndex);
+    batch.execute(Tables.createBudgets);
+    batch.execute(Tables.createBudgetsUniqueIndex);
     await batch.commit(noResult: true);
     await _seedDefaultCategories(db);
     await _seedExpenseCategories(db);
+    await _seedDefaultChecklists(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -316,6 +339,24 @@ class DatabaseHelper {
       await db.execute(Tables.createExpensesVehicleDateIndex);
       await db.execute(Tables.createExpensesCategoryIndex);
       await _seedExpenseCategories(db);
+    }
+    if (oldVersion < 17) {
+      await db.execute(Tables.createMaintenanceAttachments);
+      await db.execute(Tables.createMaintenanceAttachmentsIndex);
+    }
+    if (oldVersion < 18) {
+      await db.execute(Tables.createChecklists);
+      await db.execute(Tables.createChecklistItems);
+      await db.execute(Tables.createChecklistItemsIndex);
+      await db.execute(Tables.createInspectionRuns);
+      await db.execute(Tables.createInspectionRunsIndex);
+      await db.execute(Tables.createInspectionAnswers);
+      await db.execute(Tables.createInspectionAnswersIndex);
+      await _seedDefaultChecklists(db);
+    }
+    if (oldVersion < 19) {
+      await db.execute(Tables.createBudgets);
+      await db.execute(Tables.createBudgetsUniqueIndex);
     }
   }
 
@@ -644,6 +685,41 @@ class DatabaseHelper {
         ...row,
         'created_at': now,
       }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+  }
+
+  Future<void> _seedDefaultChecklists(Database db) async {
+    final existing = await db.query(
+      'checklists',
+      where: 'name = ? AND vehicle_id IS NULL',
+      whereArgs: ['Inspección pre-viaje'],
+    );
+    if (existing.isNotEmpty) return;
+
+    final now = formatDateTime(DateTime.now());
+    final checklistId = await db.insert('checklists', {
+      'vehicle_id': null,
+      'vehicle_type': null,
+      'name': 'Inspección pre-viaje',
+      'created_at': now,
+    });
+
+    const items = [
+      'Luces delanteras y traseras',
+      'Frenos',
+      'Presión de llantas',
+      'Cadena / transmisión',
+      'Documentos',
+      'Espejos y dirección',
+      'Niveles y fugas',
+      'Casco y seguridad',
+    ];
+    for (var i = 0; i < items.length; i++) {
+      await db.insert('checklist_items', {
+        'checklist_id': checklistId,
+        'label': items[i],
+        'sort_order': i + 1,
+      });
     }
   }
 

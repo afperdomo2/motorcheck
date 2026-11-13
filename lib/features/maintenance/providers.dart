@@ -5,7 +5,9 @@ import '../settings/providers.dart';
 import '../settings/models/maintenance_category.dart';
 import '../vehicles/providers.dart';
 import '../vehicles/models/vehicle.dart';
+import 'maintenance_attachment_repository.dart';
 import 'models/maintenance.dart';
+import 'models/maintenance_attachment.dart';
 import 'models/maintenance_item.dart';
 import 'models/workshop.dart';
 import 'repository.dart';
@@ -13,6 +15,58 @@ import 'repository.dart';
 final maintenanceRepositoryProvider = Provider<MaintenanceRepository>((ref) {
   return MaintenanceRepository();
 });
+
+final maintenanceAttachmentRepositoryProvider =
+    Provider<MaintenanceAttachmentRepository>((ref) {
+      return MaintenanceAttachmentRepository();
+    });
+
+final maintenanceAttachmentsProvider =
+    FutureProvider.family<List<MaintenanceAttachment>, int>((
+      ref,
+      maintenanceId,
+    ) async {
+      return ref
+          .watch(maintenanceAttachmentRepositoryProvider)
+          .getByMaintenanceId(maintenanceId);
+    });
+
+class MaintenanceAttachmentsNotifier extends Notifier<AsyncValue<void>> {
+  MaintenanceAttachmentRepository get _repo =>
+      ref.read(maintenanceAttachmentRepositoryProvider);
+
+  @override
+  AsyncValue<void> build() => const AsyncValue.data(null);
+
+  Future<void> add(MaintenanceAttachment attachment) async {
+    state = const AsyncValue.loading();
+    try {
+      await _repo.insert(attachment);
+      ref.invalidate(maintenanceAttachmentsProvider(attachment.maintenanceId));
+      state = const AsyncValue.data(null);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  Future<void> remove(int id, int maintenanceId) async {
+    state = const AsyncValue.loading();
+    try {
+      await _repo.delete(id);
+      ref.invalidate(maintenanceAttachmentsProvider(maintenanceId));
+      state = const AsyncValue.data(null);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
+  }
+}
+
+final maintenanceAttachmentsNotifierProvider =
+    NotifierProvider<MaintenanceAttachmentsNotifier, AsyncValue<void>>(
+      MaintenanceAttachmentsNotifier.new,
+    );
 
 final maintenancesProvider = FutureProvider<List<Maintenance>>((ref) async {
   final repository = ref.watch(maintenanceRepositoryProvider);

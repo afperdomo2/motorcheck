@@ -1,10 +1,10 @@
 # Plan — Finanzas y mantenimiento avanzado
 
-> **Estado:** Fase 1 implementada; Fases 2–3 pendientes.
+> **Estado:** Fases 1–2 implementadas; extras menores y Fase 3 pendientes.
 > **Fecha:** 2026-11-13.
 > **Ubicación canónica:** `docs/plans/plan-finanzas-y-mantenimiento-avanzado.md`.
 > **Copia de trabajo:** `/home/felipe/.opencode/plan/plan-finanzas-y-mantenimiento-avanzado.md`.
-> **Siguiente paso:** commitear este archivo y comenzar por la Fase 1.
+> **Siguiente paso:** commitear y comenzar la Fase 3 (componentes).
 
 ## 1. Contexto
 
@@ -98,8 +98,8 @@ erDiagram
 | **v16** | `fuel_logs`, `expense_categories`, `expenses` |
 | **v17** | `maintenance_attachments` |
 | **v18** | `checklists`, `checklist_items`, `inspection_runs`, `inspection_answers` |
-| **v19** | `components`, `component_services` |
-| **v20** | `budgets` (si no entra en v16) |
+| **v19** | `budgets` |
+| **v20** | `components`, `component_services` |
 
 Reglas:
 
@@ -302,8 +302,8 @@ flowchart LR
 | `lib/features/vehicles/screens/mileage_history_screen.dart` | Nuevo |
 | `lib/features/vehicles/widgets/mileage_chart.dart` | Nuevo |
 | `lib/features/checklists/...` | Feature nuevo |
-| `lib/features/expenses/screens/budget_screen.dart` | Presupuesto |
-| `lib/core/database/tables.dart` | DDL v17–v18/v20 |
+| `lib/features/finance/screens/finance_summary_view.dart` | Tarjeta de presupuesto |
+| `lib/core/database/tables.dart` | DDL v17–v19 |
 | `lib/core/database/database_helper.dart` | Migraciones |
 | `lib/core/backup/backup_service.dart` | Adjuntos y tablas |
 
@@ -322,7 +322,7 @@ flowchart LR
 | `lib/features/reminders/providers.dart` | Cálculo |
 | `lib/features/reminders/health_score.dart` | Penalización |
 | `lib/features/reports/report_data.dart` | Componentes |
-| `lib/core/database/tables.dart` | DDL v19 |
+| `lib/core/database/tables.dart` | DDL v20 |
 | `lib/core/database/database_helper.dart` | Migración |
 
 ## 9. Pruebas
@@ -392,15 +392,16 @@ Cada entrega debe incluir:
 ### Fase 2
 
 - [x] Mover almacenamiento de archivos a core.
-- [ ] Adjuntos en mantenimientos.
-- [ ] Adjuntos en mantenimientos.
-- [ ] Historial de kilometraje.
-- [ ] Checklists.
-- [ ] Presupuesto.
-- [ ] Migraciones.
-- [ ] Respaldo.
-- [ ] Pruebas.
-- [ ] Docs.
+- [x] Adjuntos en mantenimientos.
+- [x] Historial de kilometraje.
+- [x] Checklist pre-viaje y ejecución de inspecciones.
+- [ ] Editor de checklists personalizadas.
+- [x] Presupuesto por vehículo.
+- [ ] Presupuesto global.
+- [x] Migraciones.
+- [x] Respaldo.
+- [x] Pruebas.
+- [x] Docs.
 
 ### Fase 3
 
@@ -417,7 +418,7 @@ Cada entrega debe incluir:
 
 1. Leer este archivo.
 2. Revisar `git status` y `git log`.
-3. Confirmar que la base está en v16.
+3. Confirmar que la base está en v19.
 4. Implementar la Fase 1 en el orden indicado.
 5. Actualizar la checklist al terminar cada punto.
 6. Ejecutar:

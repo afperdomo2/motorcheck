@@ -13,6 +13,7 @@ import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/status_chip.dart';
 import '../../../shared/widgets/vehicle_avatar.dart';
+import '../../checklists/providers.dart';
 import '../../documents/models/vehicle_document.dart';
 import '../../documents/providers.dart';
 import '../../maintenance/providers.dart';
@@ -145,6 +146,8 @@ class VehicleDetailScreen extends ConsumerWidget {
                   vehicleId: vehicleId,
                 ),
                 const SizedBox(height: AppSpacing.lg),
+                _ChecklistsCard(vehicleId: vehicleId),
+                const SizedBox(height: AppSpacing.lg),
                 summaryAsync.when(
                   loading: () => const LoadingIndicator(),
                   error: (err, _) => const SizedBox.shrink(),
@@ -259,10 +262,22 @@ class _VehicleHeader extends StatelessWidget {
             style: theme.textTheme.titleSmall,
           ),
         ],
-        TextButton.icon(
-          onPressed: onUpdateMileage,
-          icon: const Icon(Icons.speed, size: 18),
-          label: const Text('Actualizar kilometraje'),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.xs,
+          children: [
+            TextButton.icon(
+              onPressed: onUpdateMileage,
+              icon: const Icon(Icons.speed, size: 18),
+              label: const Text('Actualizar km'),
+            ),
+            TextButton.icon(
+              onPressed: () => context.push('/vehicles/${vehicle.id}/mileage'),
+              icon: const Icon(Icons.show_chart, size: 18),
+              label: const Text('Historial'),
+            ),
+          ],
         ),
       ],
     );
@@ -481,6 +496,55 @@ class _RestrictionCard extends StatelessWidget {
             TextButton(
               onPressed: () => context.push('/vehicles/$vehicleId/restriction'),
               child: Text(status.configured ? 'Editar' : 'Configurar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChecklistsCard extends ConsumerWidget {
+  final int vehicleId;
+
+  const _ChecklistsCard({required this.vehicleId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final runsAsync = ref.watch(inspectionRunsProvider(vehicleId));
+    final theme = Theme.of(context);
+    final lastRun = runsAsync.valueOrNull?.isNotEmpty == true
+        ? runsAsync.valueOrNull!.first
+        : null;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: [
+            Icon(
+              Icons.fact_check_outlined,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Inspecciones', style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 2),
+                  Text(
+                    lastRun == null
+                        ? 'Sin inspecciones registradas'
+                        : 'Última: ${formatDisplayDate(lastRun.date)}',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: () => context.push('/vehicles/$vehicleId/checklists'),
+              child: const Text('Abrir'),
             ),
           ],
         ),

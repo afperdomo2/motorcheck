@@ -119,20 +119,21 @@ lib/
 ├── core/
 │   ├── app_info.dart            # Identidad, versión y licencia
 │   ├── theme/                   # Tokens, Barlow, temas light+dark, ThemeExtension
-│   ├── database/                # SQLite helper + DDL (v16) + factory FFI
+│   ├── database/                # SQLite helper + DDL (v19) + factory FFI
 │   ├── backup/                  # Copia ZIP (JSON + adjuntos) y exportación CSV
 │   ├── files/                   # Almacenamiento local de adjuntos
 │   ├── notifications/           # Notificaciones locales y sincronización
 │   ├── settings/                # Preferencias de notificaciones y respaldo
 │   └── utils/                   # Formateadores es_CO, dateStatus, búsqueda y errores
 ├── features/
-│   ├── vehicles/                # CRUD vehículos, selección default y kilometraje
-│   ├── maintenance/             # CRUD mantenimientos + items (categorías por tipo)
+│   ├── vehicles/                # CRUD vehículos, kilometraje e historial
+│   ├── maintenance/             # CRUD mantenimientos + adjuntos + categorías
 │   ├── dashboard/               # Inicio, finanzas, recordatorios y pico y placa
 │   ├── documents/               # SOAT, RTM, impuesto, seguro y licencia
 │   ├── fuel/                    # Tanqueadas y consumo real
 │   ├── expenses/                # Gastos y categorías de gasto
-│   ├── finance/                 # Resumen, costo por km y gráfica mensual
+│   ├── finance/                 # Resumen, costo por km, presupuesto y gráfica
+│   ├── checklists/              # Checklists e inspecciones pre-viaje
 │   ├── restrictions/            # Regla semanal de pico y placa
 │   ├── reminders/               # Bandeja única, salud del vehículo y alertas
 │   ├── reports/                 # Hoja de vida en PDF
@@ -168,6 +169,10 @@ lib/
 | `FuelLog` | `fuel_logs` | vehicleId, date, odometer, quantity, unitPrice, totalCost, fuelType |
 | `ExpenseCategory` | `expense_categories` | key, name, iconName, sortOrder |
 | `Expense` | `expenses` | vehicleId (nullable), categoryKey, date, amount, receiptPath |
+| `MaintenanceAttachment` | `maintenance_attachments` | maintenanceId, itemId (nullable), name, filePath |
+| `Checklist` / `ChecklistItem` | `checklists` / `checklist_items` | vehicleId, vehicleType, name, label, sortOrder |
+| `InspectionRun` / `InspectionAnswer` | `inspection_runs` / `inspection_answers` | vehicleId, checklistId, date, odometer, itemId, status |
+| `Budget` | `budgets` | vehicleId, period (YYYY-MM), amount |
 
 Categorías de mantenimiento por tipo: car/truck (11), motorcycle (9), bike (6), other (1).
 Definidas en `lib/features/maintenance/categories.dart`. Cada categoría puede tener

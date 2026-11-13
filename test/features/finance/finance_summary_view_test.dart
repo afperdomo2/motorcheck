@@ -46,6 +46,7 @@ void main() {
       ProviderScope(
         overrides: [
           vehicleFinanceProvider(1).overrideWith((ref) async => summary),
+          budgetForVehicleProvider(1).overrideWith((ref) async => null),
         ],
         child: const MaterialApp(
           home: MediaQuery(

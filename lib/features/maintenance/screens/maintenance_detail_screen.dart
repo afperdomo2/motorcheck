@@ -1,6 +1,11 @@
+import 'dart:io';
+
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path/path.dart' as p;
+import '../../../core/files/file_storage.dart';
 import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
@@ -16,6 +21,7 @@ import '../../settings/providers.dart';
 import '../../vehicles/models/vehicle.dart';
 import '../categories.dart';
 import '../models/maintenance.dart';
+import '../models/maintenance_attachment.dart';
 import '../models/maintenance_item.dart';
 import '../models/workshop.dart';
 import '../providers.dart';
@@ -140,6 +146,8 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                       vehicle,
                     ),
                   ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _AttachmentsCard(maintenanceId: maintenanceId),
                   if (maintenance.notes != null &&
                       maintenance.notes!.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.lg),
@@ -501,6 +509,182 @@ class _ItemTile extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _AttachmentsCard extends ConsumerWidget {
+  const _AttachmentsCard({required this.maintenanceId});
+
+  final int maintenanceId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final attachmentsAsync = ref.watch(
+      maintenanceAttachmentsProvider(maintenanceId),
+    );
+    final theme = Theme.of(context);
+    final canUseCamera = Platform.isAndroid || Platform.isIOS;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.attach_file,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text('Adjuntos', style: theme.textTheme.titleMedium),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            attachmentsAsync.when(
+              loading: () => const LinearProgressIndicator(),
+              error: (error, _) => Text(
+                'No se pudieron cargar los adjuntos',
+                style: theme.textTheme.bodySmall,
+              ),
+              data: (attachments) {
+                if (attachments.isEmpty) {
+                  return Text(
+                    'Sin facturas ni fotos adjuntas.',
+                    style: theme.textTheme.bodySmall,
+                  );
+                }
+                return Column(
+                  children: [
+                    for (final attachment in attachments)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        leading: Icon(
+                          _attachmentIcon(attachment.name),
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        title: Text(
+                          attachment.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(formatDisplayDate(attachment.createdAt)),
+                        trailing: IconButton(
+                          tooltip: 'Eliminar adjunto',
+                          icon: const Icon(Icons.close),
+                          onPressed: () => _delete(context, ref, attachment),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => _pickFile(context, ref),
+                  icon: const Icon(Icons.upload_file_outlined),
+                  label: const Text('Adjuntar archivo'),
+                ),
+                if (canUseCamera)
+                  OutlinedButton.icon(
+                    onPressed: () => _takePhoto(context, ref),
+                    icon: const Icon(Icons.photo_camera_outlined),
+                    label: const Text('Tomar foto'),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _attachmentIcon(String name) {
+    final lower = name.toLowerCase();
+    if (lower.endsWith('.pdf')) return Icons.picture_as_pdf_outlined;
+    if (lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.webp')) {
+      return Icons.image_outlined;
+    }
+    return Icons.insert_drive_file_outlined;
+  }
+
+  Future<void> _pickFile(BuildContext context, WidgetRef ref) async {
+    final file = await pickAttachmentFile();
+    if (file == null || !context.mounted) return;
+    await _add(context, ref, file);
+  }
+
+  Future<void> _takePhoto(BuildContext context, WidgetRef ref) async {
+    final file = await takeAttachmentPhoto();
+    if (file == null || !context.mounted) return;
+    await _add(context, ref, file);
+  }
+
+  Future<void> _add(BuildContext context, WidgetRef ref, XFile file) async {
+    String? path;
+    try {
+      path = await copyAttachmentFile(file);
+      final attachment = MaintenanceAttachment(
+        maintenanceId: maintenanceId,
+        name: p.basename(path),
+        filePath: path,
+        createdAt: DateTime.now(),
+      );
+      await ref
+          .read(maintenanceAttachmentsNotifierProvider.notifier)
+          .add(attachment);
+      if (!context.mounted) return;
+      AppSnackBar.success('Adjunto agregado');
+    } catch (error) {
+      if (path != null) await deleteAttachmentFile(path);
+      logError('adjuntar a mantenimiento', error, StackTrace.current);
+      if (!context.mounted) return;
+      AppSnackBar.error(
+        friendlyErrorMessage(error, fallback: 'No se pudo adjuntar el archivo'),
+      );
+    }
+  }
+
+  Future<void> _delete(
+    BuildContext context,
+    WidgetRef ref,
+    MaintenanceAttachment attachment,
+  ) async {
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'Eliminar adjunto',
+      message: '¿Eliminar "${attachment.name}"?',
+      confirmLabel: 'Eliminar',
+      isDestructive: true,
+    );
+    if (confirmed != true) return;
+
+    try {
+      await ref
+          .read(maintenanceAttachmentsNotifierProvider.notifier)
+          .remove(attachment.id!, maintenanceId);
+      await deleteAttachmentFile(attachment.filePath);
+      if (!context.mounted) return;
+      AppSnackBar.success('Adjunto eliminado');
+    } catch (error) {
+      logError('eliminar adjunto de mantenimiento', error, StackTrace.current);
+      if (!context.mounted) return;
+      AppSnackBar.error(
+        friendlyErrorMessage(error, fallback: 'No se pudo eliminar el adjunto'),
+      );
+    }
   }
 }
 

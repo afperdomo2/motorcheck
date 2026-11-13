@@ -6,6 +6,8 @@ import '../fuel/providers.dart';
 import '../fuel/repository.dart';
 import '../maintenance/providers.dart';
 import '../vehicles/providers.dart';
+import 'budget_repository.dart';
+import 'models/budget.dart';
 
 class MonthlyFinancePoint {
   const MonthlyFinancePoint({
@@ -64,6 +66,61 @@ class VehicleFinanceSummary {
 
   double get currentMonthOther => currentMonthExpenses;
 }
+
+final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
+  return BudgetRepository();
+});
+
+final budgetForVehicleProvider = FutureProvider.family<Budget?, int>((
+  ref,
+  vehicleId,
+) async {
+  final repo = ref.watch(budgetRepositoryProvider);
+  return repo.getForVehiclePeriod(vehicleId, repo.currentPeriod);
+});
+
+class BudgetNotifier extends Notifier<AsyncValue<void>> {
+  BudgetRepository get _repo => ref.read(budgetRepositoryProvider);
+
+  @override
+  AsyncValue<void> build() => const AsyncValue.data(null);
+
+  Future<void> save(int vehicleId, double amount) async {
+    state = const AsyncValue.loading();
+    final now = DateTime.now();
+    try {
+      await _repo.upsert(
+        Budget(
+          vehicleId: vehicleId,
+          period: _repo.currentPeriod,
+          amount: amount,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      ref.invalidate(budgetForVehicleProvider(vehicleId));
+      state = const AsyncValue.data(null);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  Future<void> remove(int vehicleId) async {
+    state = const AsyncValue.loading();
+    try {
+      await _repo.delete(vehicleId, _repo.currentPeriod);
+      ref.invalidate(budgetForVehicleProvider(vehicleId));
+      state = const AsyncValue.data(null);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
+  }
+}
+
+final budgetNotifierProvider =
+    NotifierProvider<BudgetNotifier, AsyncValue<void>>(BudgetNotifier.new);
 
 final vehicleFinanceProvider =
     FutureProvider.family<VehicleFinanceSummary, int>((ref, vehicleId) async {

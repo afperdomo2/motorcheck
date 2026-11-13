@@ -8,6 +8,10 @@ import '../features/vehicles/screens/vehicles_screen.dart';
 import '../features/vehicles/screens/vehicle_detail_screen.dart';
 import '../features/vehicles/screens/vehicle_form_screen.dart';
 import '../features/vehicles/screens/upcoming_maintenance_screen.dart';
+import '../features/vehicles/screens/mileage_history_screen.dart';
+import '../features/checklists/screens/checklists_screen.dart';
+import '../features/checklists/screens/inspection_form_screen.dart';
+import '../features/checklists/screens/inspection_detail_screen.dart';
 import '../features/maintenance/screens/maintenance_list_screen.dart';
 import '../features/maintenance/screens/maintenance_form_screen.dart';
 import '../features/maintenance/screens/maintenance_detail_screen.dart';
@@ -112,6 +116,50 @@ final appRouter = GoRouter(
                     final id = int.parse(state.pathParameters['id']!);
                     return UpcomingMaintenanceScreen(vehicleId: id);
                   },
+                ),
+                GoRoute(
+                  path: ':id/mileage',
+                  builder: (context, state) {
+                    final id = int.parse(state.pathParameters['id']!);
+                    return MileageHistoryScreen(vehicleId: id);
+                  },
+                ),
+                GoRoute(
+                  path: ':id/checklists',
+                  builder: (context, state) {
+                    final id = int.parse(state.pathParameters['id']!);
+                    return ChecklistsScreen(vehicleId: id);
+                  },
+                  routes: [
+                    GoRoute(
+                      path: ':checklistId/start',
+                      builder: (context, state) {
+                        final vehicleId = int.parse(
+                          state.pathParameters['id']!,
+                        );
+                        final checklistId = int.parse(
+                          state.pathParameters['checklistId']!,
+                        );
+                        return InspectionFormScreen(
+                          vehicleId: vehicleId,
+                          checklistId: checklistId,
+                        );
+                      },
+                    ),
+                    GoRoute(
+                      path: 'runs/:runId',
+                      builder: (context, state) {
+                        final vehicleId = int.parse(
+                          state.pathParameters['id']!,
+                        );
+                        final runId = int.parse(state.pathParameters['runId']!);
+                        return InspectionDetailScreen(
+                          vehicleId: vehicleId,
+                          runId: runId,
+                        );
+                      },
+                    ),
+                  ],
                 ),
                 GoRoute(
                   path: ':id/documents',

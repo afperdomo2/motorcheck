@@ -13,7 +13,7 @@ import '../settings/app_preferences.dart';
 import '../utils/user_error.dart';
 
 const _backupFormat = 'motorcheck-backup';
-const _backupSchemaVersion = 16;
+const _backupSchemaVersion = 19;
 
 const _tables = <String>[
   'vehicles',
@@ -22,16 +22,23 @@ const _tables = <String>[
   'expense_categories',
   'maintenances',
   'maintenance_items',
+  'maintenance_attachments',
   'fuel_logs',
   'expenses',
   'mileage_readings',
   'documents',
   'vehicle_restrictions',
+  'checklists',
+  'checklist_items',
+  'inspection_runs',
+  'inspection_answers',
+  'budgets',
 ];
 
 const _attachmentColumns = <String, String>{
   'documents': 'file_path',
   'expenses': 'receipt_path',
+  'maintenance_attachments': 'file_path',
 };
 
 class BackupResult {

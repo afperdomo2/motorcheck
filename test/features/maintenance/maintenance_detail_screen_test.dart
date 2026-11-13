@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:motorcheck/features/maintenance/models/maintenance.dart';
+import 'package:motorcheck/features/maintenance/models/maintenance_attachment.dart';
 import 'package:motorcheck/features/maintenance/models/maintenance_item.dart';
 import 'package:motorcheck/features/maintenance/models/workshop.dart';
 import 'package:motorcheck/features/maintenance/providers.dart';
@@ -75,6 +76,9 @@ void main() {
         overrides: [
           maintenanceByIdProvider(1).overrideWith((ref) async => maintenance),
           maintenanceItemsProvider(1).overrideWith((ref) async => [item]),
+          maintenanceAttachmentsProvider(
+            1,
+          ).overrideWith((ref) async => <MaintenanceAttachment>[]),
           workshopsProvider.overrideWith((ref) async => <Workshop>[]),
           maintenanceCategoriesProvider.overrideWith((ref) async => [category]),
           vehicleNamesProvider.overrideWith((ref) async => {1: vehicle}),

@@ -36,20 +36,21 @@ lib/
 ├── core/                    # Infraestructura compartida
 │   ├── app_info.dart        # Nombre, versión y datos de licencia
 │   ├── theme/               # Sistema de diseño (light + dark)
-│   ├── database/            # SQLite v16 + factory FFI (escritorio)
+│   ├── database/            # SQLite v19 + factory FFI (escritorio)
 │   ├── backup/              # ZIP (datos + adjuntos) y CSV
 │   ├── files/               # Almacenamiento local de adjuntos
 │   ├── notifications/       # Notificaciones locales y sincronización
 │   ├── settings/            # Preferencias de avisos y respaldo
 │   └── utils/               # Utilidades
 ├── features/                # Features de negocio
-│   ├── vehicles/            # CRUD vehículos, selección default y kilometraje
-│   ├── maintenance/         # CRUD mantenimientos + items + categorías
+│   ├── vehicles/            # CRUD vehículos, kilometraje e historial
+│   ├── maintenance/         # CRUD mantenimientos + items + categorías + adjuntos
 │   ├── dashboard/           # Inicio, finanzas, recordatorios y pico y placa
 │   ├── documents/           # SOAT, RTM, impuesto, seguro y licencia
 │   ├── fuel/                # Tanqueadas y consumo real
 │   ├── expenses/            # Gastos y categorías de gasto
-│   ├── finance/             # Resumen, costo por km y gráficas
+│   ├── finance/             # Resumen, costo por km, presupuesto y gráficas
+│   ├── checklists/          # Inspecciones y checklist pre-viaje
 │   ├── restrictions/        # Regla semanal de pico y placa
 │   ├── reminders/           # Bandeja única y salud del vehículo
 │   ├── reports/             # Hoja de vida en PDF
@@ -156,6 +157,17 @@ Gastos (5.ª pestaña)
         ↓
   Dashboard, PDF, costo por km y presupuesto
 ```
+
+### Mantenimiento avanzado
+
+- **Historial de kilometraje:** `Vehículos → Kilometraje`, con gráfica y
+  lecturas manuales, de mantenimiento o de combustible.
+- **Adjuntos:** facturas o fotos en el detalle del mantenimiento, guardadas en
+  `core/files/` y incluidas en el ZIP de respaldo.
+- **Checklists:** plantilla pre-viaje global con 8 items; cada inspección guarda
+  respuestas (`ok`, `attention`, `fail`), kilometraje y notas.
+- **Presupuesto:** límite mensual por vehículo con progreso al 80 % y 100 %.
+
 
 `fuel_logs` y `expenses` actualizan el kilometraje cuando corresponde. Los
 gastos globales (`expenses.vehicle_id = NULL`) se muestran en la lista, pero no

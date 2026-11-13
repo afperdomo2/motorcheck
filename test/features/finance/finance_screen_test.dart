@@ -92,6 +92,7 @@ void main() {
           vehiclesProvider.overrideWith((ref) async => [vehicle]),
           selectedVehicleIdProvider.overrideWith((ref) => 1),
           vehicleFinanceProvider(1).overrideWith((ref) async => summary),
+          budgetForVehicleProvider(1).overrideWith((ref) async => null),
           fuelLogsProvider(1).overrideWith((ref) async => [fuelLog]),
           fuelStatsProvider(1).overrideWith((ref) async => summary.fuelStats),
           expensesForVehicleProvider(1).overrideWith((ref) async => [expense]),

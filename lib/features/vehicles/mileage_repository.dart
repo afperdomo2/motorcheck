@@ -68,6 +68,11 @@ class MileageRepository {
 
   /// Registra una lectura y sube el kilometraje del vehículo solo si la nueva
   /// lectura es mayor. La corrección manual se hace desde Editar vehículo.
+  Future<void> delete(int id) async {
+    final db = await _db.database;
+    await db.delete('mileage_readings', where: 'id = ?', whereArgs: [id]);
+  }
+
   Future<void> addReading({
     required int vehicleId,
     required int mileage,

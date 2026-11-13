@@ -10,9 +10,12 @@ Aplicación Flutter para el seguimiento del mantenimiento personal de vehículos
 - Costos de mano de obra y repuestos por item
 - Próximos mantenimientos por kilometraje **o por tiempo** (lo que ocurra primero)
 - Historial de kilometraje y fecha estimada del próximo servicio
+- Historial de kilometraje con gráfica y lecturas manuales
+- Adjuntos de facturas y fotos en mantenimientos
+- Checklists e inspecciones pre-viaje
 - Bitácora de combustible con consumo real y costo por km
 - Gastos por vehículo o globales, con categorías y recibos
-- Resumen financiero mensual y gráfica de los últimos 6 meses
+- Resumen financiero mensual, presupuesto y gráfica de los últimos 6 meses
 - Recordatorios de mantenimiento, SOAT, RTM, impuesto, seguro y licencia
 - Documentos con adjuntos (PDF o imagen)
 - Pico y placa semanal con aviso en el inicio
@@ -78,7 +81,7 @@ lib/
 ├── app.dart               # MaterialApp.router + tema
 ├── core/                  # Infraestructura compartida
 │   ├── theme/             # Sistema de diseño
-│   ├── database/          # SQLite v16
+│   ├── database/          # SQLite v19
 │   ├── backup/            # Copias ZIP y CSV
 │   ├── files/             # Almacenamiento de adjuntos
 │   ├── notifications/     # Avisos locales
@@ -86,11 +89,12 @@ lib/
 │   └── utils/             # Utilidades
 ├── features/              # Features de negocio
 │   ├── vehicles/          # CRUD de vehículos y kilometraje
-│   ├── maintenance/       # CRUD de mantenimientos
+│   ├── maintenance/       # Mantenimientos y adjuntos
 │   ├── documents/         # SOAT, RTM, impuesto, seguro y licencia
 │   ├── fuel/              # Combustible y consumo
 │   ├── expenses/          # Gastos y categorías
-│   ├── finance/           # Resumen y costo por km
+│   ├── finance/           # Resumen, presupuesto y costo por km
+│   ├── checklists/        # Inspecciones pre-viaje
 │   ├── restrictions/      # Pico y placa
 │   ├── reminders/         # Bandeja de recordatorios
 │   ├── reports/           # Hoja de vida PDF
