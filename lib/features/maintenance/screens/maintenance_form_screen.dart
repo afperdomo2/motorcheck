@@ -11,6 +11,7 @@ import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/date_field.dart';
 import '../../../shared/widgets/form_section.dart';
 import '../../../shared/widgets/sticky_bottom_bar.dart';
+import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../vehicles/providers.dart';
 import '../../vehicles/models/vehicle.dart';
 import '../../settings/providers.dart';
@@ -18,6 +19,7 @@ import '../models/maintenance.dart';
 import '../models/maintenance_item.dart';
 import '../providers.dart';
 import '../widgets/item_form_row.dart';
+import '../widgets/vehicle_ficha.dart';
 
 class MaintenanceFormScreen extends ConsumerStatefulWidget {
   final int? maintenanceId;
@@ -45,6 +47,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
   DateTime? _vehicleMileageUpdatedAt;
   int? _workshopId;
   Vehicle? _vehicle;
+  bool _vehicleLoaded = false;
 
   bool get _isEditing => widget.maintenanceId != null;
 
@@ -74,6 +77,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     final vehicle = await ref
         .read(vehicleRepositoryProvider)
         .getById(maintenance.vehicleId);
+    if (!mounted) return;
 
     _mileageController.text = maintenance.mileage?.toString() ?? '';
     _notesController.text = maintenance.notes ?? '';
@@ -85,6 +89,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
       _originalCreatedAt = maintenance.createdAt;
       _workshopId = maintenance.workshopId;
       _vehicle = vehicle;
+      _vehicleLoaded = true;
       _items
         ..clear()
         ..addAll(items);
@@ -94,21 +99,41 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
 
   Future<void> _loadVehicle() async {
     final vehicleId = widget.vehicleId ?? ref.read(selectedVehicleIdProvider);
-    if (vehicleId == null) return;
+    if (vehicleId == null) {
+      if (mounted) setState(() => _vehicleLoaded = true);
+      return;
+    }
     final vehicle = await ref
         .read(vehicleRepositoryProvider)
         .getById(vehicleId);
-    if (vehicle != null && mounted) {
-      setState(() {
-        _vehicleCurrentMileage = vehicle.currentMileage;
-        _vehicleMileageUpdatedAt = vehicle.mileageUpdatedAt;
-        _vehicle = vehicle;
-        _dirty = false;
-      });
-      if (vehicle.currentMileage != null) {
-        _mileageController.text = vehicle.currentMileage.toString();
-      }
+    if (!mounted) return;
+    setState(() {
+      _vehicleCurrentMileage = vehicle?.currentMileage;
+      _vehicleMileageUpdatedAt = vehicle?.mileageUpdatedAt;
+      _vehicle = vehicle;
+      _vehicleLoaded = true;
+      _dirty = false;
+    });
+    if (vehicle?.currentMileage != null) {
+      _mileageController.text = vehicle!.currentMileage.toString();
     }
+  }
+
+  Future<void> _pickVehicle() async {
+    final selected = await VehicleSelectorSheet.show(context);
+    if (selected == null || selected.id == null || !mounted) return;
+    if (selected.id == _vehicle?.id) return;
+
+    setState(() {
+      _vehicle = selected;
+      _vehicleCurrentMileage = selected.currentMileage;
+      _vehicleMileageUpdatedAt = selected.mileageUpdatedAt;
+      _mileageBelowLast = false;
+    });
+    _mileageController.text = selected.currentMileage?.toString() ?? '';
+    await ref
+        .read(vehiclesNotifierProvider.notifier)
+        .selectVehicle(selected.id!);
   }
 
   @override
@@ -166,7 +191,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final validItems = _items.toList();
-    final vehicleId = widget.vehicleId ?? _vehicle?.id;
+    final vehicleId = _vehicle?.id ?? widget.vehicleId;
     if (vehicleId == null) return;
 
     setState(() => _isLoading = true);
@@ -394,6 +419,58 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     );
   }
 
+  Widget? _buildVehicleHeader() {
+    final vehicle = _vehicle;
+    if (vehicle != null) {
+      return Card(
+        child: VehicleFicha(
+          vehicle: vehicle,
+          onTap: _isEditing ? null : _pickVehicle,
+        ),
+      );
+    }
+
+    // Mientras no haya vehículo resuelto no se muestra nada; al crear sí se
+    // ofrece elegirlo para no llegar a un formulario que no puede guardar.
+    if (!_vehicleLoaded || _isEditing) return null;
+    final theme = Theme.of(context);
+    return Card(
+      child: InkWell(
+        onTap: _pickVehicle,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.directions_car_outlined,
+                  color: theme.colorScheme.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(
+                  'Selecciona un vehículo',
+                  style: theme.textTheme.titleMedium,
+                ),
+              ),
+              Icon(
+                Icons.expand_more,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final workshopsAsync = ref.watch(workshopsProvider);
@@ -405,6 +482,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
         .toList();
     final theme = Theme.of(context);
     final semantic = AppSemanticColors.of(context);
+    final vehicleHeader = _buildVehicleHeader();
 
     return PopScope(
       canPop: !_dirty && !_isLoading,
@@ -430,6 +508,10 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      if (vehicleHeader != null) ...[
+                        vehicleHeader,
+                        const SizedBox(height: AppSpacing.lg),
+                      ],
                       FormSection(
                         title: 'Datos del mantenimiento',
                         icon: Icons.event_note_outlined,
