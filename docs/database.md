@@ -140,6 +140,55 @@ Regla semanal de pico y placa por vehículo.
 | created_at | TEXT | NOT NULL (ISO 8601) |
 | updated_at | TEXT | NOT NULL (ISO 8601) |
 
+### expense_categories
+
+Categorías configurables para gastos distintos al mantenimiento.
+
+| Columna | Tipo | Restricciones |
+|--------|------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
+| key | TEXT | NOT NULL UNIQUE |
+| name | TEXT | NOT NULL |
+| icon_name | TEXT | NOT NULL DEFAULT 'receipt_long' |
+| sort_order | INTEGER | DEFAULT 0 |
+| created_at | TEXT | NOT NULL (ISO 8601) |
+
+### fuel_logs
+
+Registro de tanqueadas y base del consumo real.
+
+| Columna | Tipo | Restricciones |
+|--------|------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
+| vehicle_id | INTEGER | NOT NULL, FK → vehicles(id) ON DELETE CASCADE |
+| date | TEXT | NOT NULL (fecha ISO 8601) |
+| odometer | INTEGER | NOT NULL |
+| quantity | REAL | NOT NULL |
+| unit_price | REAL | NOT NULL DEFAULT 0 |
+| total_cost | REAL | NOT NULL DEFAULT 0 |
+| fuel_type | TEXT | NOT NULL DEFAULT 'gasoline' |
+| station | TEXT | |
+| full_tank | INTEGER | NOT NULL DEFAULT 1 |
+| notes | TEXT | |
+| created_at | TEXT | NOT NULL (ISO 8601) |
+| updated_at | TEXT | NOT NULL (ISO 8601) |
+
+### expenses
+
+Gastos del vehículo o globales (`vehicle_id` nullable).
+
+| Columna | Tipo | Restricciones |
+|--------|------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
+| vehicle_id | INTEGER | FK → vehicles(id) ON DELETE CASCADE |
+| category_key | TEXT | NOT NULL |
+| date | TEXT | NOT NULL (fecha ISO 8601) |
+| amount | REAL | NOT NULL DEFAULT 0 |
+| notes | TEXT | |
+| receipt_path | TEXT | Ruta local del recibo |
+| created_at | TEXT | NOT NULL (ISO 8601) |
+| updated_at | TEXT | NOT NULL (ISO 8601) |
+
 ## Regla de kilometraje
 
 `vehicles.current_mileage` es la fuente de verdad y **solo sube
@@ -266,6 +315,53 @@ CREATE TABLE vehicle_restrictions (
   updated_at TEXT NOT NULL,
   FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
 );
+
+CREATE TABLE expense_categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  key TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  icon_name TEXT NOT NULL DEFAULT 'receipt_long',
+  sort_order INTEGER DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE fuel_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER NOT NULL,
+  date TEXT NOT NULL,
+  odometer INTEGER NOT NULL,
+  quantity REAL NOT NULL,
+  unit_price REAL NOT NULL DEFAULT 0,
+  total_cost REAL NOT NULL DEFAULT 0,
+  fuel_type TEXT NOT NULL DEFAULT 'gasoline',
+  station TEXT,
+  full_tank INTEGER NOT NULL DEFAULT 1,
+  notes TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_fuel_vehicle_date
+  ON fuel_logs(vehicle_id, date DESC, odometer DESC);
+
+CREATE TABLE expenses (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER,
+  category_key TEXT NOT NULL,
+  date TEXT NOT NULL,
+  amount REAL NOT NULL DEFAULT 0,
+  notes TEXT,
+  receipt_path TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_expenses_vehicle_date
+  ON expenses(vehicle_id, date DESC);
+CREATE INDEX idx_expenses_category
+  ON expenses(category_key);
 ```
 
 ## Relaciones
@@ -275,7 +371,11 @@ workshops (1) ────< (N) maintenances (1) ────< (N) maintenance_i
                     │
 vehicles (1) ──────┼──< (N) mileage_readings
                     ├──< (N) documents
+                    ├──< (N) fuel_logs
+                    ├──< (N) expenses
                     └──(1) vehicle_restrictions
+
+expense_categories (1) ────< (N) expenses
 ```
 
 - Eliminar un vehículo → cascada a mantenimientos, items, lecturas de km,
@@ -285,6 +385,10 @@ vehicles (1) ──────┼──< (N) mileage_readings
 - Los costos en `maintenances` están desnormalizados para fácil visualización (suma de costos de items)
 - `documents.vehicle_id` es nullable: los documentos del conductor (licencia)
   no pertenecen a un vehículo
+- `expenses.vehicle_id` es nullable: los gastos globales no se suman al costo
+  por km de un vehículo, pero aparecen en la lista de gastos
+- Eliminar un vehículo → cascada a `fuel_logs`, `expenses`, `mileage_readings`,
+  documentos y regla de pico y placa
 
 ## Tipos de Vehículo
 
@@ -332,7 +436,7 @@ El borrado es hard-delete, pero el repositorio verifica que la categoría no est
 
 ## Versión de Base de Datos
 
-Versión actual: **15**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
+Versión actual: **16**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
 - v2: agregó `current_mileage`
 - v3: agregó `workshops` + `maintenance_cost` + `workshop_id` en maintenances
 - v4: reestructuró `maintenance_items` (renombró columnas)
@@ -347,13 +451,14 @@ Versión actual: **15**. Migraciones incrementales vía `onUpgrade` en `Database
 - v13: agregó `interval_months` y `warning_days` + tabla `mileage_readings` + backfill
 - v14: agregó tabla `documents` + backfill de SOAT/RTM desde `vehicles`
 - v15: agregó tabla `vehicle_restrictions`
+- v16: agregó `fuel_logs`, `expense_categories` y `expenses` + seed de categorías
 
 ## Respaldo
 
 `BackupService` genera un ZIP con `data.json` (todas las tablas y preferencias),
-`manifest.json` y `attachments/documents/` con los archivos adjuntos. Restaurar
-reemplaza todos los datos y crea una copia de seguridad previa. La exportación
-CSV genera un ZIP con un archivo por tabla.
+`manifest.json` y `attachments/` con los archivos adjuntos de documentos y
+gastos. Restaurar reemplaza todos los datos y crea una copia de seguridad previa.
+La exportación CSV genera un ZIP con un archivo por tabla.
 
 ---
 

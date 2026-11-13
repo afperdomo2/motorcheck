@@ -14,7 +14,6 @@ void main() async {
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   initDatabaseFactory();
   await initializeDateFormatting('es_CO');
-  await initializeDateFormatting('es');
   runApp(const ProviderScope(child: MotorCheckApp()));
   unawaited(NotificationService.instance.initialize());
   unawaited(BackupService().createAutoBackupIfNeeded());

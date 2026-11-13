@@ -3,6 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/formatters.dart';
 import '../documents/models/vehicle_document.dart';
 import '../documents/providers.dart';
+import '../expenses/models/expense.dart';
+import '../expenses/models/expense_category.dart';
+import '../expenses/providers.dart';
+import '../finance/providers.dart';
+import '../fuel/models/fuel_log.dart';
+import '../fuel/providers.dart';
 import '../maintenance/models/maintenance.dart';
 import '../maintenance/models/maintenance_item.dart';
 import '../maintenance/models/workshop.dart';
@@ -26,6 +32,10 @@ class VehicleReportData {
     required this.upcoming,
     required this.health,
     required this.mileageStats,
+    required this.fuelLogs,
+    required this.expenses,
+    required this.expenseCategories,
+    required this.finance,
     required this.totalCost,
     required this.costPerKm,
   });
@@ -39,6 +49,10 @@ class VehicleReportData {
   final List<UpcomingMaintenance> upcoming;
   final HealthScore health;
   final MileageStats mileageStats;
+  final List<FuelLog> fuelLogs;
+  final List<Expense> expenses;
+  final Map<String, ExpenseCategory> expenseCategories;
+  final VehicleFinanceSummary finance;
   final double totalCost;
   final double? costPerKm;
 
@@ -75,22 +89,10 @@ final vehicleReportDataProvider = FutureProvider.family<VehicleReportData, int>(
     );
     final health = await ref.watch(vehicleHealthProvider(vehicleId).future);
     final stats = await ref.watch(mileageStatsProvider(vehicleId).future);
-
-    final totalCost = maintenances.fold<double>(
-      0,
-      (sum, maintenance) =>
-          sum + maintenance.maintenanceCost + maintenance.totalPartsCost,
-    );
-
-    double? costPerKm;
-    final first = stats.firstReading;
-    final last = stats.lastReading;
-    if (first != null && last != null) {
-      final distance = last.mileage - first.mileage;
-      if (distance > 0) {
-        costPerKm = totalCost / distance;
-      }
-    }
+    final fuelLogs = await ref.watch(fuelLogsProvider(vehicleId).future);
+    final expenses = await ref.watch(vehicleExpensesProvider(vehicleId).future);
+    final expenseCategories = await ref.watch(expenseCategoriesProvider.future);
+    final finance = await ref.watch(vehicleFinanceProvider(vehicleId).future);
 
     return VehicleReportData(
       vehicle: vehicle,
@@ -106,8 +108,14 @@ final vehicleReportDataProvider = FutureProvider.family<VehicleReportData, int>(
       upcoming: upcoming.where((item) => item.hasInterval).toList(),
       health: health,
       mileageStats: stats,
-      totalCost: totalCost,
-      costPerKm: costPerKm,
+      fuelLogs: fuelLogs,
+      expenses: expenses,
+      expenseCategories: {
+        for (final category in expenseCategories) category.key: category,
+      },
+      finance: finance,
+      totalCost: finance.totalCost,
+      costPerKm: finance.costPerKm,
     );
   },
 );

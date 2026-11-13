@@ -6,6 +6,10 @@ import 'package:motorcheck/core/backup/backup_service.dart';
 import 'package:motorcheck/core/database/database_helper.dart';
 import 'package:motorcheck/features/documents/models/vehicle_document.dart';
 import 'package:motorcheck/features/documents/repository.dart';
+import 'package:motorcheck/features/expenses/models/expense.dart';
+import 'package:motorcheck/features/expenses/repository.dart';
+import 'package:motorcheck/features/fuel/models/fuel_log.dart';
+import 'package:motorcheck/features/fuel/repository.dart';
 import 'package:motorcheck/features/vehicles/models/vehicle.dart';
 import 'package:motorcheck/features/vehicles/repository.dart';
 import 'package:path/path.dart' as p;
@@ -69,18 +73,55 @@ void main() {
       ),
     );
 
+    final fuelRepo = FuelRepository();
+    await fuelRepo.insert(
+      FuelLog(
+        vehicleId: vehicleId,
+        date: now,
+        odometer: 10100,
+        quantity: 40,
+        unitPrice: 4000,
+        totalCost: 160000,
+        fuelType: 'gasoline',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    final receipt = File(p.join(baseDir.path, 'recibo.png'));
+    await receipt.writeAsBytes([5, 6, 7, 8]);
+    final expenseRepo = ExpenseRepository();
+    await expenseRepo.insert(
+      Expense(
+        vehicleId: vehicleId,
+        categoryKey: 'other',
+        date: now,
+        amount: 50000,
+        receiptPath: receipt.path,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
     final result = await service.createBackup();
     expect(await result.file.exists(), isTrue);
     expect(result.counts['vehicles'], 1);
     expect(result.counts['documents'], 1);
-    expect(result.attachments, 1);
+    expect(result.counts['fuel_logs'], 1);
+    expect(result.counts['expenses'], 1);
+    expect(result.counts['expense_categories'], greaterThanOrEqualTo(8));
+    expect(result.attachments, 2);
 
     final preview = await service.inspect(result.file);
     expect(preview.counts['vehicles'], 1);
-    expect(preview.attachments, 1);
+    expect(preview.counts['fuel_logs'], 1);
+    expect(preview.counts['expenses'], 1);
+    expect(preview.attachments, 2);
 
     await vehicleRepo.delete(vehicleId);
     expect(await documentsRepo.getAll(), isEmpty);
+    expect(await expenseRepo.getAll(), isEmpty);
+    expect(await fuelRepo.getByVehicleId(vehicleId), isEmpty);
 
     await service.restore(result.file);
 
@@ -92,6 +133,17 @@ void main() {
     expect(restoredDocuments, hasLength(1));
     expect(restoredDocuments.first.filePath, isNotNull);
     expect(await File(restoredDocuments.first.filePath!).exists(), isTrue);
+
+    final restoredFuel = await fuelRepo.getByVehicleId(vehicleId);
+    expect(restoredFuel, hasLength(1));
+
+    final restoredExpenses = await expenseRepo.getForVehicle(
+      vehicleId,
+      includeGlobal: false,
+    );
+    expect(restoredExpenses, hasLength(1));
+    expect(restoredExpenses.first.receiptPath, isNotNull);
+    expect(await File(restoredExpenses.first.receiptPath!).exists(), isTrue);
   });
 
   test('rechaza un archivo que no es de MotorCheck', () async {

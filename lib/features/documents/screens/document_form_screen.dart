@@ -14,7 +14,7 @@ import '../../../shared/widgets/date_field.dart';
 import '../../../shared/widgets/form_section.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/sticky_bottom_bar.dart';
-import '../file_storage.dart';
+import '../../../core/files/file_storage.dart';
 import '../models/vehicle_document.dart';
 import '../providers.dart';
 
@@ -99,7 +99,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
   @override
   void dispose() {
     if (!_saved && _filePath != null && _filePath != _originalFilePath) {
-      deleteDocumentFile(_filePath);
+      deleteAttachmentFile(_filePath);
     }
     _nameController.dispose();
     _numberController.dispose();
@@ -133,18 +133,18 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
   }
 
   Future<void> _pickFile() async {
-    final file = await pickDocumentFile();
+    final file = await pickAttachmentFile();
     if (file != null) await _setFile(file);
   }
 
   Future<void> _takePhoto() async {
-    final file = await takeDocumentPhoto();
+    final file = await takeAttachmentPhoto();
     if (file != null) await _setFile(file);
   }
 
   Future<void> _setFile(XFile file) async {
     try {
-      final path = await copyDocumentFile(file);
+      final path = await copyAttachmentFile(file);
       if (!mounted) return;
       final previous = _filePath;
       setState(() {
@@ -152,7 +152,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
         _dirty = true;
       });
       if (previous != null && previous != _originalFilePath) {
-        await deleteDocumentFile(previous);
+        await deleteAttachmentFile(previous);
       }
     } catch (error) {
       logError('adjuntar documento', error, StackTrace.current);
@@ -168,7 +168,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
       _dirty = true;
     });
     if (current != null && current != _originalFilePath) {
-      await deleteDocumentFile(current);
+      await deleteAttachmentFile(current);
     }
   }
 
@@ -240,7 +240,7 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
       await ref.read(documentsNotifierProvider.notifier).save(document);
       _saved = true;
       if (_originalFilePath != null && _originalFilePath != _filePath) {
-        await deleteDocumentFile(_originalFilePath);
+        await deleteAttachmentFile(_originalFilePath);
       }
       if (!mounted) return;
       setState(() {

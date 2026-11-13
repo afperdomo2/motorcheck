@@ -35,7 +35,7 @@ class DatabaseHelper {
 
     return openDatabase(
       path,
-      version: 15,
+      version: 16,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onOpen: _ensureSchemaIntegrity,
@@ -105,6 +105,12 @@ class DatabaseHelper {
     await db.execute(Tables.createDocumentsVehicleIndex);
     await db.execute(Tables.createDocumentsExpiresIndex);
     await db.execute(Tables.createVehicleRestrictions);
+    await db.execute(Tables.createExpenseCategories);
+    await db.execute(Tables.createFuelLogs);
+    await db.execute(Tables.createFuelVehicleDateIndex);
+    await db.execute(Tables.createExpenses);
+    await db.execute(Tables.createExpensesVehicleDateIndex);
+    await db.execute(Tables.createExpensesCategoryIndex);
 
     // Los backfills viven solo en `_onUpgrade` (v13/v14). Ejecutarlos en cada
     // apertura resucitaría documentos o lecturas que el usuario haya borrado.
@@ -168,8 +174,15 @@ class DatabaseHelper {
     batch.execute(Tables.createDocumentsVehicleIndex);
     batch.execute(Tables.createDocumentsExpiresIndex);
     batch.execute(Tables.createVehicleRestrictions);
+    batch.execute(Tables.createExpenseCategories);
+    batch.execute(Tables.createFuelLogs);
+    batch.execute(Tables.createFuelVehicleDateIndex);
+    batch.execute(Tables.createExpenses);
+    batch.execute(Tables.createExpensesVehicleDateIndex);
+    batch.execute(Tables.createExpensesCategoryIndex);
     await batch.commit(noResult: true);
     await _seedDefaultCategories(db);
+    await _seedExpenseCategories(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -294,6 +307,15 @@ class DatabaseHelper {
     }
     if (oldVersion < 15) {
       await db.execute(Tables.createVehicleRestrictions);
+    }
+    if (oldVersion < 16) {
+      await db.execute(Tables.createExpenseCategories);
+      await db.execute(Tables.createFuelLogs);
+      await db.execute(Tables.createFuelVehicleDateIndex);
+      await db.execute(Tables.createExpenses);
+      await db.execute(Tables.createExpensesVehicleDateIndex);
+      await db.execute(Tables.createExpensesCategoryIndex);
+      await _seedExpenseCategories(db);
     }
   }
 
@@ -569,6 +591,56 @@ class DatabaseHelper {
     ];
     for (final row in defaults) {
       await db.insert('maintenance_categories', {
+        ...row,
+        'created_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+  }
+
+  Future<void> _seedExpenseCategories(Database db) async {
+    final now = formatDateTime(DateTime.now());
+    const defaults = <Map<String, dynamic>>[
+      {
+        'key': 'insurance',
+        'name': 'Seguro',
+        'icon_name': 'security',
+        'sort_order': 1,
+      },
+      {
+        'key': 'tax',
+        'name': 'Impuesto',
+        'icon_name': 'account_balance',
+        'sort_order': 2,
+      },
+      {'key': 'tolls', 'name': 'Peajes', 'icon_name': 'toll', 'sort_order': 3},
+      {
+        'key': 'parking',
+        'name': 'Parqueadero',
+        'icon_name': 'local_parking',
+        'sort_order': 4,
+      },
+      {'key': 'fines', 'name': 'Multas', 'icon_name': 'gavel', 'sort_order': 5},
+      {
+        'key': 'wash',
+        'name': 'Lavado',
+        'icon_name': 'local_car_wash',
+        'sort_order': 6,
+      },
+      {
+        'key': 'accessories',
+        'name': 'Accesorios',
+        'icon_name': 'shopping_bag',
+        'sort_order': 7,
+      },
+      {
+        'key': 'other',
+        'name': 'Otros',
+        'icon_name': 'receipt_long',
+        'sort_order': 8,
+      },
+    ];
+    for (final row in defaults) {
+      await db.insert('expense_categories', {
         ...row,
         'created_at': now,
       }, conflictAlgorithm: ConflictAlgorithm.ignore);

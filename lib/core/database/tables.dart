@@ -142,4 +142,64 @@ CREATE TABLE IF NOT EXISTS vehicle_restrictions (
   FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
 )
 ''';
+
+  static const createExpenseCategories = '''
+CREATE TABLE IF NOT EXISTS expense_categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  key TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  icon_name TEXT NOT NULL DEFAULT 'receipt_long',
+  sort_order INTEGER DEFAULT 0,
+  created_at TEXT NOT NULL
+)
+''';
+
+  static const createFuelLogs = '''
+CREATE TABLE IF NOT EXISTS fuel_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER NOT NULL,
+  date TEXT NOT NULL,
+  odometer INTEGER NOT NULL,
+  quantity REAL NOT NULL,
+  unit_price REAL NOT NULL DEFAULT 0,
+  total_cost REAL NOT NULL DEFAULT 0,
+  fuel_type TEXT NOT NULL DEFAULT 'gasoline',
+  station TEXT,
+  full_tank INTEGER NOT NULL DEFAULT 1,
+  notes TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+)
+''';
+
+  static const createFuelVehicleDateIndex = '''
+CREATE INDEX IF NOT EXISTS idx_fuel_vehicle_date
+  ON fuel_logs(vehicle_id, date DESC, odometer DESC)
+''';
+
+  static const createExpenses = '''
+CREATE TABLE IF NOT EXISTS expenses (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER,
+  category_key TEXT NOT NULL,
+  date TEXT NOT NULL,
+  amount REAL NOT NULL DEFAULT 0,
+  notes TEXT,
+  receipt_path TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+)
+''';
+
+  static const createExpensesVehicleDateIndex = '''
+CREATE INDEX IF NOT EXISTS idx_expenses_vehicle_date
+  ON expenses(vehicle_id, date DESC)
+''';
+
+  static const createExpensesCategoryIndex = '''
+CREATE INDEX IF NOT EXISTS idx_expenses_category
+  ON expenses(category_key)
+''';
 }

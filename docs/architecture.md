@@ -36,23 +36,27 @@ lib/
 ├── core/                    # Infraestructura compartida
 │   ├── app_info.dart        # Nombre, versión y datos de licencia
 │   ├── theme/               # Sistema de diseño (light + dark)
-│   ├── database/            # SQLite v15 + factory FFI (escritorio)
+│   ├── database/            # SQLite v16 + factory FFI (escritorio)
 │   ├── backup/              # ZIP (datos + adjuntos) y CSV
+│   ├── files/               # Almacenamiento local de adjuntos
 │   ├── notifications/       # Notificaciones locales y sincronización
 │   ├── settings/            # Preferencias de avisos y respaldo
 │   └── utils/               # Utilidades
 ├── features/                # Features de negocio
 │   ├── vehicles/            # CRUD vehículos, selección default y kilometraje
 │   ├── maintenance/         # CRUD mantenimientos + items + categorías
-│   ├── dashboard/           # Inicio, recordatorios y pico y placa
+│   ├── dashboard/           # Inicio, finanzas, recordatorios y pico y placa
 │   ├── documents/           # SOAT, RTM, impuesto, seguro y licencia
+│   ├── fuel/                # Tanqueadas y consumo real
+│   ├── expenses/            # Gastos y categorías de gasto
+│   ├── finance/             # Resumen, costo por km y gráficas
 │   ├── restrictions/        # Regla semanal de pico y placa
 │   ├── reminders/           # Bandeja única y salud del vehículo
 │   ├── reports/             # Hoja de vida en PDF
 │   └── settings/            # Tema, talleres, categorías, respaldo, avisos y licencias
 ├── shared/                  # Widgets reutilizables (dumb)
 │   └── widgets/
-└── routes/                  # Navegación (4 tabs con StatefulShellRoute)
+└── routes/                  # Navegación (5 tabs con StatefulShellRoute)
 ```
 
 ## Patrón Smart/Dumb Components
@@ -140,6 +144,23 @@ de `mileage_readings`.
 Al tocar una notificación con la app cerrada, `NotificationService` lee
 `getNotificationAppLaunchDetails` y navega después del primer frame.
 
+### Finanzas
+
+```
+Gastos (5.ª pestaña)
+  ├─ Resumen: mantenimiento + combustible + gastos
+  ├─ Combustible: tanqueadas, consumo y costo/km
+  └─ Gastos: categorías, recibos y gastos globales
+        ↓
+  financeProvider combina las tres fuentes
+        ↓
+  Dashboard, PDF, costo por km y presupuesto
+```
+
+`fuel_logs` y `expenses` actualizan el kilometraje cuando corresponde. Los
+gastos globales (`expenses.vehicle_id = NULL`) se muestran en la lista, pero no
+se suman al costo por km de un vehículo específico.
+
 ### Respaldo
 
 ```
@@ -148,6 +169,8 @@ Ajustes → Datos y respaldo
    ├─ Exportar CSV → ZIP con un archivo por tabla
    └─ Restaurar → validar → copia previa → transacción → adjuntos
 ```
+
+Los adjuntos incluyen `documents.file_path` y `expenses.receipt_path`.
 
 La restauración reemplaza todos los datos y se ejecuta en una transacción. Los
 adjuntos se guardan en `documents/` dentro del directorio de soporte de la app.

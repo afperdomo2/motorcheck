@@ -10,6 +10,9 @@ Aplicación Flutter para el seguimiento del mantenimiento personal de vehículos
 - Costos de mano de obra y repuestos por item
 - Próximos mantenimientos por kilometraje **o por tiempo** (lo que ocurra primero)
 - Historial de kilometraje y fecha estimada del próximo servicio
+- Bitácora de combustible con consumo real y costo por km
+- Gastos por vehículo o globales, con categorías y recibos
+- Resumen financiero mensual y gráfica de los últimos 6 meses
 - Recordatorios de mantenimiento, SOAT, RTM, impuesto, seguro y licencia
 - Documentos con adjuntos (PDF o imagen)
 - Pico y placa semanal con aviso en el inicio
@@ -75,8 +78,9 @@ lib/
 ├── app.dart               # MaterialApp.router + tema
 ├── core/                  # Infraestructura compartida
 │   ├── theme/             # Sistema de diseño
-│   ├── database/          # SQLite v15
+│   ├── database/          # SQLite v16
 │   ├── backup/            # Copias ZIP y CSV
+│   ├── files/             # Almacenamiento de adjuntos
 │   ├── notifications/     # Avisos locales
 │   ├── settings/          # Preferencias
 │   └── utils/             # Utilidades
@@ -84,13 +88,16 @@ lib/
 │   ├── vehicles/          # CRUD de vehículos y kilometraje
 │   ├── maintenance/       # CRUD de mantenimientos
 │   ├── documents/         # SOAT, RTM, impuesto, seguro y licencia
+│   ├── fuel/              # Combustible y consumo
+│   ├── expenses/          # Gastos y categorías
+│   ├── finance/           # Resumen y costo por km
 │   ├── restrictions/      # Pico y placa
 │   ├── reminders/         # Bandeja de recordatorios
 │   ├── reports/           # Hoja de vida PDF
 │   ├── dashboard/         # Panel principal
 │   └── settings/          # Configuración
 ├── shared/widgets/        # Componentes reutilizables
-└── routes/                # Configuración de rutas
+└── routes/                # Configuración de rutas (5 tabs)
 ```
 
 Ver la carpeta `docs/` para documentación detallada de arquitectura, base de datos, sistema de diseño y testing.

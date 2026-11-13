@@ -30,6 +30,9 @@ void main() {
       'mileage_readings',
       'documents',
       'vehicle_restrictions',
+      'fuel_logs',
+      'expenses',
+      'expense_categories',
     ]) {
       final result = await db.rawQuery(
         "SELECT name FROM sqlite_master WHERE type='table' AND name=?",

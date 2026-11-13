@@ -5,34 +5,34 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import '../../core/utils/user_error.dart';
+import '../utils/user_error.dart';
 
-const _documentExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
+const _attachmentExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
 
-Future<Directory> _documentsDirectory() async {
+Future<Directory> _attachmentsDirectory() async {
   final base = await getApplicationSupportDirectory();
   final dir = Directory(p.join(base.path, 'documents'));
   await dir.create(recursive: true);
   return dir;
 }
 
-Future<XFile?> pickDocumentFile() {
+Future<XFile?> pickAttachmentFile() {
   return openFile(
     acceptedTypeGroups: const [
       XTypeGroup(
         label: 'Documentos e imágenes',
-        extensions: _documentExtensions,
+        extensions: _attachmentExtensions,
       ),
     ],
   );
 }
 
-Future<XFile?> takeDocumentPhoto() {
+Future<XFile?> takeAttachmentPhoto() {
   return ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 85);
 }
 
-Future<String> copyDocumentFile(XFile file) async {
-  final dir = await _documentsDirectory();
+Future<String> copyAttachmentFile(XFile file) async {
+  final dir = await _attachmentsDirectory();
   final safeName = p
       .basename(file.name)
       .replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
@@ -43,7 +43,7 @@ Future<String> copyDocumentFile(XFile file) async {
   return target.path;
 }
 
-Future<void> deleteDocumentFile(String? path) async {
+Future<void> deleteAttachmentFile(String? path) async {
   if (path == null || path.isEmpty) return;
   try {
     final file = File(path);

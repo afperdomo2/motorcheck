@@ -34,7 +34,7 @@ class QuickStats extends StatelessWidget {
               child: StatTile(
                 icon: Icons.payments_outlined,
                 value: formatCurrency(summary.currentMonthSpent),
-                label: 'Gasto ${summary.currentMonthLabel}',
+                label: 'Mantenimiento ${summary.currentMonthLabel}',
               ),
             ),
           ],

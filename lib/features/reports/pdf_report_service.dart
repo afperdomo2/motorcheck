@@ -4,6 +4,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../../core/utils/formatters.dart';
 import '../documents/models/vehicle_document.dart';
+import '../fuel/models/fuel_log.dart';
 import '../maintenance/models/maintenance_item.dart';
 import 'report_data.dart';
 
@@ -79,7 +80,13 @@ class PdfReportService {
           pw.SizedBox(height: 14),
           _summaryGrid(data),
           pw.SizedBox(height: 16),
+          _section('Resumen financiero', _financeTable(data)),
+          pw.SizedBox(height: 14),
           _section('Documentos', _documentsTable(data.documents)),
+          pw.SizedBox(height: 14),
+          _section('Combustible', _fuelTable(data)),
+          pw.SizedBox(height: 14),
+          _section('Gastos', _expensesTable(data)),
           pw.SizedBox(height: 14),
           _section('Próximos mantenimientos', _upcomingTable(data)),
           pw.SizedBox(height: 14),
@@ -319,6 +326,106 @@ class PdfReportService {
         1: pw.FlexColumnWidth(2),
         2: pw.FlexColumnWidth(2),
         3: pw.FlexColumnWidth(2),
+      },
+    );
+  }
+
+  pw.Widget _financeTable(VehicleReportData data) {
+    final finance = data.finance;
+    return pw.TableHelper.fromTextArray(
+      headers: const ['Concepto', 'Valor'],
+      data: [
+        ['Mantenimiento', formatCurrency(finance.totalMaintenance)],
+        ['Combustible', formatCurrency(finance.totalFuel)],
+        ['Gastos', formatCurrency(finance.totalExpenses)],
+        ['Total', formatCurrency(finance.totalCost)],
+        ['Consumo promedio', finance.fuelStats.consumptionLabel()],
+        [
+          'Costo por km',
+          finance.costPerKm != null
+              ? formatCurrency(finance.costPerKm!)
+              : 'Sin datos',
+        ],
+      ],
+      headerStyle: const pw.TextStyle(
+        color: PdfColors.white,
+        fontWeight: pw.FontWeight.bold,
+        fontSize: 8,
+      ),
+      headerDecoration: const pw.BoxDecoration(color: _graphite),
+      cellStyle: const pw.TextStyle(fontSize: 8),
+      cellPadding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+      border: pw.TableBorder.all(color: _line, width: 0.5),
+      columnWidths: const {0: pw.FlexColumnWidth(3), 1: pw.FlexColumnWidth(2)},
+    );
+  }
+
+  pw.Widget _fuelTable(VehicleReportData data) {
+    if (data.fuelLogs.isEmpty) {
+      return _empty('Sin tanqueadas registradas');
+    }
+    return pw.TableHelper.fromTextArray(
+      headers: const ['Fecha', 'Odómetro', 'Cantidad', 'Total'],
+      data: data.fuelLogs
+          .take(10)
+          .map(
+            (log) => [
+              formatDisplayDate(log.date),
+              formatMileage(log.odometer),
+              '${log.quantity.toStringAsFixed(1)} '
+                  '${fuelTypeFor(log.fuelType).unit}',
+              formatCurrency(log.totalCost),
+            ],
+          )
+          .toList(),
+      headerStyle: const pw.TextStyle(
+        color: PdfColors.white,
+        fontWeight: pw.FontWeight.bold,
+        fontSize: 8,
+      ),
+      headerDecoration: const pw.BoxDecoration(color: _graphite),
+      cellStyle: const pw.TextStyle(fontSize: 8),
+      cellPadding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+      border: pw.TableBorder.all(color: _line, width: 0.5),
+      columnWidths: const {
+        0: pw.FlexColumnWidth(2),
+        1: pw.FlexColumnWidth(2),
+        2: pw.FlexColumnWidth(2),
+        3: pw.FlexColumnWidth(2),
+      },
+    );
+  }
+
+  pw.Widget _expensesTable(VehicleReportData data) {
+    if (data.expenses.isEmpty) {
+      return _empty('Sin gastos registrados');
+    }
+    return pw.TableHelper.fromTextArray(
+      headers: const ['Fecha', 'Categoría', 'Valor'],
+      data: data.expenses
+          .take(10)
+          .map(
+            (expense) => [
+              formatDisplayDate(expense.date),
+              data.expenseCategories[expense.categoryKey]?.name ??
+                  expense.categoryKey,
+              formatCurrency(expense.amount),
+            ],
+          )
+          .toList(),
+      headerStyle: const pw.TextStyle(
+        color: PdfColors.white,
+        fontWeight: pw.FontWeight.bold,
+        fontSize: 8,
+      ),
+      headerDecoration: const pw.BoxDecoration(color: _graphite),
+      cellStyle: const pw.TextStyle(fontSize: 8),
+      cellPadding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+      border: pw.TableBorder.all(color: _line, width: 0.5),
+      columnWidths: const {
+        0: pw.FlexColumnWidth(2),
+        1: pw.FlexColumnWidth(3),
+        2: pw.FlexColumnWidth(2),
       },
     );
   }

@@ -25,6 +25,10 @@ import '../features/documents/screens/document_form_screen.dart';
 import '../features/restrictions/screens/pico_y_placa_screen.dart';
 import '../features/reminders/screens/reminders_screen.dart';
 import '../features/reports/screens/vehicle_report_screen.dart';
+import '../features/finance/screens/finance_screen.dart';
+import '../features/fuel/screens/fuel_form_screen.dart';
+import '../features/expenses/screens/expense_form_screen.dart';
+import '../features/expenses/screens/expense_categories_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -159,6 +163,52 @@ final appRouter = GoRouter(
                     final id = int.parse(state.pathParameters['id']!);
                     return VehicleReportScreen(vehicleId: id);
                   },
+                ),
+              ],
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/finance',
+              builder: (context, state) => const FinanceScreen(),
+              routes: [
+                GoRoute(
+                  path: 'fuel/add',
+                  builder: (context, state) {
+                    final vehicleId = int.tryParse(
+                      state.uri.queryParameters['vehicleId'] ?? '',
+                    );
+                    return FuelFormScreen(vehicleId: vehicleId);
+                  },
+                ),
+                GoRoute(
+                  path: 'fuel/:id/edit',
+                  builder: (context, state) {
+                    final id = int.tryParse(state.pathParameters['id'] ?? '');
+                    return FuelFormScreen(fuelLogId: id);
+                  },
+                ),
+                GoRoute(
+                  path: 'expenses/add',
+                  builder: (context, state) {
+                    final vehicleId = int.tryParse(
+                      state.uri.queryParameters['vehicleId'] ?? '',
+                    );
+                    return ExpenseFormScreen(vehicleId: vehicleId);
+                  },
+                ),
+                GoRoute(
+                  path: 'expenses/:id/edit',
+                  builder: (context, state) {
+                    final id = int.tryParse(state.pathParameters['id'] ?? '');
+                    return ExpenseFormScreen(expenseId: id);
+                  },
+                ),
+                GoRoute(
+                  path: 'categories',
+                  builder: (context, state) => const ExpenseCategoriesScreen(),
                 ),
               ],
             ),
@@ -320,6 +370,11 @@ class AppShell extends ConsumerWidget {
                 icon: Icon(Icons.directions_car_outlined),
                 selectedIcon: Icon(Icons.directions_car),
                 label: 'Vehículos',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.payments_outlined),
+                selectedIcon: Icon(Icons.payments),
+                label: 'Gastos',
               ),
               NavigationDestination(
                 icon: Icon(Icons.tune),

@@ -50,7 +50,7 @@ class DocumentsNotifier extends Notifier<AsyncValue<void>> {
 
   Future<void> save(VehicleDocument document) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    try {
       if (document.id == null) {
         await _repo.insert(document);
       } else {
@@ -59,21 +59,29 @@ class DocumentsNotifier extends Notifier<AsyncValue<void>> {
       if (document.vehicleId != null) {
         await _syncLegacyDate(document.vehicleId!, document.type);
       }
-    });
-    _invalidate(document.vehicleId);
+      _invalidate(document.vehicleId);
+      state = const AsyncValue.data(null);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
   }
 
   Future<void> remove(int id, {int? vehicleId}) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    try {
       final document = await _repo.getById(id);
       await _repo.delete(id);
       final ownerId = document?.vehicleId ?? vehicleId;
       if (document != null && ownerId != null) {
         await _syncLegacyDate(ownerId, document.type);
       }
-    });
-    _invalidate(vehicleId);
+      _invalidate(vehicleId);
+      state = const AsyncValue.data(null);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
   }
 
   Future<void> syncVehicleDates(

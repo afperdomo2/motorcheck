@@ -13,18 +13,26 @@ import '../settings/app_preferences.dart';
 import '../utils/user_error.dart';
 
 const _backupFormat = 'motorcheck-backup';
-const _backupSchemaVersion = 15;
+const _backupSchemaVersion = 16;
 
 const _tables = <String>[
   'vehicles',
   'workshops',
   'maintenance_categories',
+  'expense_categories',
   'maintenances',
   'maintenance_items',
+  'fuel_logs',
+  'expenses',
   'mileage_readings',
   'documents',
   'vehicle_restrictions',
 ];
+
+const _attachmentColumns = <String, String>{
+  'documents': 'file_path',
+  'expenses': 'receipt_path',
+};
 
 class BackupResult {
   const BackupResult({
@@ -78,7 +86,7 @@ class BackupService {
     return dir;
   }
 
-  Future<Directory> _documentsDirectory() async {
+  Future<Directory> _attachmentsDirectory() async {
     final dir = Directory(p.join((await _baseDirectory()).path, 'documents'));
     await dir.create(recursive: true);
     return dir;
@@ -108,23 +116,25 @@ class BackupService {
       counts[table] = rows.length;
       final jsonRows = rows.map(_jsonSafe).toList();
 
-      if (table == 'documents' && includeAttachments) {
+      final attachmentColumn = _attachmentColumns[table];
+      if (includeAttachments && attachmentColumn != null) {
         for (final row in jsonRows) {
-          final rawPath = row['file_path'] as String?;
+          final rawPath = row[attachmentColumn] as String?;
           if (rawPath == null || rawPath.isEmpty) continue;
           final file = File(rawPath);
           if (!await file.exists()) {
-            row['file_path'] = null;
+            row[attachmentColumn] = null;
             continue;
           }
           final archivePath = _attachmentPath(
+            table,
             row['id'] is int ? row['id'] as int : null,
             p.basename(rawPath),
           );
           archive.addFile(
             ArchiveFile.bytes(archivePath, await file.readAsBytes()),
           );
-          row['file_path'] = archivePath;
+          row[attachmentColumn] = archivePath;
           attachmentCount++;
         }
       }
@@ -258,7 +268,7 @@ class BackupService {
 
     final tables = _tablesMap(data);
     final db = await _db.database;
-    final documentsDir = await _documentsDirectory();
+    final attachmentsDir = await _attachmentsDirectory();
 
     Directory? oldDocuments;
     var prepared = false;
@@ -284,11 +294,12 @@ class BackupService {
               if (!columns.contains(entry.key)) continue;
               clean[entry.key] = entry.value;
             }
-            if (table == 'documents' && clean['file_path'] is String) {
-              final relative = clean['file_path'] as String;
+            final attachmentColumn = _attachmentColumns[table];
+            if (attachmentColumn != null && clean[attachmentColumn] is String) {
+              final relative = clean[attachmentColumn] as String;
               final target = extracted[relative];
-              clean['file_path'] = target != null
-                  ? p.join(documentsDir.path, p.basename(target))
+              clean[attachmentColumn] = target != null
+                  ? p.join(attachmentsDir.path, p.basename(target))
                   : null;
             }
             await txn.insert(table, clean);
@@ -359,7 +370,7 @@ class BackupService {
   /// Mueve los documentos actuales a una carpeta temporal, crea la nueva
   /// carpeta y copia los adjuntos preparados. Si algo falla, restaura.
   Future<Directory?> _prepareDocuments(Directory staging) async {
-    final documents = await _documentsDirectory();
+    final documents = await _attachmentsDirectory();
     final old = Directory(
       p.join(
         documents.parent.path,
@@ -384,7 +395,7 @@ class BackupService {
   }
 
   Future<void> _rollbackDocuments(Directory? old) async {
-    final documents = await _documentsDirectory();
+    final documents = await _attachmentsDirectory();
     try {
       if (await documents.exists()) {
         await documents.delete(recursive: true);
@@ -449,9 +460,9 @@ class BackupService {
     };
   }
 
-  String _attachmentPath(int? id, String name) {
+  String _attachmentPath(String table, int? id, String name) {
     final safeName = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-    return 'attachments/documents/${id ?? 'solo'}_$safeName';
+    return 'attachments/$table/${id ?? 'solo'}_$safeName';
   }
 
   String _stamp(DateTime date) {

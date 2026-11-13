@@ -1,6 +1,6 @@
 # Plan — Finanzas y mantenimiento avanzado
 
-> **Estado:** aprobado, pendiente de implementación.
+> **Estado:** Fase 1 implementada; Fases 2–3 pendientes.
 > **Fecha:** 2026-11-13.
 > **Ubicación canónica:** `docs/plans/plan-finanzas-y-mantenimiento-avanzado.md`.
 > **Copia de trabajo:** `/home/felipe/.opencode/plan/plan-finanzas-y-mantenimiento-avanzado.md`.
@@ -281,12 +281,12 @@ flowchart LR
 | `lib/features/expenses/screens/expense_categories_screen.dart` | Categorías |
 | `lib/features/finance/providers.dart` | Totales combinados |
 | `lib/features/finance/screens/finance_screen.dart` | Pestaña Gastos |
-| `lib/features/dashboard/widgets/finance_summary.dart` | Resumen en Inicio |
+| `lib/features/dashboard/widgets/finance_summary_card.dart` | Resumen en Inicio |
 | `lib/features/reports/report_data.dart` | Incluir finanzas |
 | `lib/features/reports/pdf_report_service.dart` | PDF con costo real |
 | `lib/routes/app_router.dart` | 5ª pestaña y rutas |
 | `lib/routes/app_router.dart` (`AppShell`) | Nuevo destino |
-| `pubspec.yaml` | `fl_chart` |
+| `pubspec.yaml` | Sin dependencia nueva: gráfica mensual propia |
 | `lib/core/database/tables.dart` | DDL v16 |
 | `lib/core/database/database_helper.dart` | Migración v16 |
 | `lib/core/backup/backup_service.dart` | Tablas y CSV nuevos |
@@ -336,7 +336,7 @@ flowchart LR
 - Componente vencido por km, fecha y ambos.
 - Checklist: respuestas y estado final.
 - Backup round-trip con tablas y adjuntos nuevos.
-- Migraciones v15 → v20.
+- Migraciones v16 → v20.
 - PDF con finanzas y muchos registros.
 
 ### Widget
@@ -376,22 +376,23 @@ Cada entrega debe incluir:
 
 ### Fase 1
 
-- [ ] Modelo y migración v16.
-- [ ] Repositorio y providers de combustible.
-- [ ] Pantallas de combustible.
-- [ ] Repositorio y providers de gastos.
-- [ ] Pantallas de gastos y categorías.
-- [ ] Pestaña Gastos con Resumen.
-- [ ] Resumen financiero en Inicio.
-- [ ] Costo por km real.
-- [ ] PDF con finanzas.
-- [ ] Respaldo/CSV actualizado.
-- [ ] Pruebas.
-- [ ] Docs.
+- [x] Modelo y migración v16.
+- [x] Repositorio y providers de combustible.
+- [x] Pantallas de combustible.
+- [x] Repositorio y providers de gastos.
+- [x] Pantallas de gastos y categorías.
+- [x] Pestaña Gastos con Resumen.
+- [x] Resumen financiero en Inicio.
+- [x] Costo por km real.
+- [x] PDF con finanzas.
+- [x] Respaldo/CSV actualizado.
+- [x] Pruebas.
+- [x] Docs.
 
 ### Fase 2
 
-- [ ] Mover almacenamiento de archivos a core.
+- [x] Mover almacenamiento de archivos a core.
+- [ ] Adjuntos en mantenimientos.
 - [ ] Adjuntos en mantenimientos.
 - [ ] Historial de kilometraje.
 - [ ] Checklists.
@@ -416,7 +417,7 @@ Cada entrega debe incluir:
 
 1. Leer este archivo.
 2. Revisar `git status` y `git log`.
-3. Confirmar que la base está en v15.
+3. Confirmar que la base está en v16.
 4. Implementar la Fase 1 en el orden indicado.
 5. Actualizar la checklist al terminar cada punto.
 6. Ejecutar:

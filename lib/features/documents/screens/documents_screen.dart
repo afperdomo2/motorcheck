@@ -10,7 +10,7 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../vehicles/providers.dart';
-import '../file_storage.dart';
+import '../../../core/files/file_storage.dart';
 import '../models/vehicle_document.dart';
 import '../providers.dart';
 import '../widgets/document_card.dart';
@@ -145,7 +145,7 @@ class DocumentsScreen extends ConsumerWidget {
       await ref
           .read(documentsNotifierProvider.notifier)
           .remove(document.id!, vehicleId: document.vehicleId);
-      await deleteDocumentFile(document.filePath);
+      await deleteAttachmentFile(document.filePath);
       AppSnackBar.success('Documento eliminado');
     } catch (error) {
       logError('eliminar documento', error, StackTrace.current);

@@ -158,7 +158,7 @@ AppSnackBar.success('Vehículo guardado')
 
 ### Shell
 
-- 4 tabs: Inicio, Mantenimientos, Vehículos, Ajustes.
+- 5 tabs: Inicio, Mantenimientos, Vehículos, Gastos, Ajustes.
 - Etiquetas siempre visibles y badge de pendientes en Mantenimientos.
 - AppBar alineada a la izquierda.
 

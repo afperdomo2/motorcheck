@@ -14,13 +14,16 @@
 test/                           # Espejo de lib/
 ├── core/
 │   ├── backup/                 # Round-trip del ZIP con datos y adjuntos
-│   ├── database/               # SQLite, migraciones y tablas v13-v15
+│   ├── database/               # SQLite, migraciones y tablas v13-v16
 │   └── utils/                  # Formateadores, fechas y búsqueda
 ├── features/
 │   ├── settings/               # Categorías, licencias y ajustes
 │   ├── vehicles/               # Modelos, repositorios, km y notifier
 │   ├── maintenance/            # Modelos, repositorios y fechas
 │   ├── documents/              # CRUD de documentos
+│   ├── fuel/                   # Tanqueadas y consumo real
+│   ├── expenses/               # Gastos y categorías
+│   ├── finance/                # Resumen y gráfica mensual
 │   ├── restrictions/           # Evaluación de pico y placa
 │   ├── reminders/              # Bandeja, salud y widget
 │   └── reports/                # Generación de PDF
@@ -137,6 +140,13 @@ void main() {
 - `reminder_tile_test.dart`: estados visuales de la bandeja.
 - `upcoming_maintenance_view_test.dart`: sin overflow a 360 px con text scale 2.
 - `licenses_screen_test.dart`: pantalla de licencias y texto OFL.
+- `fuel_repository_test.dart`: consumo con tanque lleno y kilometraje.
+- `expense_repository_test.dart`: gastos por vehículo/global y categorías en uso.
+- `finance_provider_test.dart`: suma de mantenimiento + combustible + gastos.
+- `finance_screen_test.dart`: tres secciones y 5.ª pestaña a 360 px.
+- `finance_summary_view_test.dart` y `finance_summary_card_test.dart`: sin
+  overflow con text scale 2.0.
+- `navigation_bar_test.dart`: cinco pestañas a 360 px con text scale 2.0.
 
 ---
 
