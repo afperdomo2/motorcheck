@@ -18,6 +18,9 @@ class MonthlySpendChart extends StatelessWidget {
         .fold<double>(0, (max, value) => value > max ? value : max);
     final safeMax = maxValue <= 0 ? 1.0 : maxValue;
     final monthFormat = DateFormat('MMM', 'es_CO');
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final scaleFactor = (textScale - 1).clamp(0.0, 2.0).toDouble();
+    final chartHeight = 150.0 + scaleFactor * 60.0;
 
     return Card(
       child: Padding(
@@ -43,7 +46,7 @@ class MonthlySpendChart extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             SizedBox(
-              height: 150,
+              height: chartHeight,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [

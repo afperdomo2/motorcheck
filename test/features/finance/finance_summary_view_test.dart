@@ -5,6 +5,7 @@ import 'package:motorcheck/features/finance/models/budget.dart';
 import 'package:motorcheck/features/finance/providers.dart';
 import 'package:motorcheck/features/finance/screens/finance_summary_view.dart';
 import 'package:motorcheck/features/fuel/repository.dart';
+import 'package:motorcheck/shared/widgets/status_chip.dart';
 
 void main() {
   testWidgets('no desborda a 360 px con texto al 200 %', (tester) async {
@@ -72,5 +73,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
+
+    await tester.scrollUntilVisible(find.text('Presupuesto mensual'), 300);
+    await tester.pumpAndSettle();
+    expect(find.byType(StatusChip), findsNothing);
+    expect(find.text('Cerca del límite'), findsOneWidget);
   });
 }

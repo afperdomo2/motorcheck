@@ -9,7 +9,6 @@ import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
-import '../../../shared/widgets/status_chip.dart';
 import '../budget_alert_service.dart';
 import '../budget_status.dart';
 import '../providers.dart';
@@ -289,16 +288,14 @@ class _BudgetCard extends ConsumerWidget {
           BudgetStatus.warning => semantic.warning,
           BudgetStatus.exceeded => semantic.danger,
         };
-        final appStatus = switch (status) {
-          BudgetStatus.ok => AppStatus.ok,
-          BudgetStatus.warning => AppStatus.warning,
-          BudgetStatus.exceeded => AppStatus.danger,
-        };
-        final statusLabel = budgetStatusLabel(
-          status: status,
-          spent: spent,
-          amount: budget.amount,
-        );
+        final leftMessage = spent > budget.amount
+            ? 'Superado por ${formatCurrency(spent - budget.amount)}'
+            : status == BudgetStatus.exceeded
+            ? 'Límite alcanzado'
+            : 'Disponible ${formatCurrency(budget.amount - spent)}';
+        final rightMessage = status == BudgetStatus.warning
+            ? 'Cerca del límite'
+            : null;
 
         return Card(
           child: Padding(
@@ -321,12 +318,6 @@ class _BudgetCard extends ConsumerWidget {
                       child: const Text('Editar'),
                     ),
                   ],
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                StatusChip(
-                  status: appStatus,
-                  label: statusLabel,
-                  icon: Icons.savings_outlined,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Row(
@@ -354,13 +345,24 @@ class _BudgetCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                Text(
-                  spent > budget.amount
-                      ? 'Superado por ${formatCurrency(spent - budget.amount)}'
-                      : status == BudgetStatus.exceeded
-                      ? 'Límite alcanzado'
-                      : 'Disponible ${formatCurrency(budget.amount - spent)}',
-                  style: theme.textTheme.bodySmall?.copyWith(color: color),
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.xs,
+                  children: [
+                    Text(
+                      leftMessage,
+                      style: theme.textTheme.bodySmall?.copyWith(color: color),
+                    ),
+                    if (rightMessage != null)
+                      Text(
+                        rightMessage,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: color,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
