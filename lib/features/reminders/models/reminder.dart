@@ -1,4 +1,4 @@
-enum ReminderKind { maintenance, document, restriction }
+enum ReminderKind { maintenance, document, component, restriction }
 
 enum ReminderSeverity { overdue, warning, info }
 

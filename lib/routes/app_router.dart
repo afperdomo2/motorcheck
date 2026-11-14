@@ -9,6 +9,10 @@ import '../features/vehicles/screens/vehicle_detail_screen.dart';
 import '../features/vehicles/screens/vehicle_form_screen.dart';
 import '../features/vehicles/screens/upcoming_maintenance_screen.dart';
 import '../features/vehicles/screens/mileage_history_screen.dart';
+import '../features/components/screens/components_screen.dart';
+import '../features/components/screens/component_form_screen.dart';
+import '../features/components/screens/component_detail_screen.dart';
+import '../features/components/screens/component_service_form_screen.dart';
 import '../features/checklists/screens/checklists_screen.dart';
 import '../features/checklists/screens/inspection_form_screen.dart';
 import '../features/checklists/screens/inspection_detail_screen.dart';
@@ -158,6 +162,69 @@ final appRouter = GoRouter(
                           runId: runId,
                         );
                       },
+                    ),
+                  ],
+                ),
+                GoRoute(
+                  path: ':id/components',
+                  builder: (context, state) {
+                    final id = int.parse(state.pathParameters['id']!);
+                    return ComponentsScreen(vehicleId: id);
+                  },
+                  routes: [
+                    GoRoute(
+                      path: 'add',
+                      builder: (context, state) {
+                        final id = int.parse(state.pathParameters['id']!);
+                        return ComponentFormScreen(vehicleId: id);
+                      },
+                    ),
+                    GoRoute(
+                      path: ':componentId',
+                      builder: (context, state) {
+                        final vehicleId = int.parse(
+                          state.pathParameters['id']!,
+                        );
+                        final componentId = int.parse(
+                          state.pathParameters['componentId']!,
+                        );
+                        return ComponentDetailScreen(
+                          vehicleId: vehicleId,
+                          componentId: componentId,
+                        );
+                      },
+                      routes: [
+                        GoRoute(
+                          path: 'edit',
+                          builder: (context, state) {
+                            final vehicleId = int.parse(
+                              state.pathParameters['id']!,
+                            );
+                            final componentId = int.parse(
+                              state.pathParameters['componentId']!,
+                            );
+                            return ComponentFormScreen(
+                              vehicleId: vehicleId,
+                              componentId: componentId,
+                            );
+                          },
+                        ),
+                        GoRoute(
+                          path: 'services/add',
+                          builder: (context, state) {
+                            final vehicleId = int.parse(
+                              state.pathParameters['id']!,
+                            );
+                            final componentId = int.parse(
+                              state.pathParameters['componentId']!,
+                            );
+                            return ComponentServiceFormScreen(
+                              vehicleId: vehicleId,
+                              componentId: componentId,
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),

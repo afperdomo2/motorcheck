@@ -13,6 +13,8 @@ Aplicación Flutter para el seguimiento del mantenimiento personal de vehículos
 - Historial de kilometraje con gráfica y lecturas manuales
 - Adjuntos de facturas y fotos en mantenimientos
 - Checklists e inspecciones pre-viaje
+- Componentes con desgaste propio: llantas individuales, batería, cadena, frenos y suspensión
+- Historial de servicios por componente, con reinicio de ciclo opcional
 - Bitácora de combustible con consumo real y costo por km
 - Gastos por vehículo o globales, con categorías y recibos
 - Resumen financiero mensual, presupuesto con alertas y gráfica de los últimos 6 meses
@@ -82,7 +84,7 @@ lib/
 ├── app.dart               # MaterialApp.router + tema
 ├── core/                  # Infraestructura compartida
 │   ├── theme/             # Sistema de diseño
-│   ├── database/          # SQLite v19
+│   ├── database/          # SQLite v20
 │   ├── backup/            # Copias ZIP y CSV
 │   ├── files/             # Almacenamiento de adjuntos
 │   ├── notifications/     # Avisos locales

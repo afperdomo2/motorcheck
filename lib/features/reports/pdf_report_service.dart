@@ -3,6 +3,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../core/utils/formatters.dart';
+import '../components/models/component_status.dart';
 import '../documents/models/vehicle_document.dart';
 import '../fuel/models/fuel_log.dart';
 import '../maintenance/models/maintenance_item.dart';
@@ -83,6 +84,8 @@ class PdfReportService {
           _section('Resumen financiero', _financeTable(data)),
           pw.SizedBox(height: 14),
           _section('Documentos', _documentsTable(data.documents)),
+          pw.SizedBox(height: 14),
+          _section('Componentes', _componentsTable(data.components)),
           pw.SizedBox(height: 14),
           _section('Combustible', _fuelTable(data)),
           pw.SizedBox(height: 14),
@@ -309,6 +312,44 @@ class PdfReportService {
               document.number ?? '-',
               formatDisplayDate(document.expiresAt),
               _documentStatus(document),
+            ],
+          )
+          .toList(),
+      headerStyle: const pw.TextStyle(
+        color: PdfColors.white,
+        fontWeight: pw.FontWeight.bold,
+        fontSize: 8,
+      ),
+      headerDecoration: const pw.BoxDecoration(color: _graphite),
+      cellStyle: const pw.TextStyle(fontSize: 8),
+      cellPadding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+      border: pw.TableBorder.all(color: _line, width: 0.5),
+      columnWidths: const {
+        0: pw.FlexColumnWidth(3),
+        1: pw.FlexColumnWidth(2),
+        2: pw.FlexColumnWidth(2),
+        3: pw.FlexColumnWidth(2),
+      },
+    );
+  }
+
+  pw.Widget _componentsTable(List<ComponentStatus> components) {
+    final active = components
+        .where((status) => status.component.active)
+        .take(12)
+        .toList();
+    if (active.isEmpty) {
+      return _empty('Sin componentes registrados');
+    }
+    return pw.TableHelper.fromTextArray(
+      headers: const ['Componente', 'Posición', 'Próximo', 'Estado'],
+      data: active
+          .map(
+            (status) => [
+              status.component.name,
+              status.component.position ?? '-',
+              status.primaryLabel,
+              status.statusWord,
             ],
           )
           .toList(),

@@ -119,7 +119,7 @@ lib/
 ├── core/
 │   ├── app_info.dart            # Identidad, versión y licencia
 │   ├── theme/                   # Tokens, Barlow, temas light+dark, ThemeExtension
-│   ├── database/                # SQLite helper + DDL (v19) + factory FFI
+│   ├── database/                # SQLite helper + DDL (v20) + factory FFI
 │   ├── backup/                  # Copia ZIP (JSON + adjuntos) y exportación CSV
 │   ├── files/                   # Almacenamiento local de adjuntos
 │   ├── notifications/           # Notificaciones locales y sincronización
@@ -134,6 +134,7 @@ lib/
 │   ├── expenses/                # Gastos y categorías de gasto
 │   ├── finance/                 # Resumen, costo por km, presupuesto y gráfica
 │   ├── checklists/              # Checklists e inspecciones pre-viaje
+│   ├── components/              # Llantas, batería, cadena, frenos y suspensión
 │   ├── restrictions/            # Regla semanal de pico y placa
 │   ├── reminders/               # Bandeja única, salud del vehículo y alertas
 │   ├── reports/                 # Hoja de vida en PDF
@@ -173,11 +174,20 @@ lib/
 | `Checklist` / `ChecklistItem` | `checklists` / `checklist_items` | vehicleId, vehicleType, name, label, sortOrder |
 | `InspectionRun` / `InspectionAnswer` | `inspection_runs` / `inspection_answers` | vehicleId, checklistId, date, odometer, itemId, status |
 | `Budget` | `budgets` | vehicleId, period (YYYY-MM), amount |
+| `VehicleComponent` | `components` | vehicleId, name, type, position, installedAt, installedKm, intervalKm/Months, warningKm/Days, active |
+| `ComponentService` | `component_services` | componentId, date, odometer, cost, notes, resetInterval |
 
 Categorías de mantenimiento por tipo: car/truck (11), motorcycle (9), bike (6), other (1).
 Definidas en `lib/features/maintenance/categories.dart`. Cada categoría puede tener
 `interval_km`/`warning_km` y `interval_months`/`warning_days`; el próximo servicio
 se calcula con **lo que ocurra primero** entre kilometraje y fecha.
+
+Los **componentes** son piezas con ciclo propio (llantas, batería, cadena,
+frenos, suspensión). Cada llanta es un componente individual y `position` es
+texto libre, así que el camión se maneja con el mismo formulario
+(`Eje 2 izquierda exterior`). El estado se calcula con lo que ocurra primero
+entre km y meses; un componente inactivo no genera recordatorios. Registrar un
+servicio con `resetInterval` reinicia `installed_at`/`installed_km`.
 
 La fuente de verdad de SOAT, RTM, impuesto, seguro y licencia es `documents`.
 Las columnas `vehicles.soat_expires_at` y `rtm_expires_at` se conservan solo por

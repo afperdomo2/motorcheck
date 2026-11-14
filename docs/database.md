@@ -260,6 +260,49 @@ Presupuesto mensual por vehículo.
 
 Índice único `(vehicle_id, period)`.
 
+### components
+
+Piezas con ciclo de vida propio: llantas, batería, cadena, frenos o
+suspensión. Una fila por componente individual (por ejemplo, cada llanta de un
+carro o cada posición de un camión).
+
+| Columna | Tipo | Restricciones |
+|--------|------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
+| vehicle_id | INTEGER | NOT NULL, FK → vehicles(id) ON DELETE CASCADE |
+| name | TEXT | NOT NULL |
+| type | TEXT | NOT NULL DEFAULT 'other' (tire, battery, chain, brakes, suspension, other) |
+| position | TEXT | Texto libre: "Delantera", "Eje 2 izquierda exterior" |
+| installed_at | TEXT | NOT NULL (YYYY-MM-DD) |
+| installed_km | INTEGER | Kilometraje al instalar |
+| interval_km | INTEGER | Cada cuántos km se cambia o revisa |
+| interval_months | INTEGER | Cada cuántos meses |
+| warning_km | INTEGER | Aviso previo en km |
+| warning_days | INTEGER | Aviso previo en días |
+| notes | TEXT | |
+| active | INTEGER | NOT NULL DEFAULT 1; inactivo no genera avisos |
+| created_at | TEXT | NOT NULL (ISO 8601) |
+| updated_at | TEXT | NOT NULL (ISO 8601) |
+
+Índice `(vehicle_id, active)`.
+
+### component_services
+
+Historial de cambios, rotaciones y revisiones de un componente.
+
+| Columna | Tipo | Restricciones |
+|--------|------|-------------|
+| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
+| component_id | INTEGER | NOT NULL, FK → components(id) ON DELETE CASCADE |
+| date | TEXT | NOT NULL (YYYY-MM-DD) |
+| odometer | INTEGER | Kilometraje del servicio |
+| cost | REAL | DEFAULT 0 |
+| notes | TEXT | |
+| reset_interval | INTEGER | NOT NULL DEFAULT 0; si es 1 reinicia el ciclo |
+| created_at | TEXT | NOT NULL (ISO 8601) |
+
+Índice `(component_id, date DESC)`.
+
 ## Regla de kilometraje
 
 `vehicles.current_mileage` es la fuente de verdad y **solo sube
@@ -501,6 +544,41 @@ CREATE TABLE budgets (
 );
 CREATE UNIQUE INDEX idx_budgets_vehicle_period
   ON budgets(vehicle_id, period);
+
+CREATE TABLE components (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'other',
+  position TEXT,
+  installed_at TEXT NOT NULL,
+  installed_km INTEGER,
+  interval_km INTEGER,
+  interval_months INTEGER,
+  warning_km INTEGER,
+  warning_days INTEGER,
+  notes TEXT,
+  active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_components_vehicle
+  ON components(vehicle_id, active);
+
+CREATE TABLE component_services (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  component_id INTEGER NOT NULL,
+  date TEXT NOT NULL,
+  odometer INTEGER,
+  cost REAL DEFAULT 0,
+  notes TEXT,
+  reset_interval INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (component_id) REFERENCES components(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_component_services_component
+  ON component_services(component_id, date DESC);
 ```
 
 ## Relaciones
@@ -514,6 +592,7 @@ vehicles (1) ──────┼──< (N) mileage_readings
                     ├──< (N) expenses
                     ├──< (N) inspection_runs ──< (N) inspection_answers
                     ├──< (N) budgets
+                    ├──< (N) components ──< (N) component_services
                     └──(1) vehicle_restrictions
 
 maintenances (1) ────< (N) maintenance_attachments
@@ -523,7 +602,8 @@ expense_categories (1) ────< (N) expenses
 ```
 
 - Eliminar un vehículo → cascada a mantenimientos, items, lecturas de km,
-  documentos y regla de pico y placa
+  documentos, componentes y regla de pico y placa
+- Eliminar un componente → cascada a su historial de servicios
 - Eliminar un mantenimiento → cascada a todos sus items
 - Eliminar un taller → el `workshop_id` del mantenimiento se pone en NULL
 - Los costos en `maintenances` están desnormalizados para fácil visualización (suma de costos de items)
@@ -580,7 +660,7 @@ El borrado es hard-delete, pero el repositorio verifica que la categoría no est
 
 ## Versión de Base de Datos
 
-Versión actual: **19**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
+Versión actual: **20**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
 - v2: agregó `current_mileage`
 - v3: agregó `workshops` + `maintenance_cost` + `workshop_id` en maintenances
 - v4: reestructuró `maintenance_items` (renombró columnas)
@@ -599,6 +679,7 @@ Versión actual: **19**. Migraciones incrementales vía `onUpgrade` en `Database
 - v17: agregó `maintenance_attachments`
 - v18: agregó checklists, items, inspecciones y respuestas + seed pre-viaje
 - v19: agregó `budgets`
+- v20: agregó `components` y `component_services`
 
 ## Respaldo
 

@@ -4,6 +4,9 @@ import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:motorcheck/core/backup/backup_service.dart';
 import 'package:motorcheck/core/database/database_helper.dart';
+import 'package:motorcheck/features/components/models/component_service.dart';
+import 'package:motorcheck/features/components/models/vehicle_component.dart';
+import 'package:motorcheck/features/components/repository.dart';
 import 'package:motorcheck/features/documents/models/vehicle_document.dart';
 import 'package:motorcheck/features/documents/repository.dart';
 import 'package:motorcheck/features/expenses/models/expense.dart';
@@ -130,6 +133,27 @@ void main() {
         createdAt: now,
       ),
     );
+    final componentsRepo = ComponentsRepository();
+    final componentId = await componentsRepo.insert(
+      VehicleComponent(
+        vehicleId: vehicleId,
+        name: 'Llanta delantera',
+        type: 'tire',
+        installedAt: now,
+        installedKm: 10000,
+        intervalKm: 10000,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    await componentsRepo.registerService(
+      ComponentService(
+        componentId: componentId,
+        date: now,
+        odometer: 10000,
+        createdAt: now,
+      ),
+    );
     final budgetRepo = BudgetRepository();
     await budgetRepo.upsert(
       Budget(
@@ -149,6 +173,8 @@ void main() {
     expect(result.counts['expenses'], 1);
     expect(result.counts['maintenance_attachments'], 1);
     expect(result.counts['budgets'], 1);
+    expect(result.counts['components'], 1);
+    expect(result.counts['component_services'], 1);
     expect(result.counts['expense_categories'], greaterThanOrEqualTo(8));
     expect(result.attachments, 3);
 
@@ -198,6 +224,14 @@ void main() {
     );
     expect(restoredBudget, isNotNull);
     expect(restoredBudget!.amount, 800000);
+
+    final restoredComponents = await componentsRepo.getByVehicleId(vehicleId);
+    expect(restoredComponents, hasLength(1));
+    expect(restoredComponents.first.name, 'Llanta delantera');
+    final restoredServices = await componentsRepo.getServices(
+      restoredComponents.first.id!,
+    );
+    expect(restoredServices, hasLength(1));
   });
 
   test('rechaza un archivo que no es de MotorCheck', () async {

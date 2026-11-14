@@ -299,4 +299,49 @@ CREATE TABLE IF NOT EXISTS budgets (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_budgets_vehicle_period
   ON budgets(vehicle_id, period)
 ''';
+
+  static const createComponents = '''
+CREATE TABLE IF NOT EXISTS components (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  vehicle_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'other',
+  position TEXT,
+  installed_at TEXT NOT NULL,
+  installed_km INTEGER,
+  interval_km INTEGER,
+  interval_months INTEGER,
+  warning_km INTEGER,
+  warning_days INTEGER,
+  notes TEXT,
+  active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+)
+''';
+
+  static const createComponentsVehicleIndex = '''
+CREATE INDEX IF NOT EXISTS idx_components_vehicle
+  ON components(vehicle_id, active)
+''';
+
+  static const createComponentServices = '''
+CREATE TABLE IF NOT EXISTS component_services (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  component_id INTEGER NOT NULL,
+  date TEXT NOT NULL,
+  odometer INTEGER,
+  cost REAL DEFAULT 0,
+  notes TEXT,
+  reset_interval INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (component_id) REFERENCES components(id) ON DELETE CASCADE
+)
+''';
+
+  static const createComponentServicesIndex = '''
+CREATE INDEX IF NOT EXISTS idx_component_services_component
+  ON component_services(component_id, date DESC)
+''';
 }

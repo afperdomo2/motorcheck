@@ -36,7 +36,7 @@ lib/
 ├── core/                    # Infraestructura compartida
 │   ├── app_info.dart        # Nombre, versión y datos de licencia
 │   ├── theme/               # Sistema de diseño (light + dark)
-│   ├── database/            # SQLite v19 + factory FFI (escritorio)
+│   ├── database/            # SQLite v20 + factory FFI (escritorio)
 │   ├── backup/              # ZIP (datos + adjuntos) y CSV
 │   ├── files/               # Almacenamiento local de adjuntos
 │   ├── notifications/       # Notificaciones locales y sincronización
@@ -51,6 +51,7 @@ lib/
 │   ├── expenses/            # Gastos y categorías de gasto
 │   ├── finance/             # Resumen, costo por km, presupuesto y gráficas
 │   ├── checklists/          # Inspecciones y checklist pre-viaje
+│   ├── components/          # Llantas, batería, cadena, frenos y suspensión
 │   ├── restrictions/        # Regla semanal de pico y placa
 │   ├── reminders/           # Bandeja única y salud del vehículo
 │   ├── reports/             # Hoja de vida en PDF
@@ -157,6 +158,27 @@ Gastos (5.ª pestaña)
         ↓
   Dashboard, PDF, costo por km y presupuesto
 ```
+
+### Componentes y desgaste
+
+```
+Vehículo
+  └─ Componentes (llanta, batería, cadena, frenos, suspensión, otro)
+       ├─ Instalación: fecha + kilometraje
+       ├─ Frecuencia: km, meses o ambos
+       ├─ Estado: al día / próximo / vencido (lo que ocurra primero)
+       └─ Servicios: cambio, rotación o revisión
+            └─ resetInterval = true reinicia el ciclo
+```
+
+- Una fila por componente individual: 2 llantas en moto y bicicleta, 4 más
+  repuesto opcional en carro, N posiciones en camión.
+- `position` es texto libre, así que el camión se maneja sin UI especializada
+  (`Eje 2 izquierda exterior`, etc.).
+- Los componentes activos vencidos o próximos entran a `remindersProvider` y a
+  la salud del vehículo.
+- El PDF incluye una sección de componentes (máximo 12) y el respaldo incluye
+  `components` y `component_services`.
 
 ### Mantenimiento avanzado
 

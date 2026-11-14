@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/settings/app_preferences.dart';
 import '../../core/utils/date_status.dart';
 import '../../core/utils/formatters.dart';
+import '../components/models/vehicle_component.dart';
+import '../components/providers.dart';
 import '../documents/models/vehicle_document.dart';
 import '../documents/providers.dart';
 import '../maintenance/providers.dart';
@@ -46,6 +48,34 @@ final remindersProvider = FutureProvider<List<Reminder>>((ref) async {
           dueDate: item.nextServiceDate,
           remainingKm: item.remainingKm,
           remainingDays: item.remainingDays,
+        ),
+      );
+    }
+
+    final componentStatuses = await ref.watch(
+      vehicleComponentStatusesProvider(vehicleId).future,
+    );
+    for (final status in componentStatuses) {
+      final component = status.component;
+      if (!component.active) continue;
+      if (!status.isOverdue && !status.isWarning) continue;
+      reminders.add(
+        Reminder(
+          id: 'component-${component.id ?? component.name}',
+          kind: ReminderKind.component,
+          vehicleId: vehicleId,
+          vehicleName: vehicle.name,
+          title: component.name,
+          subtitle: 'Componente · ${componentTypeFor(component.type).label}',
+          severity: status.isOverdue
+              ? ReminderSeverity.overdue
+              : ReminderSeverity.warning,
+          route: component.id == null
+              ? '/vehicles/$vehicleId/components'
+              : '/vehicles/$vehicleId/components/${component.id}',
+          dueDate: status.nextDate,
+          remainingKm: status.remainingKm,
+          remainingDays: status.remainingDays,
         ),
       );
     }
@@ -202,6 +232,20 @@ final vehicleHealthProvider = FutureProvider.family<HealthScore, int>((
             r.severity == ReminderSeverity.warning,
       )
       .length;
+  final overdueComponents = reminders
+      .where(
+        (r) =>
+            r.kind == ReminderKind.component &&
+            r.severity == ReminderSeverity.overdue,
+      )
+      .length;
+  final warningComponents = reminders
+      .where(
+        (r) =>
+            r.kind == ReminderKind.component &&
+            r.severity == ReminderSeverity.warning,
+      )
+      .length;
 
   final hasData = reminders.isNotEmpty || stats.lastReadingDate != null;
   if (!hasData) {
@@ -219,6 +263,8 @@ final vehicleHealthProvider = FutureProvider.family<HealthScore, int>((
     expiredDocuments: expiredDocuments,
     expiringDocuments: expiringDocuments,
     daysSinceMileageUpdate: stats.daysSinceLastReading,
+    overdueComponents: overdueComponents,
+    warningComponents: warningComponents,
   );
 
   final reasons = <String>[];
@@ -248,6 +294,20 @@ final vehicleHealthProvider = FutureProvider.family<HealthScore, int>((
       expiringDocuments == 1
           ? '1 documento por vencer'
           : '$expiringDocuments documentos por vencer',
+    );
+  }
+  if (overdueComponents > 0) {
+    reasons.add(
+      overdueComponents == 1
+          ? '1 componente vencido'
+          : '$overdueComponents componentes vencidos',
+    );
+  }
+  if (warningComponents > 0) {
+    reasons.add(
+      warningComponents == 1
+          ? '1 componente próximo'
+          : '$warningComponents componentes próximos',
     );
   }
   if (stats.daysSinceLastReading != null && stats.daysSinceLastReading! > 60) {

@@ -14,6 +14,8 @@ import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/status_chip.dart';
 import '../../../shared/widgets/vehicle_avatar.dart';
 import '../../checklists/providers.dart';
+import '../../components/providers.dart';
+import '../../components/widgets/vehicle_components_card.dart';
 import '../../documents/models/vehicle_document.dart';
 import '../../documents/providers.dart';
 import '../../maintenance/providers.dart';
@@ -112,6 +114,7 @@ class VehicleDetailScreen extends ConsumerWidget {
               ref.invalidate(vehicleCurrentDocumentsProvider(vehicleId));
               ref.invalidate(vehicleRestrictionStatusProvider(vehicleId));
               ref.invalidate(vehicleHealthProvider(vehicleId));
+              ref.invalidate(vehicleComponentStatusesProvider(vehicleId));
               await Future.wait([
                 ref.read(selectedVehicleProvider(vehicleId).future),
                 ref.read(vehicleMaintenanceSummaryProvider(vehicleId).future),
@@ -120,6 +123,7 @@ class VehicleDetailScreen extends ConsumerWidget {
                 ref.read(vehicleCurrentDocumentsProvider(vehicleId).future),
                 ref.read(vehicleRestrictionStatusProvider(vehicleId).future),
                 ref.read(vehicleHealthProvider(vehicleId).future),
+                ref.read(vehicleComponentStatusesProvider(vehicleId).future),
               ]);
             },
             child: ListView(
@@ -147,6 +151,8 @@ class VehicleDetailScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 _ChecklistsCard(vehicleId: vehicleId),
+                const SizedBox(height: AppSpacing.lg),
+                VehicleComponentsCard(vehicleId: vehicleId),
                 const SizedBox(height: AppSpacing.lg),
                 summaryAsync.when(
                   loading: () => const LoadingIndicator(),

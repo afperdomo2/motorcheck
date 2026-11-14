@@ -35,7 +35,7 @@ class DatabaseHelper {
 
     return openDatabase(
       path,
-      version: 19,
+      version: 20,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onOpen: _ensureSchemaIntegrity,
@@ -122,6 +122,10 @@ class DatabaseHelper {
     await db.execute(Tables.createInspectionAnswersIndex);
     await db.execute(Tables.createBudgets);
     await db.execute(Tables.createBudgetsUniqueIndex);
+    await db.execute(Tables.createComponents);
+    await db.execute(Tables.createComponentsVehicleIndex);
+    await db.execute(Tables.createComponentServices);
+    await db.execute(Tables.createComponentServicesIndex);
 
     // Los backfills viven solo en `_onUpgrade` (v13/v14). Ejecutarlos en cada
     // apertura resucitaría documentos o lecturas que el usuario haya borrado.
@@ -202,6 +206,10 @@ class DatabaseHelper {
     batch.execute(Tables.createInspectionAnswersIndex);
     batch.execute(Tables.createBudgets);
     batch.execute(Tables.createBudgetsUniqueIndex);
+    batch.execute(Tables.createComponents);
+    batch.execute(Tables.createComponentsVehicleIndex);
+    batch.execute(Tables.createComponentServices);
+    batch.execute(Tables.createComponentServicesIndex);
     await batch.commit(noResult: true);
     await _seedDefaultCategories(db);
     await _seedExpenseCategories(db);
@@ -357,6 +365,12 @@ class DatabaseHelper {
     if (oldVersion < 19) {
       await db.execute(Tables.createBudgets);
       await db.execute(Tables.createBudgetsUniqueIndex);
+    }
+    if (oldVersion < 20) {
+      await db.execute(Tables.createComponents);
+      await db.execute(Tables.createComponentsVehicleIndex);
+      await db.execute(Tables.createComponentServices);
+      await db.execute(Tables.createComponentServicesIndex);
     }
   }
 

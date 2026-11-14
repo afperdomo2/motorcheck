@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/formatters.dart';
+import '../components/models/component_status.dart';
+import '../components/providers.dart';
 import '../documents/models/vehicle_document.dart';
 import '../documents/providers.dart';
 import '../expenses/models/expense.dart';
@@ -29,6 +31,7 @@ class VehicleReportData {
     required this.workshops,
     required this.categories,
     required this.documents,
+    required this.components,
     required this.upcoming,
     required this.health,
     required this.mileageStats,
@@ -46,6 +49,7 @@ class VehicleReportData {
   final Map<int, Workshop> workshops;
   final Map<String, MaintenanceCategory> categories;
   final List<VehicleDocument> documents;
+  final List<ComponentStatus> components;
   final List<UpcomingMaintenance> upcoming;
   final HealthScore health;
   final MileageStats mileageStats;
@@ -87,6 +91,9 @@ final vehicleReportDataProvider = FutureProvider.family<VehicleReportData, int>(
     final upcoming = await ref.watch(
       upcomingMaintenanceProvider(vehicleId).future,
     );
+    final components = await ref.watch(
+      vehicleComponentStatusesProvider(vehicleId).future,
+    );
     final health = await ref.watch(vehicleHealthProvider(vehicleId).future);
     final stats = await ref.watch(mileageStatsProvider(vehicleId).future);
     final fuelLogs = await ref.watch(fuelLogsProvider(vehicleId).future);
@@ -105,6 +112,7 @@ final vehicleReportDataProvider = FutureProvider.family<VehicleReportData, int>(
       },
       categories: {for (final category in categories) category.key: category},
       documents: [...vehicleDocuments, ...globalDocuments],
+      components: components,
       upcoming: upcoming.where((item) => item.hasInterval).toList(),
       health: health,
       mileageStats: stats,

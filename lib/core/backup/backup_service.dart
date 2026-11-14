@@ -13,7 +13,7 @@ import '../settings/app_preferences.dart';
 import '../utils/user_error.dart';
 
 const _backupFormat = 'motorcheck-backup';
-const _backupSchemaVersion = 19;
+const _backupSchemaVersion = 20;
 
 const _tables = <String>[
   'vehicles',
@@ -28,6 +28,8 @@ const _tables = <String>[
   'mileage_readings',
   'documents',
   'vehicle_restrictions',
+  'components',
+  'component_services',
   'checklists',
   'checklist_items',
   'inspection_runs',

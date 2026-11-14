@@ -100,6 +100,7 @@ class _FilterBar extends StatelessWidget {
           _chip(context, null, 'Todos'),
           _chip(context, ReminderKind.maintenance, 'Mantenimiento'),
           _chip(context, ReminderKind.document, 'Documentos'),
+          _chip(context, ReminderKind.component, 'Componentes'),
           _chip(context, ReminderKind.restriction, 'Pico y placa'),
         ],
       ),

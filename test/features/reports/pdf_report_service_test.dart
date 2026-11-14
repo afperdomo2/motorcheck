@@ -134,6 +134,7 @@ void main() {
           updatedAt: createdAt,
         ),
       ],
+      components: const [],
       upcoming: [
         UpcomingMaintenance(
           category: category.copyWith(intervalKm: 5000),
@@ -234,6 +235,7 @@ void main() {
       },
       categories: {'car_oil': category},
       documents: const [],
+      components: const [],
       upcoming: const [],
       health: const HealthScore(
         value: 82,

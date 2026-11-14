@@ -21,6 +21,7 @@ class ReminderTile extends StatelessWidget {
     final icon = switch (reminder.kind) {
       ReminderKind.maintenance => Icons.build_outlined,
       ReminderKind.document => Icons.description_outlined,
+      ReminderKind.component => Icons.tire_repair,
       ReminderKind.restriction => Icons.directions_car_outlined,
     };
 
