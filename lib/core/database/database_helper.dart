@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'database_factory.dart';
+import 'component_defaults.dart';
 import 'tables.dart';
 import '../utils/formatters.dart';
 
@@ -35,7 +36,7 @@ class DatabaseHelper {
 
     return openDatabase(
       path,
-      version: 20,
+      version: 21,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onOpen: _ensureSchemaIntegrity,
@@ -124,8 +125,19 @@ class DatabaseHelper {
     await db.execute(Tables.createBudgetsUniqueIndex);
     await db.execute(Tables.createComponents);
     await db.execute(Tables.createComponentsVehicleIndex);
-    await db.execute(Tables.createComponentServices);
-    await db.execute(Tables.createComponentServicesIndex);
+    if (!await _hasColumn(db, 'components', 'is_system')) {
+      await db.execute(
+        'ALTER TABLE components ADD COLUMN is_system INTEGER NOT NULL DEFAULT 0',
+      );
+    }
+    if (!await _hasColumn(db, 'components', 'category_key')) {
+      await db.execute('ALTER TABLE components ADD COLUMN category_key TEXT');
+    }
+    if (!await _hasColumn(db, 'maintenance_items', 'component_id')) {
+      await db.execute(
+        'ALTER TABLE maintenance_items ADD COLUMN component_id INTEGER',
+      );
+    }
 
     // Los backfills viven solo en `_onUpgrade` (v13/v14). Ejecutarlos en cada
     // apertura resucitaría documentos o lecturas que el usuario haya borrado.
@@ -208,8 +220,6 @@ class DatabaseHelper {
     batch.execute(Tables.createBudgetsUniqueIndex);
     batch.execute(Tables.createComponents);
     batch.execute(Tables.createComponentsVehicleIndex);
-    batch.execute(Tables.createComponentServices);
-    batch.execute(Tables.createComponentServicesIndex);
     await batch.commit(noResult: true);
     await _seedDefaultCategories(db);
     await _seedExpenseCategories(db);
@@ -369,8 +379,110 @@ class DatabaseHelper {
     if (oldVersion < 20) {
       await db.execute(Tables.createComponents);
       await db.execute(Tables.createComponentsVehicleIndex);
-      await db.execute(Tables.createComponentServices);
-      await db.execute(Tables.createComponentServicesIndex);
+    }
+    if (oldVersion < 21) {
+      if (!await _hasColumn(db, 'components', 'is_system')) {
+        await db.execute(
+          'ALTER TABLE components ADD COLUMN is_system INTEGER NOT NULL DEFAULT 0',
+        );
+      }
+      if (!await _hasColumn(db, 'components', 'category_key')) {
+        await db.execute('ALTER TABLE components ADD COLUMN category_key TEXT');
+      }
+      if (!await _hasColumn(db, 'maintenance_items', 'component_id')) {
+        await db.execute(
+          'ALTER TABLE maintenance_items ADD COLUMN component_id INTEGER',
+        );
+      }
+      await _migrateComponentServices(db);
+      await _seedDefaultCategories(db);
+      await _seedDefaultComponents(db);
+    }
+  }
+
+  /// Convierte los servicios sueltos de la v20 en mantenimientos con su ítem,
+  /// para que el reemplazo viva siempre dentro de una cuenta única.
+  Future<void> _migrateComponentServices(Database db) async {
+    final exists = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' "
+      "AND name = 'component_services'",
+    );
+    if (exists.isEmpty) return;
+
+    final services = await db.rawQuery(
+      'SELECT s.*, c.vehicle_id, c.category_key, c.type '
+      'FROM component_services s '
+      'JOIN components c ON c.id = s.component_id',
+    );
+    for (final service in services) {
+      final createdAt =
+          service['created_at'] as String? ?? formatDateTime(DateTime.now());
+      final cost = (service['cost'] as num?)?.toDouble() ?? 0;
+      final maintenanceId = await db.insert('maintenances', {
+        'vehicle_id': service['vehicle_id'],
+        'date': service['date'],
+        'mileage': service['odometer'],
+        'maintenance_cost': 0,
+        'total_parts_cost': cost,
+        'notes': service['notes'],
+        'created_at': createdAt,
+        'updated_at': createdAt,
+      });
+      await db.insert('maintenance_items', {
+        'maintenance_id': maintenanceId,
+        'category': service['category_key'] ?? 'general',
+        'parts_cost': cost,
+        'notes': service['notes'],
+        'component_id': service['component_id'],
+        'created_at': createdAt,
+      });
+    }
+    await db.execute('DROP TABLE component_services');
+  }
+
+  /// Crea los componentes de plantilla que falten en cada vehículo existente.
+  Future<void> _seedDefaultComponents(Database db) async {
+    final vehicles = await db.query(
+      'vehicles',
+      columns: ['id', 'type', 'current_mileage', 'created_at'],
+    );
+    for (final vehicle in vehicles) {
+      final vehicleId = vehicle['id'] as int;
+      final type = (vehicle['type'] as String?) ?? 'other';
+      final templates = componentTemplatesFor(type);
+      if (templates.isEmpty) continue;
+      final createdAt =
+          (vehicle['created_at'] as String?) ?? formatDateTime(DateTime.now());
+      final installedAt = createdAt.length >= 10
+          ? createdAt.substring(0, 10)
+          : createdAt;
+      for (final template in templates) {
+        final existing = await db.query(
+          'components',
+          columns: ['id'],
+          where: 'vehicle_id = ? AND name = ?',
+          whereArgs: [vehicleId, template.name],
+          limit: 1,
+        );
+        if (existing.isNotEmpty) continue;
+        await db.insert('components', {
+          'vehicle_id': vehicleId,
+          'name': template.name,
+          'type': template.type,
+          'category_key': template.categoryKey,
+          'position': template.position,
+          'installed_at': installedAt,
+          'installed_km': vehicle['current_mileage'],
+          'interval_km': template.intervalKm,
+          'interval_months': template.intervalMonths,
+          'warning_km': template.warningKm,
+          'warning_days': template.warningDays,
+          'active': template.active ? 1 : 0,
+          'is_system': 1,
+          'created_at': createdAt,
+          'updated_at': createdAt,
+        });
+      }
     }
   }
 
@@ -635,6 +747,55 @@ class DatabaseHelper {
         'icon_name': 'build',
         'vehicle_type': 'truck',
         'sort_order': 11,
+      },
+      {
+        'key': 'bike_battery',
+        'name': 'Batería',
+        'icon_name': 'battery_charging_full',
+        'vehicle_type': 'bike',
+        'sort_order': 8,
+      },
+      {
+        'key': 'scooter_tires',
+        'name': 'Llantas',
+        'icon_name': 'circle',
+        'vehicle_type': 'scooter',
+        'sort_order': 1,
+      },
+      {
+        'key': 'scooter_brakes',
+        'name': 'Frenos',
+        'icon_name': 'disc_full',
+        'vehicle_type': 'scooter',
+        'sort_order': 2,
+      },
+      {
+        'key': 'scooter_battery',
+        'name': 'Batería',
+        'icon_name': 'battery_charging_full',
+        'vehicle_type': 'scooter',
+        'sort_order': 3,
+      },
+      {
+        'key': 'scooter_suspension',
+        'name': 'Suspensión',
+        'icon_name': 'tire_repair',
+        'vehicle_type': 'scooter',
+        'sort_order': 4,
+      },
+      {
+        'key': 'scooter_electrical',
+        'name': 'Eléctrico',
+        'icon_name': 'electrical_services',
+        'vehicle_type': 'scooter',
+        'sort_order': 5,
+      },
+      {
+        'key': 'scooter_general',
+        'name': 'General',
+        'icon_name': 'build',
+        'vehicle_type': 'scooter',
+        'sort_order': 6,
       },
       {
         'key': 'other_general',

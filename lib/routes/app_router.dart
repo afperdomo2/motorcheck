@@ -12,7 +12,6 @@ import '../features/vehicles/screens/mileage_history_screen.dart';
 import '../features/components/screens/components_screen.dart';
 import '../features/components/screens/component_form_screen.dart';
 import '../features/components/screens/component_detail_screen.dart';
-import '../features/components/screens/component_service_form_screen.dart';
 import '../features/checklists/screens/checklists_screen.dart';
 import '../features/checklists/screens/inspection_form_screen.dart';
 import '../features/checklists/screens/inspection_detail_screen.dart';
@@ -65,7 +64,13 @@ final appRouter = GoRouter(
                     final vehicleId = int.tryParse(
                       state.uri.queryParameters['vehicleId'] ?? '',
                     );
-                    return MaintenanceFormScreen(vehicleId: vehicleId);
+                    final componentId = int.tryParse(
+                      state.uri.queryParameters['componentId'] ?? '',
+                    );
+                    return MaintenanceFormScreen(
+                      vehicleId: vehicleId,
+                      componentId: componentId,
+                    );
                   },
                 ),
                 GoRoute(
@@ -176,7 +181,8 @@ final appRouter = GoRouter(
                       path: 'add',
                       builder: (context, state) {
                         final id = int.parse(state.pathParameters['id']!);
-                        return ComponentFormScreen(vehicleId: id);
+                        final spare = state.uri.queryParameters['spare'] == '1';
+                        return ComponentFormScreen(vehicleId: id, spare: spare);
                       },
                     ),
                     GoRoute(
@@ -204,21 +210,6 @@ final appRouter = GoRouter(
                               state.pathParameters['componentId']!,
                             );
                             return ComponentFormScreen(
-                              vehicleId: vehicleId,
-                              componentId: componentId,
-                            );
-                          },
-                        ),
-                        GoRoute(
-                          path: 'services/add',
-                          builder: (context, state) {
-                            final vehicleId = int.parse(
-                              state.pathParameters['id']!,
-                            );
-                            final componentId = int.parse(
-                              state.pathParameters['componentId']!,
-                            );
-                            return ComponentServiceFormScreen(
                               vehicleId: vehicleId,
                               componentId: componentId,
                             );

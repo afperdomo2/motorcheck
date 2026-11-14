@@ -281,27 +281,26 @@ carro o cada posición de un camión).
 | warning_days | INTEGER | Aviso previo en días |
 | notes | TEXT | |
 | active | INTEGER | NOT NULL DEFAULT 1; inactivo no genera avisos |
+| is_system | INTEGER | NOT NULL DEFAULT 0; 1 = plantilla, no se elimina |
+| category_key | TEXT | Categoría de mantenimiento asociada (ej: `car_tires`) |
 | created_at | TEXT | NOT NULL (ISO 8601) |
 | updated_at | TEXT | NOT NULL (ISO 8601) |
 
 Índice `(vehicle_id, active)`.
 
-### component_services
+### maintenance_items.component_id
 
-Historial de cambios, rotaciones y revisiones de un componente.
+El reemplazo de un componente **no** tiene tabla propia: se guarda en
+`maintenance_items.component_id`. Cada ítem de un mantenimiento puede apuntar a
+la pieza que reemplazó. El historial del componente se deriva de esos ítems
+junto con la fecha y el kilometraje del mantenimiento.
 
-| Columna | Tipo | Restricciones |
-|--------|------|-------------|
-| id | INTEGER | PRIMARY KEY AUTOINCREMENT |
-| component_id | INTEGER | NOT NULL, FK → components(id) ON DELETE CASCADE |
-| date | TEXT | NOT NULL (YYYY-MM-DD) |
-| odometer | INTEGER | Kilometraje del servicio |
-| cost | REAL | DEFAULT 0 |
-| notes | TEXT | |
-| reset_interval | INTEGER | NOT NULL DEFAULT 0; si es 1 reinicia el ciclo |
-| created_at | TEXT | NOT NULL (ISO 8601) |
-
-Índice `(component_id, date DESC)`.
+- Si `component_id` es `NULL`, el ítem es solo un trabajo o repuesto.
+- Si tiene valor, el componente reinicia su ciclo con la fecha y km del
+  mantenimiento.
+- Al borrar el mantenimiento se borra el ítem y el historial se recalcula.
+- La tabla `component_services` de la v20 se migró a mantenimientos y se
+  eliminó en la v21.
 
 ## Regla de kilometraje
 
@@ -367,8 +366,10 @@ CREATE TABLE maintenance_items (
   category TEXT DEFAULT 'general',
   parts_cost REAL DEFAULT 0,
   notes TEXT,
+  component_id INTEGER,
   created_at TEXT NOT NULL,
-  FOREIGN KEY (maintenance_id) REFERENCES maintenances(id) ON DELETE CASCADE
+  FOREIGN KEY (maintenance_id) REFERENCES maintenances(id) ON DELETE CASCADE,
+  FOREIGN KEY (component_id) REFERENCES components(id) ON DELETE SET NULL
 );
 
 CREATE TABLE maintenance_categories (
@@ -559,6 +560,8 @@ CREATE TABLE components (
   warning_days INTEGER,
   notes TEXT,
   active INTEGER NOT NULL DEFAULT 1,
+  is_system INTEGER NOT NULL DEFAULT 0,
+  category_key TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
@@ -566,19 +569,7 @@ CREATE TABLE components (
 CREATE INDEX idx_components_vehicle
   ON components(vehicle_id, active);
 
-CREATE TABLE component_services (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  component_id INTEGER NOT NULL,
-  date TEXT NOT NULL,
-  odometer INTEGER,
-  cost REAL DEFAULT 0,
-  notes TEXT,
-  reset_interval INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL,
-  FOREIGN KEY (component_id) REFERENCES components(id) ON DELETE CASCADE
-);
-CREATE INDEX idx_component_services_component
-  ON component_services(component_id, date DESC);
+-- El reemplazo vive en maintenance_items.component_id
 ```
 
 ## Relaciones
@@ -592,7 +583,7 @@ vehicles (1) ──────┼──< (N) mileage_readings
                     ├──< (N) expenses
                     ├──< (N) inspection_runs ──< (N) inspection_answers
                     ├──< (N) budgets
-                    ├──< (N) components ──< (N) component_services
+                    ├──< (N) components
                     └──(1) vehicle_restrictions
 
 maintenances (1) ────< (N) maintenance_attachments
@@ -603,7 +594,8 @@ expense_categories (1) ────< (N) expenses
 
 - Eliminar un vehículo → cascada a mantenimientos, items, lecturas de km,
   documentos, componentes y regla de pico y placa
-- Eliminar un componente → cascada a su historial de servicios
+- Eliminar un componente → sus ítems de mantenimiento quedan sin enlace
+  (`component_id = NULL`); el mantenimiento y su costo se conservan
 - Eliminar un mantenimiento → cascada a todos sus items
 - Eliminar un taller → el `workshop_id` del mantenimiento se pone en NULL
 - Los costos en `maintenances` están desnormalizados para fácil visualización (suma de costos de items)
@@ -660,7 +652,7 @@ El borrado es hard-delete, pero el repositorio verifica que la categoría no est
 
 ## Versión de Base de Datos
 
-Versión actual: **20**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
+Versión actual: **21**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
 - v2: agregó `current_mileage`
 - v3: agregó `workshops` + `maintenance_cost` + `workshop_id` en maintenances
 - v4: reestructuró `maintenance_items` (renombró columnas)
@@ -680,6 +672,9 @@ Versión actual: **20**. Migraciones incrementales vía `onUpgrade` en `Database
 - v18: agregó checklists, items, inspecciones y respuestas + seed pre-viaje
 - v19: agregó `budgets`
 - v20: agregó `components` y `component_services`
+- v21: `is_system` y `category_key` en components, `component_id` en
+  maintenance_items, migración de `component_services` a mantenimientos y
+  plantillas por tipo de vehículo
 
 ## Respaldo
 

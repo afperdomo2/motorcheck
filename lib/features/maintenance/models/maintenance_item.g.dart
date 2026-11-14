@@ -13,6 +13,7 @@ _MaintenanceItem _$MaintenanceItemFromJson(Map<String, dynamic> json) =>
       category: json['category'] as String? ?? 'general',
       partsCost: (json['partsCost'] as num?)?.toDouble() ?? 0,
       notes: json['notes'] as String?,
+      componentId: (json['componentId'] as num?)?.toInt(),
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
 
@@ -23,5 +24,6 @@ Map<String, dynamic> _$MaintenanceItemToJson(_MaintenanceItem instance) =>
       'category': instance.category,
       'partsCost': instance.partsCost,
       'notes': instance.notes,
+      'componentId': instance.componentId,
       'createdAt': instance.createdAt.toIso8601String(),
     };

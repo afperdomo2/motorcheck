@@ -4,7 +4,6 @@ import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:motorcheck/core/backup/backup_service.dart';
 import 'package:motorcheck/core/database/database_helper.dart';
-import 'package:motorcheck/features/components/models/component_service.dart';
 import 'package:motorcheck/features/components/models/vehicle_component.dart';
 import 'package:motorcheck/features/components/repository.dart';
 import 'package:motorcheck/features/documents/models/vehicle_document.dart';
@@ -17,6 +16,7 @@ import 'package:motorcheck/features/fuel/models/fuel_log.dart';
 import 'package:motorcheck/features/fuel/repository.dart';
 import 'package:motorcheck/features/maintenance/maintenance_attachment_repository.dart';
 import 'package:motorcheck/features/maintenance/models/maintenance.dart';
+import 'package:motorcheck/features/maintenance/models/maintenance_item.dart';
 import 'package:motorcheck/features/maintenance/models/maintenance_attachment.dart';
 import 'package:motorcheck/features/maintenance/repository.dart';
 import 'package:motorcheck/features/vehicles/models/vehicle.dart';
@@ -146,13 +146,24 @@ void main() {
         updatedAt: now,
       ),
     );
-    await componentsRepo.registerService(
-      ComponentService(
-        componentId: componentId,
-        date: now,
-        odometer: 10000,
+    await MaintenanceRepository().insert(
+      Maintenance(
+        vehicleId: vehicleId,
+        date: DateTime(2026, 6, 1),
+        mileage: 10500,
+        totalPartsCost: 250000,
         createdAt: now,
+        updatedAt: now,
       ),
+      [
+        MaintenanceItem(
+          maintenanceId: 0,
+          category: 'car_tires',
+          partsCost: 250000,
+          componentId: componentId,
+          createdAt: now,
+        ),
+      ],
     );
     final budgetRepo = BudgetRepository();
     await budgetRepo.upsert(
@@ -174,7 +185,6 @@ void main() {
     expect(result.counts['maintenance_attachments'], 1);
     expect(result.counts['budgets'], 1);
     expect(result.counts['components'], 1);
-    expect(result.counts['component_services'], 1);
     expect(result.counts['expense_categories'], greaterThanOrEqualTo(8));
     expect(result.attachments, 3);
 
@@ -228,10 +238,11 @@ void main() {
     final restoredComponents = await componentsRepo.getByVehicleId(vehicleId);
     expect(restoredComponents, hasLength(1));
     expect(restoredComponents.first.name, 'Llanta delantera');
-    final restoredServices = await componentsRepo.getServices(
-      restoredComponents.first.id!,
+    final restoredReplacements = await componentsRepo.getReplacements(
+      vehicleId,
     );
-    expect(restoredServices, hasLength(1));
+    expect(restoredReplacements, hasLength(1));
+    expect(restoredReplacements.first.componentId, componentId);
   });
 
   test('rechaza un archivo que no es de MotorCheck', () async {

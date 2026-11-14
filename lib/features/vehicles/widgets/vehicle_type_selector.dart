@@ -14,7 +14,14 @@ class VehicleTypeSelector extends StatelessWidget {
     required this.onChanged,
   });
 
-  static const _types = ['car', 'motorcycle', 'bike', 'truck', 'other'];
+  static const _types = [
+    'car',
+    'motorcycle',
+    'bike',
+    'scooter',
+    'truck',
+    'other',
+  ];
 
   @override
   Widget build(BuildContext context) {

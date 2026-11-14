@@ -64,7 +64,16 @@ class VehicleComponentsCard extends ConsumerWidget {
                     style: theme.textTheme.bodySmall,
                   );
                 }
-                final visible = statuses.take(3).toList();
+                final active = statuses
+                    .where((status) => status.component.active)
+                    .toList();
+                if (active.isEmpty) {
+                  return Text(
+                    'Todos los componentes están inactivos.',
+                    style: theme.textTheme.bodySmall,
+                  );
+                }
+                final visible = active.take(3).toList();
                 return Column(
                   children: [
                     for (final status in visible)
@@ -113,11 +122,11 @@ class VehicleComponentsCard extends ConsumerWidget {
                           ),
                         ),
                       ),
-                    if (statuses.length > visible.length)
+                    if (active.length > visible.length)
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'y ${statuses.length - visible.length} más',
+                          'y ${active.length - visible.length} más',
                           style: theme.textTheme.bodySmall,
                         ),
                       ),

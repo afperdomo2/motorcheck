@@ -14,7 +14,7 @@
 test/                           # Espejo de lib/
 ├── core/
 │   ├── backup/                 # Round-trip del ZIP con datos y adjuntos
-│   ├── database/               # SQLite, migraciones y tablas v13-v20
+│   ├── database/               # SQLite, migraciones y tablas v13-v21
 │   └── utils/                  # Formateadores, fechas y búsqueda
 ├── features/
 │   ├── settings/               # Categorías, licencias y ajustes
@@ -157,8 +157,10 @@ void main() {
 - `maintenance_reading_date_test.dart`: la lectura usa la fecha del mantenimiento.
 - `vehicle_mileage_reading_test.dart`: crear/editar vehículo agrega lecturas.
 - `attachment_preview_test.dart`: archivo faltante en la previsualización.
-- `component_status_test.dart`: estado por km, por meses, ambos, inactivo y orden.
-- `components_repository_test.dart`: CRUD, servicios y reinicio de intervalo.
+- `component_status_test.dart`: estado por km, por meses, ambos, inactivo,
+  reemplazo y orden.
+- `components_repository_test.dart`: CRUD, plantilla protegida, historial
+  derivado del mantenimiento y liberación al cambiar de tipo.
 - `components_screen_test.dart`: lista, estado vacío y formulario a 360 px con
   text scale 2.0.
 - `reminders_provider_test.dart`: componentes vencidos/próximos y exclusión de

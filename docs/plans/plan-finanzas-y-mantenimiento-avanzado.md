@@ -54,7 +54,12 @@ componentes. No cubre integraciones que rompen la promesa local-first.
 - Checklists e inspecciones.
 - Presupuesto mensual.
 
-### Fase 3 — Componentes
+### Fase 3
+
+> La implementación final de esta fase se detalla en
+> `docs/plans/plan-fase-3-componentes.md`. En la v21 el reemplazo de
+> componentes vive dentro del mantenimiento (`maintenance_items.component_id`)
+> y ya no existe `component_services`. — Componentes
 
 - Llantas, batería, cadena, frenos, suspensión y otros.
 - Historial de servicios por componente.

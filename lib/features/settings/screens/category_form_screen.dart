@@ -17,6 +17,7 @@ const _vehicleTypeOptions = [
   ('car', 'Carro', Icons.directions_car),
   ('motorcycle', 'Moto', Icons.motorcycle),
   ('bike', 'Bicicleta', Icons.pedal_bike),
+  ('scooter', 'Patineta eléctrica', Icons.electric_scooter),
   ('truck', 'Camión', Icons.local_shipping),
   ('other', 'Otro', Icons.help_outline),
 ];

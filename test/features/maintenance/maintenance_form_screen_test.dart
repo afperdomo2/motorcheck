@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:motorcheck/features/components/providers.dart';
 import 'package:motorcheck/features/maintenance/models/maintenance.dart';
 import 'package:motorcheck/features/maintenance/providers.dart';
 import 'package:motorcheck/features/maintenance/repository.dart';
@@ -70,6 +71,8 @@ void main() {
           vehiclesProvider.overrideWith((ref) async => [toyota, mazda]),
           workshopsProvider.overrideWith((ref) async => []),
           maintenanceCategoriesProvider.overrideWith((ref) async => []),
+          vehicleComponentsProvider(1).overrideWith((ref) async => []),
+          vehicleComponentsProvider(2).overrideWith((ref) async => []),
         ],
         child: MaterialApp(
           home: MaintenanceFormScreen(

@@ -8,22 +8,34 @@ import 'vehicle_component.dart';
 class ComponentStatus {
   const ComponentStatus({
     required this.component,
+    required this.baselineDate,
+    this.baselineKm,
     this.currentMileage,
     this.nextKm,
     this.nextDate,
     this.remainingKm,
     this.remainingDays,
+    this.isReplaced = false,
   });
 
   final VehicleComponent component;
+
+  /// Fecha de la última instalación: el reemplazo más reciente o, si no hay,
+  /// la instalación inicial del componente.
+  final DateTime baselineDate;
+
+  /// Kilometraje de la última instalación.
+  final int? baselineKm;
+
   final int? currentMileage;
   final int? nextKm;
   final DateTime? nextDate;
   final int? remainingKm;
   final int? remainingDays;
+  final bool isReplaced;
 
   bool get hasMileageInterval =>
-      component.intervalKm != null && component.installedKm != null;
+      component.intervalKm != null && baselineKm != null;
 
   bool get hasDateInterval => component.intervalMonths != null;
 
@@ -136,13 +148,18 @@ ComponentStatus componentStatusFor(
   VehicleComponent component, {
   int? currentMileage,
   DateTime? today,
+  DateTime? replacementDate,
+  int? replacementKm,
 }) {
   final base = today ?? DateTime.now();
+  final hasReplacement = replacementDate != null;
+  final baselineDate = replacementDate ?? component.installedAt;
+  final baselineKm = hasReplacement ? replacementKm : component.installedKm;
 
   int? nextKm;
   int? remainingKm;
-  if (component.intervalKm != null && component.installedKm != null) {
-    nextKm = component.installedKm! + component.intervalKm!;
+  if (component.intervalKm != null && baselineKm != null) {
+    nextKm = baselineKm + component.intervalKm!;
     if (currentMileage != null) {
       remainingKm = nextKm - currentMileage;
     }
@@ -151,7 +168,7 @@ ComponentStatus componentStatusFor(
   DateTime? nextDate;
   int? remainingDays;
   if (component.intervalMonths != null) {
-    final installed = component.installedAt;
+    final installed = baselineDate;
     nextDate = DateTime(
       installed.year,
       installed.month + component.intervalMonths!,
@@ -164,11 +181,14 @@ ComponentStatus componentStatusFor(
 
   return ComponentStatus(
     component: component,
+    baselineDate: baselineDate,
+    baselineKm: baselineKm,
     currentMileage: currentMileage,
     nextKm: nextKm,
     nextDate: nextDate,
     remainingKm: remainingKm,
     remainingDays: remainingDays,
+    isReplaced: hasReplacement,
   );
 }
 

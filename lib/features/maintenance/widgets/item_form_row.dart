@@ -4,6 +4,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
 import '../categories.dart';
 import '../models/maintenance_item.dart';
+import '../../components/models/vehicle_component.dart';
 import '../../settings/models/maintenance_category.dart';
 
 class ItemFormRow extends StatefulWidget {
@@ -14,6 +15,10 @@ class ItemFormRow extends StatefulWidget {
   final ValueChanged<MaintenanceItem> onChanged;
   final List<MaintenanceCategory> categories;
 
+  /// Componentes que se pueden reemplazar con este ítem. El padre filtra los
+  /// que ya están usados en otras filas.
+  final List<VehicleComponent> components;
+
   const ItemFormRow({
     super.key,
     required this.item,
@@ -22,6 +27,7 @@ class ItemFormRow extends StatefulWidget {
     required this.canRemove,
     required this.onChanged,
     required this.categories,
+    this.components = const [],
   });
 
   @override
@@ -110,10 +116,66 @@ class _ItemFormRowState extends State<ItemFormRow> {
                   ),
                 )
                 .toList(),
-            onChanged: (value) => widget.onChanged(
-              widget.item.copyWith(category: value ?? 'general'),
-            ),
+            onChanged: (value) {
+              final category = value ?? 'general';
+              VehicleComponent? selected;
+              for (final component in widget.components) {
+                if (component.id == widget.item.componentId) {
+                  selected = component;
+                }
+              }
+              final keepsComponent =
+                  selected != null && selected.categoryKey == category;
+              widget.onChanged(
+                widget.item.copyWith(
+                  category: category,
+                  componentId: keepsComponent ? widget.item.componentId : null,
+                ),
+              );
+            },
           ),
+          if (widget.components.isNotEmpty ||
+              widget.item.componentId != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            DropdownButtonFormField<int>(
+              isExpanded: true,
+              initialValue:
+                  widget.components.any(
+                    (component) => component.id == widget.item.componentId,
+                  )
+                  ? widget.item.componentId
+                  : 0,
+              decoration: const InputDecoration(
+                labelText: 'Componente reemplazado (opcional)',
+                prefixIcon: Icon(Icons.tire_repair),
+                helperText:
+                    'Reinicia el ciclo de la pieza con la fecha y el '
+                    'kilometraje de este mantenimiento.',
+              ),
+              items: [
+                const DropdownMenuItem(
+                  value: 0,
+                  child: Text('Sin reemplazo de componente'),
+                ),
+                for (final component in widget.components)
+                  if (component.id != null)
+                    DropdownMenuItem(
+                      value: component.id,
+                      child: Text(
+                        component.position?.isNotEmpty == true
+                            ? '${component.name} · ${component.position}'
+                            : component.name,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+              ],
+              onChanged: (value) => widget.onChanged(
+                widget.item.copyWith(
+                  componentId: value == null || value == 0 ? null : value,
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.md),
           TextFormField(
             controller: _costController,

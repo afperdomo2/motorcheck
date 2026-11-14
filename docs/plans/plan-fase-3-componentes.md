@@ -8,6 +8,29 @@
 > **Decisión clave:** componentes genéricos para carro, moto, bici y camión.
 > Sin UI especializada de camión (ejes, duales, rotación) en esta fase.
 
+## 0. Revisión de implementación (v21)
+
+La primera entrega (v20) separaba el reemplazo en una tabla
+`component_services`, lo que obligaba a registrar el mantenimiento y los
+reemplazos por aparte. La implementación final adoptó estas decisiones:
+
+- El reemplazo vive **dentro del mantenimiento**: `maintenance_items.component_id`.
+  El mantenimiento sigue siendo la única cuenta (mano de obra + repuestos).
+- Se eliminó `component_services`; el historial del componente se deriva de los
+  ítems de mantenimiento.
+- `components.is_system` protege las plantillas (no se eliminan, sí se
+  desactivan) y `components.category_key` las asocia a su categoría.
+- Plantillas por tipo: carro (4 llantas + batería + frenos del/tras),
+  moto (2 llantas + kit de arrastre + frenos del/tras + batería),
+  bici (2 llantas + cadena + frenos del/tras + batería inactiva) y
+  patineta eléctrica (2 llantas + batería + frenos del/tras). El camión no
+  tiene plantilla.
+- Se agregó el tipo de vehículo `scooter` con sus categorías.
+- La categoría de mantenimiento cubierta por un componente activo deja de
+  generar su propio aviso para evitar alertas duplicadas.
+- El detalle del componente muestra frecuencia y aviso, y la acción se llama
+  “Reemplazar componente”.
+
 ## 1. Contexto
 
 MotorCheck ya tiene:

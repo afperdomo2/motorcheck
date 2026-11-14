@@ -19,10 +19,12 @@ class ComponentFormScreen extends ConsumerStatefulWidget {
     super.key,
     required this.vehicleId,
     this.componentId,
+    this.spare = false,
   });
 
   final int vehicleId;
   final int? componentId;
+  final bool spare;
 
   @override
   ConsumerState<ComponentFormScreen> createState() =>
@@ -43,6 +45,8 @@ class _ComponentFormScreenState extends ConsumerState<ComponentFormScreen> {
   String _type = 'tire';
   DateTime _installedAt = DateTime.now();
   bool _active = true;
+  bool _isSystem = false;
+  String? _categoryKey;
   bool _loading = false;
   bool _saving = false;
   bool _dirty = false;
@@ -56,6 +60,12 @@ class _ComponentFormScreenState extends ConsumerState<ComponentFormScreen> {
     if (_isEditing) {
       _loading = true;
       Future.microtask(_load);
+    } else if (widget.spare) {
+      _type = 'tire';
+      _nameController.text = 'Llanta de repuesto';
+      _positionController.text = 'Repuesto';
+      _intervalMonthsController.text = '72';
+      _warningDaysController.text = '45';
     }
   }
 
@@ -78,6 +88,8 @@ class _ComponentFormScreenState extends ConsumerState<ComponentFormScreen> {
     _notesController.text = component.notes ?? '';
     setState(() {
       _type = component.type;
+      _isSystem = component.isSystem;
+      _categoryKey = component.categoryKey;
       _installedAt = component.installedAt;
       _active = component.active;
       _createdAt = component.createdAt;
@@ -144,6 +156,8 @@ class _ComponentFormScreenState extends ConsumerState<ComponentFormScreen> {
           ? null
           : _notesController.text.trim(),
       active: _active,
+      isSystem: _isSystem,
+      categoryKey: _isSystem ? _categoryKey : null,
       createdAt: _createdAt ?? now,
       updatedAt: now,
     );
@@ -222,9 +236,18 @@ class _ComponentFormScreenState extends ConsumerState<ComponentFormScreen> {
                                 children: [
                                   DropdownButtonFormField<String>(
                                     initialValue: _type,
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                       labelText: 'Tipo *',
-                                      prefixIcon: Icon(Icons.category_outlined),
+                                      prefixIcon: const Icon(
+                                        Icons.category_outlined,
+                                      ),
+                                      helperText: _isSystem
+                                          ? 'El tipo de un componente de '
+                                                'plantilla no se cambia.'
+                                          : null,
+                                    ),
+                                    disabledHint: Text(
+                                      componentTypeFor(_type).label,
                                     ),
                                     items: componentTypeOptions
                                         .map(
@@ -242,13 +265,15 @@ class _ComponentFormScreenState extends ConsumerState<ComponentFormScreen> {
                                           ),
                                         )
                                         .toList(),
-                                    onChanged: (value) {
-                                      if (value == null) return;
-                                      setState(() {
-                                        _type = value;
-                                        _dirty = true;
-                                      });
-                                    },
+                                    onChanged: _isSystem
+                                        ? null
+                                        : (value) {
+                                            if (value == null) return;
+                                            setState(() {
+                                              _type = value;
+                                              _dirty = true;
+                                            });
+                                          },
                                   ),
                                   const SizedBox(height: AppSpacing.lg),
                                   TextFormField(

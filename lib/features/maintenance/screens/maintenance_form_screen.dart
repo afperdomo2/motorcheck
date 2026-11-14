@@ -14,6 +14,8 @@ import '../../../shared/widgets/date_field.dart';
 import '../../../shared/widgets/form_section.dart';
 import '../../../shared/widgets/sticky_bottom_bar.dart';
 import '../../../shared/widgets/vehicle_selector_sheet.dart';
+import '../../components/models/vehicle_component.dart';
+import '../../components/providers.dart';
 import '../../vehicles/providers.dart';
 import '../../finance/budget_alert_service.dart';
 import '../../vehicles/models/vehicle.dart';
@@ -28,7 +30,15 @@ class MaintenanceFormScreen extends ConsumerStatefulWidget {
   final int? maintenanceId;
   final int? vehicleId;
 
-  const MaintenanceFormScreen({super.key, this.maintenanceId, this.vehicleId});
+  /// Si viene, precarga un ítem para reemplazar ese componente.
+  final int? componentId;
+
+  const MaintenanceFormScreen({
+    super.key,
+    this.maintenanceId,
+    this.vehicleId,
+    this.componentId,
+  });
 
   @override
   ConsumerState<MaintenanceFormScreen> createState() =>
@@ -117,6 +127,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
       _vehicleLoaded = true;
       _dirty = false;
     });
+    await _preloadReplacementItem();
     if (vehicle?.currentMileage != null) {
       _mileageController.text = vehicle!.currentMileage.toString();
     }
@@ -145,6 +156,27 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     _notesController.dispose();
     _maintenanceCostController.dispose();
     super.dispose();
+  }
+
+  Future<void> _preloadReplacementItem() async {
+    final componentId = widget.componentId;
+    if (componentId == null || !mounted) return;
+    if (_items.any((item) => item.componentId == componentId)) return;
+    final component = await ref
+        .read(componentsRepositoryProvider)
+        .getById(componentId);
+    if (component == null || !mounted) return;
+    setState(() {
+      _items.add(
+        MaintenanceItem(
+          maintenanceId: widget.maintenanceId ?? 0,
+          category: component.categoryKey ?? 'general',
+          componentId: component.id,
+          createdAt: DateTime.now(),
+        ),
+      );
+      _dirty = false;
+    });
   }
 
   void _addItem() {
@@ -196,6 +228,17 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     final validItems = _items.toList();
     final vehicleId = _vehicle?.id ?? widget.vehicleId;
     if (vehicleId == null) return;
+
+    final replacedComponents = validItems
+        .map((item) => item.componentId)
+        .whereType<int>()
+        .toList();
+    if (replacedComponents.length != replacedComponents.toSet().length) {
+      AppSnackBar.error(
+        'Un componente solo se puede reemplazar una vez por mantenimiento',
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
     final now = DateTime.now();
@@ -429,7 +472,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
       return Card(
         child: VehicleFicha(
           vehicle: vehicle,
-          onTap: _isEditing ? null : _pickVehicle,
+          onTap: _isEditing || widget.componentId != null ? null : _pickVehicle,
         ),
       );
     }
@@ -440,7 +483,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     final theme = Theme.of(context);
     return Card(
       child: InkWell(
-        onTap: _pickVehicle,
+        onTap: widget.componentId != null ? null : _pickVehicle,
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
@@ -484,6 +527,24 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     final vehicleCategories = categories
         .where((c) => c.vehicleType == vehicleType)
         .toList();
+    final currentVehicleId = _vehicle?.id ?? widget.vehicleId;
+    final allComponents = currentVehicleId == null
+        ? const <VehicleComponent>[]
+        : ref.watch(vehicleComponentsProvider(currentVehicleId)).valueOrNull ??
+              const <VehicleComponent>[];
+    List<VehicleComponent> eligibleComponents(int index) {
+      final item = _items[index];
+      final used = _items
+          .map((row) => row.componentId)
+          .whereType<int>()
+          .toSet();
+      return allComponents.where((component) {
+        if (component.id == item.componentId) return true;
+        if (component.categoryKey != item.category) return false;
+        return component.id != null && !used.contains(component.id);
+      }).toList();
+    }
+
     final theme = Theme.of(context);
     final semantic = AppSemanticColors.of(context);
     final vehicleHeader = _buildVehicleHeader();
@@ -666,6 +727,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                                   index: entry.key,
                                   canRemove: true,
                                   categories: vehicleCategories,
+                                  components: eligibleComponents(entry.key),
                                   onRemove: () => _removeItem(entry.key),
                                   onChanged: (updated) =>
                                       _updateItem(entry.key, updated),

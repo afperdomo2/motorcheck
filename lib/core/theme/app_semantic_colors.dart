@@ -24,6 +24,7 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     required this.vehicleMotorcycle,
     required this.vehicleBike,
     required this.vehicleTruck,
+    required this.vehicleScooter,
     required this.vehicleOther,
   });
 
@@ -49,6 +50,7 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   final Color vehicleMotorcycle;
   final Color vehicleBike;
   final Color vehicleTruck;
+  final Color vehicleScooter;
   final Color vehicleOther;
 
   static AppSemanticColors of(BuildContext context) {
@@ -63,6 +65,7 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       'motorcycle' => vehicleMotorcycle,
       'bike' => vehicleBike,
       'truck' => vehicleTruck,
+      'scooter' => vehicleScooter,
       _ => vehicleOther,
     };
   }
@@ -85,6 +88,7 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     vehicleMotorcycle: AppColors.motorcycleLight,
     vehicleBike: AppColors.bikeLight,
     vehicleTruck: AppColors.truckLight,
+    vehicleScooter: AppColors.scooterLight,
     vehicleOther: AppColors.otherLight,
   );
 
@@ -106,6 +110,7 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     vehicleMotorcycle: AppColors.motorcycleDark,
     vehicleBike: AppColors.bikeDark,
     vehicleTruck: AppColors.truckDark,
+    vehicleScooter: AppColors.scooterDark,
     vehicleOther: AppColors.otherDark,
   );
 
@@ -128,6 +133,7 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     Color? vehicleMotorcycle,
     Color? vehicleBike,
     Color? vehicleTruck,
+    Color? vehicleScooter,
     Color? vehicleOther,
   }) {
     return AppSemanticColors(
@@ -148,6 +154,7 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       vehicleMotorcycle: vehicleMotorcycle ?? this.vehicleMotorcycle,
       vehicleBike: vehicleBike ?? this.vehicleBike,
       vehicleTruck: vehicleTruck ?? this.vehicleTruck,
+      vehicleScooter: vehicleScooter ?? this.vehicleScooter,
       vehicleOther: vehicleOther ?? this.vehicleOther,
     );
   }
@@ -197,6 +204,7 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       )!,
       vehicleBike: Color.lerp(vehicleBike, other.vehicleBike, t)!,
       vehicleTruck: Color.lerp(vehicleTruck, other.vehicleTruck, t)!,
+      vehicleScooter: Color.lerp(vehicleScooter, other.vehicleScooter, t)!,
       vehicleOther: Color.lerp(vehicleOther, other.vehicleOther, t)!,
     );
   }

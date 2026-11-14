@@ -32,6 +32,12 @@ class _ComponentsScreenState extends ConsumerState<ComponentsScreen> {
       vehicleComponentStatusesProvider(widget.vehicleId),
     );
     final vehicle = vehicleAsync.valueOrNull;
+    final hasSpare =
+        statusesAsync.valueOrNull?.any(
+          (status) => status.component.name == 'Llanta de repuesto',
+        ) ??
+        false;
+    final showSpareAction = vehicle?.type == 'car' && !hasSpare;
 
     return Scaffold(
       appBar: AppBar(
@@ -48,6 +54,16 @@ class _ComponentsScreenState extends ConsumerState<ComponentsScreen> {
               ),
           ],
         ),
+        actions: [
+          if (showSpareAction)
+            IconButton(
+              tooltip: 'Agregar llanta de repuesto',
+              icon: const Icon(Icons.add_circle_outline),
+              onPressed: () => context.push(
+                '/vehicles/${widget.vehicleId}/components/add?spare=1',
+              ),
+            ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openForm,

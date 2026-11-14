@@ -20,6 +20,7 @@ import '../widgets/month_header.dart';
 IconData _searchVehicleIcon(String? type) => switch (type) {
   'motorcycle' => Icons.motorcycle,
   'bike' => Icons.pedal_bike,
+  'scooter' => Icons.electric_scooter,
   'truck' => Icons.local_shipping,
   'other' => Icons.help_outline,
   _ => Icons.directions_car,

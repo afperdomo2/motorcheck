@@ -103,6 +103,23 @@ void main() {
     expect(status.primaryLabel, 'En 500 km');
   });
 
+  test('un reemplazo mueve la base del ciclo', () {
+    final status = componentStatusFor(
+      component(intervalKm: 10000, installedKm: 150000, warningKm: 1000),
+      currentMileage: 158000,
+      today: today,
+      replacementDate: DateTime(2026, 11, 1),
+      replacementKm: 155000,
+    );
+
+    expect(status.isReplaced, isTrue);
+    expect(status.baselineDate, DateTime(2026, 11, 1));
+    expect(status.baselineKm, 155000);
+    expect(status.nextKm, 165000);
+    expect(status.remainingKm, 7000);
+    expect(status.isOk, isTrue);
+  });
+
   test('sin intervalos es solo informativo', () {
     final status = componentStatusFor(component(), today: today);
 

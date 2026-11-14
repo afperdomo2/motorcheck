@@ -11,6 +11,7 @@ abstract class MaintenanceItem with _$MaintenanceItem {
     @Default('general') String category,
     @Default(0) double partsCost,
     String? notes,
+    int? componentId,
     required DateTime createdAt,
   }) = _MaintenanceItem;
 

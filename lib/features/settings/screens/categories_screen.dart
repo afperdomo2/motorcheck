@@ -16,11 +16,19 @@ const _vehicleTypeLabels = {
   'car': 'Carro',
   'motorcycle': 'Moto',
   'bike': 'Bicicleta',
+  'scooter': 'Patineta eléctrica',
   'truck': 'Camión',
   'other': 'Otro',
 };
 
-const _vehicleTypeOrder = ['car', 'motorcycle', 'bike', 'truck', 'other'];
+const _vehicleTypeOrder = [
+  'car',
+  'motorcycle',
+  'bike',
+  'scooter',
+  'truck',
+  'other',
+];
 
 class CategoriesScreen extends ConsumerWidget {
   const CategoriesScreen({super.key});

@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MaintenanceItem {
 
- int? get id; int get maintenanceId; String get category; double get partsCost; String? get notes; DateTime get createdAt;
+ int? get id; int get maintenanceId; String get category; double get partsCost; String? get notes; int? get componentId; DateTime get createdAt;
 /// Create a copy of MaintenanceItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +30,20 @@ $MaintenanceItemCopyWith<MaintenanceItem> get copyWith => _$MaintenanceItemCopyW
 @override
 bool operator ==(Object other) {
   final _this = this as MaintenanceItem;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MaintenanceItem&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.maintenanceId, _this.maintenanceId) || other.maintenanceId == _this.maintenanceId)&&(identical(other.category, _this.category) || other.category == _this.category)&&(identical(other.partsCost, _this.partsCost) || other.partsCost == _this.partsCost)&&(identical(other.notes, _this.notes) || other.notes == _this.notes)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MaintenanceItem&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.maintenanceId, _this.maintenanceId) || other.maintenanceId == _this.maintenanceId)&&(identical(other.category, _this.category) || other.category == _this.category)&&(identical(other.partsCost, _this.partsCost) || other.partsCost == _this.partsCost)&&(identical(other.notes, _this.notes) || other.notes == _this.notes)&&(identical(other.componentId, _this.componentId) || other.componentId == _this.componentId)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as MaintenanceItem;
-  return Object.hash(runtimeType,_this.id,_this.maintenanceId,_this.category,_this.partsCost,_this.notes,_this.createdAt);
+  return Object.hash(runtimeType,_this.id,_this.maintenanceId,_this.category,_this.partsCost,_this.notes,_this.componentId,_this.createdAt);
 }
 
 @override
 String toString() {
   final _this = this as MaintenanceItem;
-  return 'MaintenanceItem(id: ${_this.id}, maintenanceId: ${_this.maintenanceId}, category: ${_this.category}, partsCost: ${_this.partsCost}, notes: ${_this.notes}, createdAt: ${_this.createdAt})';
+  return 'MaintenanceItem(id: ${_this.id}, maintenanceId: ${_this.maintenanceId}, category: ${_this.category}, partsCost: ${_this.partsCost}, notes: ${_this.notes}, componentId: ${_this.componentId}, createdAt: ${_this.createdAt})';
 }
 
 
@@ -54,7 +54,7 @@ abstract mixin class $MaintenanceItemCopyWith<$Res>  {
   factory $MaintenanceItemCopyWith(MaintenanceItem value, $Res Function(MaintenanceItem) _then) = _$MaintenanceItemCopyWithImpl;
 @useResult
 $Res call({
- int? id, int maintenanceId, String category, double partsCost, String? notes, DateTime createdAt
+ int? id, int maintenanceId, String category, double partsCost, String? notes, int? componentId, DateTime createdAt
 });
 
 
@@ -71,14 +71,15 @@ class _$MaintenanceItemCopyWithImpl<$Res>
 
 /// Create a copy of MaintenanceItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? maintenanceId = null,Object? category = null,Object? partsCost = null,Object? notes = freezed,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? maintenanceId = null,Object? category = null,Object? partsCost = null,Object? notes = freezed,Object? componentId = freezed,Object? createdAt = null,}) {
   return _then(MaintenanceItem(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int?,maintenanceId: null == maintenanceId ? _self.maintenanceId : maintenanceId // ignore: cast_nullable_to_non_nullable
 as int,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
 as String,partsCost: null == partsCost ? _self.partsCost : partsCost // ignore: cast_nullable_to_non_nullable
 as double,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
-as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as String?,componentId: freezed == componentId ? _self.componentId : componentId // ignore: cast_nullable_to_non_nullable
+as int?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,
   ));
 }
@@ -164,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  int maintenanceId,  String category,  double partsCost,  String? notes,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  int maintenanceId,  String category,  double partsCost,  String? notes,  int? componentId,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MaintenanceItem() when $default != null:
-return $default(_that.id,_that.maintenanceId,_that.category,_that.partsCost,_that.notes,_that.createdAt);case _:
+return $default(_that.id,_that.maintenanceId,_that.category,_that.partsCost,_that.notes,_that.componentId,_that.createdAt);case _:
   return orElse();
 
 }
@@ -185,10 +186,10 @@ return $default(_that.id,_that.maintenanceId,_that.category,_that.partsCost,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  int maintenanceId,  String category,  double partsCost,  String? notes,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  int maintenanceId,  String category,  double partsCost,  String? notes,  int? componentId,  DateTime createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _MaintenanceItem():
-return $default(_that.id,_that.maintenanceId,_that.category,_that.partsCost,_that.notes,_that.createdAt);case _:
+return $default(_that.id,_that.maintenanceId,_that.category,_that.partsCost,_that.notes,_that.componentId,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +206,10 @@ return $default(_that.id,_that.maintenanceId,_that.category,_that.partsCost,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  int maintenanceId,  String category,  double partsCost,  String? notes,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  int maintenanceId,  String category,  double partsCost,  String? notes,  int? componentId,  DateTime createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _MaintenanceItem() when $default != null:
-return $default(_that.id,_that.maintenanceId,_that.category,_that.partsCost,_that.notes,_that.createdAt);case _:
+return $default(_that.id,_that.maintenanceId,_that.category,_that.partsCost,_that.notes,_that.componentId,_that.createdAt);case _:
   return null;
 
 }
@@ -220,7 +221,7 @@ return $default(_that.id,_that.maintenanceId,_that.category,_that.partsCost,_tha
 @JsonSerializable()
 
 class _MaintenanceItem implements MaintenanceItem {
-  const _MaintenanceItem({this.id, required this.maintenanceId, this.category = 'general', this.partsCost = 0, this.notes, required this.createdAt});
+  const _MaintenanceItem({this.id, required this.maintenanceId, this.category = 'general', this.partsCost = 0, this.notes, this.componentId, required this.createdAt});
   factory _MaintenanceItem.fromJson(Map<String, dynamic> json) => _$MaintenanceItemFromJson(json);
 
 @override final  int? id;
@@ -228,6 +229,7 @@ class _MaintenanceItem implements MaintenanceItem {
 @override@JsonKey() final  String category;
 @override@JsonKey() final  double partsCost;
 @override final  String? notes;
+@override final  int? componentId;
 @override final  DateTime createdAt;
 
 /// Create a copy of MaintenanceItem
@@ -243,18 +245,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MaintenanceItem&&(identical(other.id, id) || other.id == id)&&(identical(other.maintenanceId, maintenanceId) || other.maintenanceId == maintenanceId)&&(identical(other.category, category) || other.category == category)&&(identical(other.partsCost, partsCost) || other.partsCost == partsCost)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MaintenanceItem&&(identical(other.id, id) || other.id == id)&&(identical(other.maintenanceId, maintenanceId) || other.maintenanceId == maintenanceId)&&(identical(other.category, category) || other.category == category)&&(identical(other.partsCost, partsCost) || other.partsCost == partsCost)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.componentId, componentId) || other.componentId == componentId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,maintenanceId,category,partsCost,notes,createdAt);
+    return Object.hash(runtimeType,id,maintenanceId,category,partsCost,notes,componentId,createdAt);
 }
 
 @override
 String toString() {
-    return 'MaintenanceItem(id: $id, maintenanceId: $maintenanceId, category: $category, partsCost: $partsCost, notes: $notes, createdAt: $createdAt)';
+    return 'MaintenanceItem(id: $id, maintenanceId: $maintenanceId, category: $category, partsCost: $partsCost, notes: $notes, componentId: $componentId, createdAt: $createdAt)';
 }
 
 
@@ -265,7 +267,7 @@ abstract mixin class _$MaintenanceItemCopyWith<$Res> implements $MaintenanceItem
   factory _$MaintenanceItemCopyWith(_MaintenanceItem value, $Res Function(_MaintenanceItem) _then) = __$MaintenanceItemCopyWithImpl;
 @override @useResult
 $Res call({
- int? id, int maintenanceId, String category, double partsCost, String? notes, DateTime createdAt
+ int? id, int maintenanceId, String category, double partsCost, String? notes, int? componentId, DateTime createdAt
 });
 
 
@@ -282,14 +284,15 @@ class __$MaintenanceItemCopyWithImpl<$Res>
 
 /// Create a copy of MaintenanceItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? maintenanceId = null,Object? category = null,Object? partsCost = null,Object? notes = freezed,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? maintenanceId = null,Object? category = null,Object? partsCost = null,Object? notes = freezed,Object? componentId = freezed,Object? createdAt = null,}) {
   return _then(_MaintenanceItem(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int?,maintenanceId: null == maintenanceId ? _self.maintenanceId : maintenanceId // ignore: cast_nullable_to_non_nullable
 as int,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
 as String,partsCost: null == partsCost ? _self.partsCost : partsCost // ignore: cast_nullable_to_non_nullable
 as double,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
-as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as String?,componentId: freezed == componentId ? _self.componentId : componentId // ignore: cast_nullable_to_non_nullable
+as int?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,
   ));
 }

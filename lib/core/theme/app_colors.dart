@@ -64,11 +64,13 @@ class AppColors {
   static const motorcycleLight = Color(0xFF6D28D9);
   static const bikeLight = Color(0xFF047857);
   static const truckLight = Color(0xFF0E7490);
+  static const scooterLight = Color(0xFFBE185D);
   static const otherLight = Color(0xFF475569);
 
   static const carDark = Color(0xFF93B4FF);
   static const motorcycleDark = Color(0xFFC4B5FD);
   static const bikeDark = Color(0xFF6EE7B7);
   static const truckDark = Color(0xFF67E8F9);
+  static const scooterDark = Color(0xFFF9A8D4);
   static const otherDark = Color(0xFFCBD5E1);
 }

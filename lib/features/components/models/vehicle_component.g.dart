@@ -21,6 +21,8 @@ _VehicleComponent _$VehicleComponentFromJson(Map<String, dynamic> json) =>
       warningDays: (json['warningDays'] as num?)?.toInt(),
       notes: json['notes'] as String?,
       active: json['active'] as bool? ?? true,
+      isSystem: json['isSystem'] as bool? ?? false,
+      categoryKey: json['categoryKey'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
@@ -40,6 +42,8 @@ Map<String, dynamic> _$VehicleComponentToJson(_VehicleComponent instance) =>
       'warningDays': instance.warningDays,
       'notes': instance.notes,
       'active': instance.active,
+      'isSystem': instance.isSystem,
+      'categoryKey': instance.categoryKey,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
     };

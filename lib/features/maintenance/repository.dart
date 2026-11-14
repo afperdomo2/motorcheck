@@ -308,6 +308,7 @@ class MaintenanceRepository {
     'category': item.category,
     'parts_cost': item.partsCost,
     'notes': item.notes,
+    'component_id': item.componentId,
     'created_at': formatDateTime(item.createdAt),
   };
 
@@ -317,6 +318,7 @@ class MaintenanceRepository {
     category: m['category'] as String? ?? 'general',
     partsCost: (m['parts_cost'] as num?)?.toDouble() ?? 0,
     notes: m['notes'] as String?,
+    componentId: m['component_id'] as int?,
     createdAt: parseDateTime(m['created_at'] as String),
   );
 }

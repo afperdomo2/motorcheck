@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/database/component_defaults.dart';
 import '../vehicles/providers.dart';
-import 'models/component_service.dart';
+import 'models/component_replacement.dart';
 import 'models/component_status.dart';
 import 'models/vehicle_component.dart';
 import 'repository.dart';
@@ -22,12 +23,14 @@ final componentByIdProvider = FutureProvider.family<VehicleComponent?, int>((
   return ref.watch(componentsRepositoryProvider).getById(id);
 });
 
-final componentServicesProvider =
-    FutureProvider.family<List<ComponentService>, int>((
+final componentReplacementsProvider =
+    FutureProvider.family<List<ComponentReplacement>, int>((
       ref,
       componentId,
     ) async {
-      return ref.watch(componentsRepositoryProvider).getServices(componentId);
+      return ref
+          .watch(componentsRepositoryProvider)
+          .getReplacementsForComponent(componentId);
     });
 
 /// Componentes de un vehículo con su estado calculado y ordenados por urgencia.
@@ -39,18 +42,25 @@ final vehicleComponentStatusesProvider =
       final vehicle = await ref.watch(
         selectedVehicleProvider(vehicleId).future,
       );
+      final replacements = await ref
+          .watch(componentsRepositoryProvider)
+          .getReplacements(vehicleId);
+      final latest = <int, ComponentReplacement>{};
+      for (final replacement in replacements) {
+        latest.putIfAbsent(replacement.componentId, () => replacement);
+      }
+
       final today = DateTime.now();
-      final statuses =
-          components
-              .map(
-                (component) => componentStatusFor(
-                  component,
-                  currentMileage: vehicle?.currentMileage,
-                  today: today,
-                ),
-              )
-              .toList()
-            ..sort(compareComponentStatus);
+      final statuses = components.map((component) {
+        final replacement = latest[component.id];
+        return componentStatusFor(
+          component,
+          currentMileage: vehicle?.currentMileage,
+          today: today,
+          replacementDate: replacement?.date,
+          replacementKm: replacement?.mileage,
+        );
+      }).toList()..sort(compareComponentStatus);
       return statuses;
     });
 
@@ -63,7 +73,15 @@ final componentStatusProvider = FutureProvider.family<ComponentStatus?, int>((
   final vehicle = await ref.watch(
     selectedVehicleProvider(component.vehicleId).future,
   );
-  return componentStatusFor(component, currentMileage: vehicle?.currentMileage);
+  final replacement = await ref
+      .read(componentsRepositoryProvider)
+      .getLatestReplacement(componentId);
+  return componentStatusFor(
+    component,
+    currentMileage: vehicle?.currentMileage,
+    replacementDate: replacement?.date,
+    replacementKm: replacement?.mileage,
+  );
 });
 
 class ComponentsNotifier extends Notifier<AsyncValue<void>> {
@@ -75,14 +93,19 @@ class ComponentsNotifier extends Notifier<AsyncValue<void>> {
   Future<int> save(VehicleComponent component) async {
     state = const AsyncValue.loading();
     try {
-      final id = component.id == null
-          ? await _repo.insert(component)
-          : component.id!;
-      if (component.id != null) {
-        await _repo.update(component);
+      final vehicle = await ref.read(
+        selectedVehicleProvider(component.vehicleId).future,
+      );
+      final categoryKey =
+          component.categoryKey ??
+          componentCategoryKeyFor(vehicle?.type ?? 'other', component.type);
+      final toSave = component.copyWith(categoryKey: categoryKey);
+      final id = toSave.id == null ? await _repo.insert(toSave) : toSave.id!;
+      if (toSave.id != null) {
+        await _repo.update(toSave);
       }
       state = const AsyncValue.data(null);
-      _invalidate(component.vehicleId, component.id ?? id);
+      _invalidate(component.vehicleId, toSave.id ?? id);
       return id;
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -102,43 +125,35 @@ class ComponentsNotifier extends Notifier<AsyncValue<void>> {
     }
   }
 
-  Future<void> registerService(ComponentService service) async {
-    state = const AsyncValue.loading();
-    try {
-      await _repo.registerService(service);
-      final component = await _repo.getById(service.componentId);
-      state = const AsyncValue.data(null);
-      if (component != null) {
-        _invalidate(component.vehicleId, component.id!);
-      }
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      rethrow;
-    }
-  }
-
-  Future<void> removeService(
-    int serviceId, {
-    required int componentId,
+  Future<int> seedDefaults({
     required int vehicleId,
+    required String vehicleType,
+    required DateTime installedAt,
+    int? installedKm,
   }) async {
-    state = const AsyncValue.loading();
     try {
-      await _repo.deleteService(serviceId);
-      state = const AsyncValue.data(null);
-      _invalidate(vehicleId, componentId);
+      final created = await _repo.seedDefaults(
+        vehicleId: vehicleId,
+        vehicleType: vehicleType,
+        installedAt: installedAt,
+        installedKm: installedKm,
+      );
+      if (created > 0) {
+        _invalidate(vehicleId, null);
+      }
+      return created;
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
       rethrow;
     }
   }
 
-  void _invalidate(int vehicleId, int componentId) {
+  void _invalidate(int vehicleId, int? componentId) {
     ref.invalidate(vehicleComponentsProvider(vehicleId));
     ref.invalidate(vehicleComponentStatusesProvider(vehicleId));
-    ref.invalidate(componentByIdProvider(componentId));
-    ref.invalidate(componentStatusProvider(componentId));
-    ref.invalidate(componentServicesProvider(componentId));
+    ref.invalidate(componentByIdProvider);
+    ref.invalidate(componentStatusProvider);
+    ref.invalidate(componentReplacementsProvider);
   }
 }
 

@@ -162,23 +162,31 @@ Gastos (5.ª pestaña)
 ### Componentes y desgaste
 
 ```
-Vehículo
-  └─ Componentes (llanta, batería, cadena, frenos, suspensión, otro)
-       ├─ Instalación: fecha + kilometraje
-       ├─ Frecuencia: km, meses o ambos
-       ├─ Estado: al día / próximo / vencido (lo que ocurra primero)
-       └─ Servicios: cambio, rotación o revisión
-            └─ resetInterval = true reinicia el ciclo
+Mantenimiento = la cuenta
+  ├─ Mano de obra
+  └─ Items
+       ├─ Llantas  → Componente: Llanta delantera izq.
+       └─ Frenos   → Componente: Frenos delanteros
+              ↓
+Componente actualiza su ciclo (fecha + km del mantenimiento)
+              ↓
+Recordatorios · salud · historial · PDF
 ```
 
-- Una fila por componente individual: 2 llantas en moto y bicicleta, 4 más
-  repuesto opcional en carro, N posiciones en camión.
-- `position` es texto libre, así que el camión se maneja sin UI especializada
-  (`Eje 2 izquierda exterior`, etc.).
-- Los componentes activos vencidos o próximos entran a `remindersProvider` y a
-  la salud del vehículo.
-- El PDF incluye una sección de componentes (máximo 12) y el respaldo incluye
-  `components` y `component_services`.
+- Un componente es una **posición o pieza con vida útil**: 4 llantas y 2 ejes
+  de frenos en un carro, 2 llantas + kit de arrastre + 2 frenos en una moto.
+- El reemplazo se registra como un **ítem del mantenimiento** con
+  `component_id`; no hay una segunda cuenta ni un costo duplicado.
+- El historial del componente se deriva de esos ítems, así que borrar el
+  mantenimiento recalcula el ciclo.
+- La acción “Reemplazar componente” abre el mantenimiento con el ítem
+  precargado.
+- Las categorías cubiertas por un componente activo (llantas, frenos, batería,
+  cadena) no generan un aviso propio: el componente es el dueño del desgaste.
+- Las plantillas por tipo crean componentes protegidos (`is_system`), editables
+  y desactivables, pero no eliminables.
+- Tipos: carro, moto, bicicleta, patineta eléctrica y camión (camión sin
+  plantilla por defecto).
 
 ### Mantenimiento avanzado
 

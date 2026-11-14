@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/date_status.dart';
 import '../../core/utils/formatters.dart';
+import '../components/providers.dart';
 import '../settings/providers.dart';
 import '../settings/models/maintenance_category.dart';
 import '../vehicles/providers.dart';
@@ -147,6 +148,13 @@ class MaintenancesNotifier extends Notifier<AsyncValue<List<Maintenance>>> {
     ref.invalidate(upcomingMaintenanceProvider);
     ref.invalidate(maintenanceAttentionCountProvider);
     ref.invalidate(vehicleNamesProvider);
+
+    // Un mantenimiento puede haber reemplazado componentes.
+    ref.invalidate(vehicleComponentsProvider);
+    ref.invalidate(vehicleComponentStatusesProvider);
+    ref.invalidate(componentByIdProvider);
+    ref.invalidate(componentStatusProvider);
+    ref.invalidate(componentReplacementsProvider);
 
     // El repositorio pudo subir el kilometraje del vehículo.
     ref.invalidate(vehiclesNotifierProvider);
@@ -325,9 +333,23 @@ final upcomingMaintenanceProvider =
       final stats = await ref
           .read(mileageRepositoryProvider)
           .getStats(vehicleId);
+
+      // Las categorías cubiertas por un componente activo (llantas, frenos,
+      // batería, cadena) no generan su propio aviso: el componente es el
+      // dueño del desgaste y evita alertas duplicadas.
+      final componentStatuses = await ref.watch(
+        vehicleComponentStatusesProvider(vehicleId).future,
+      );
+      final coveredCategories = <String>{
+        for (final status in componentStatuses)
+          if (status.component.active && status.component.categoryKey != null)
+            status.component.categoryKey!,
+      };
+
       final result = <UpcomingMaintenance>[];
 
       for (final cat in categories) {
+        if (coveredCategories.contains(cat.key)) continue;
         final last = await maintRepo.getLastServiceByCategory(
           vehicleId,
           cat.key,

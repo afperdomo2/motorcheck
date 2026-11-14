@@ -7,6 +7,7 @@ IconData vehicleTypeIcon(String type) => switch (type) {
   'motorcycle' => Icons.motorcycle,
   'bike' => Icons.pedal_bike,
   'truck' => Icons.local_shipping,
+  'scooter' => Icons.electric_scooter,
   _ => Icons.help_outline,
 };
 
@@ -15,6 +16,7 @@ String vehicleTypeLabel(String type) => switch (type) {
   'motorcycle' => 'Moto',
   'bike' => 'Bicicleta',
   'truck' => 'Camión',
+  'scooter' => 'Patineta eléctrica',
   _ => 'Otro',
 };
 

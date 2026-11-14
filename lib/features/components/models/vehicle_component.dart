@@ -22,6 +22,8 @@ abstract class VehicleComponent with _$VehicleComponent {
     int? warningDays,
     String? notes,
     @Default(true) bool active,
+    @Default(false) bool isSystem,
+    String? categoryKey,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _VehicleComponent;

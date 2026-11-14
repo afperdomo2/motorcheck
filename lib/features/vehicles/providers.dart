@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../components/providers.dart';
 import 'mileage_repository.dart';
 import 'models/mileage_reading.dart';
 import 'models/vehicle.dart';
@@ -102,6 +103,14 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
       if (vehicle.isDefault) {
         await _repo.setDefault(id);
       }
+      await ref
+          .read(componentsNotifierProvider.notifier)
+          .seedDefaults(
+            vehicleId: id,
+            vehicleType: vehicle.type,
+            installedAt: vehicle.createdAt,
+            installedKm: vehicle.currentMileage,
+          );
       state = AsyncValue.data(vehicles);
       ref.invalidate(vehiclesProvider);
       ref.invalidate(defaultVehicleProvider);
@@ -120,6 +129,18 @@ class VehiclesNotifier extends Notifier<AsyncValue<List<Vehicle>>> {
     state = await AsyncValue.guard(() async {
       final previous = await _repo.getById(vehicle.id!);
       await _repo.update(vehicle);
+      if (previous != null && previous.type != vehicle.type) {
+        final components = ref.read(componentsRepositoryProvider);
+        await components.releaseSystemComponents(vehicle.id!);
+        await ref
+            .read(componentsNotifierProvider.notifier)
+            .seedDefaults(
+              vehicleId: vehicle.id!,
+              vehicleType: vehicle.type,
+              installedAt: vehicle.createdAt,
+              installedKm: vehicle.currentMileage ?? previous.currentMileage,
+            );
+      }
       if (vehicle.currentMileage != null &&
           vehicle.currentMileage != previous?.currentMileage) {
         await ref
