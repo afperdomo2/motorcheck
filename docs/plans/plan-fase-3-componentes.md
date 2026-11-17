@@ -30,6 +30,8 @@ reemplazos por aparte. La implementación final adoptó estas decisiones:
   generar su propio aviso para evitar alertas duplicadas.
 - El detalle del componente muestra frecuencia y aviso, y la acción se llama
   “Reemplazar componente”.
+- La v22 agrega `position_code` (posición estructurada) para llantas y frenos,
+  con etiqueta visible y texto libre como respaldo para camión y “otro”.
 
 ## 1. Contexto
 

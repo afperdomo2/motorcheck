@@ -19,6 +19,7 @@ import '../../components/providers.dart';
 import '../../vehicles/providers.dart';
 import '../../finance/budget_alert_service.dart';
 import '../../vehicles/models/vehicle.dart';
+import '../../settings/models/maintenance_category.dart';
 import '../../settings/providers.dart';
 import '../models/maintenance.dart';
 import '../models/maintenance_item.dart';
@@ -51,7 +52,11 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
   late final TextEditingController _notesController;
   late final TextEditingController _maintenanceCostController;
   DateTime _date = DateTime.now();
-  final List<MaintenanceItem> _items = [];
+  final List<_ItemDraft> _items = [];
+  int _nextItemKey = 0;
+  int? _expandedItemKey;
+  int? _highlightItemKey;
+  Timer? _highlightTimer;
   bool _isLoading = false;
   bool _dirty = false;
   bool _mileageBelowLast = false;
@@ -105,7 +110,8 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
       _vehicleLoaded = true;
       _items
         ..clear()
-        ..addAll(items);
+        ..addAll(items.map(_draftFrom));
+      _expandedItemKey = null;
       _dirty = false;
     });
   }
@@ -152,6 +158,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
 
   @override
   void dispose() {
+    _highlightTimer?.cancel();
     _mileageController.dispose();
     _notesController.dispose();
     _maintenanceCostController.dispose();
@@ -161,46 +168,111 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
   Future<void> _preloadReplacementItem() async {
     final componentId = widget.componentId;
     if (componentId == null || !mounted) return;
-    if (_items.any((item) => item.componentId == componentId)) return;
+    if (_items.any((draft) => draft.item.componentId == componentId)) return;
     final component = await ref
         .read(componentsRepositoryProvider)
         .getById(componentId);
     if (component == null || !mounted) return;
+    final draft = _draftFrom(
+      MaintenanceItem(
+        maintenanceId: widget.maintenanceId ?? 0,
+        category: component.categoryKey ?? 'general',
+        componentId: component.id,
+        createdAt: DateTime.now(),
+      ),
+    );
     setState(() {
-      _items.add(
-        MaintenanceItem(
-          maintenanceId: widget.maintenanceId ?? 0,
-          category: component.categoryKey ?? 'general',
-          componentId: component.id,
-          createdAt: DateTime.now(),
-        ),
-      );
+      _items.add(draft);
+      _expandedItemKey = draft.key;
       _dirty = false;
     });
   }
 
-  void _addItem() {
+  _ItemDraft _draftFrom(MaintenanceItem item) {
+    return _ItemDraft(key: _nextItemKey++, item: item);
+  }
+
+  List<MaintenanceCategory> _vehicleCategories() {
+    final all = ref.read(maintenanceCategoriesProvider).valueOrNull ?? const [];
+    final vehicleType = _vehicle?.type ?? 'other';
+    return all.where((c) => c.vehicleType == vehicleType).toList();
+  }
+
+  /// Categoría con la que arranca un ítem nuevo: la «General» del tipo de
+  /// vehículo. Si el catálogo no la tiene (el usuario la borró), devuelve vacío
+  /// para obligar a elegir una.
+  String _defaultCategory(List<MaintenanceCategory> categories) {
+    if (categories.isEmpty) return 'general';
+    final vehicleType = _vehicle?.type ?? 'other';
+    for (final category in categories) {
+      if (category.key == '${vehicleType}_general') return category.key;
+    }
+    for (final category in categories) {
+      final name = category.name.trim().toLowerCase();
+      if (category.key == 'general' ||
+          category.key.endsWith('_general') ||
+          name == 'general') {
+        return category.key;
+      }
+    }
+    return '';
+  }
+
+  void _addItem(List<MaintenanceCategory> categories) {
+    final draft = _draftFrom(
+      MaintenanceItem(
+        maintenanceId: widget.maintenanceId ?? 0,
+        category: _defaultCategory(categories),
+        createdAt: DateTime.now(),
+      ),
+    );
     setState(() {
-      _items.add(
-        MaintenanceItem(
-          maintenanceId: widget.maintenanceId ?? 0,
-          createdAt: DateTime.now(),
-        ),
+      _items.add(draft);
+      _expandedItemKey = draft.key;
+      _highlightItemKey = draft.key;
+      _dirty = true;
+    });
+    _scheduleReveal(draft);
+    _highlightTimer?.cancel();
+    _highlightTimer = Timer(const Duration(milliseconds: 1600), () {
+      if (mounted) setState(() => _highlightItemKey = null);
+    });
+  }
+
+  void _toggleItem(int key) {
+    setState(() => _expandedItemKey = _expandedItemKey == key ? null : key);
+  }
+
+  /// Desplaza el formulario para que la fila quede visible. Se ejecuta después
+  /// del frame para que la fila nueva ya exista y tenga tamaño.
+  void _scheduleReveal(_ItemDraft draft) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final rowContext = draft.rowKey.currentContext;
+      if (rowContext == null) return;
+      Scrollable.ensureVisible(
+        rowContext,
+        alignment: 0.05,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
       );
+    });
+  }
+
+  void _removeItem(int key) {
+    setState(() {
+      _items.removeWhere((draft) => draft.key == key);
+      if (_expandedItemKey == key) _expandedItemKey = null;
+      if (_highlightItemKey == key) _highlightItemKey = null;
       _dirty = true;
     });
   }
 
-  void _removeItem(int index) {
+  void _updateItem(int key, MaintenanceItem updated) {
+    final index = _items.indexWhere((draft) => draft.key == key);
+    if (index == -1) return;
     setState(() {
-      _items.removeAt(index);
-      _dirty = true;
-    });
-  }
-
-  void _updateItem(int index, MaintenanceItem updated) {
-    setState(() {
-      _items[index] = updated;
+      _items[index] = _items[index].copyWith(item: updated);
       _dirty = true;
     });
   }
@@ -215,17 +287,53 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
   }
 
   double get _totalParts =>
-      _items.fold<double>(0, (sum, i) => sum + i.partsCost);
+      _items.fold<double>(0, (sum, draft) => sum + draft.item.partsCost);
+
+  String get _itemsSummary {
+    if (_items.isEmpty) return 'Sin ítems';
+    final count = '${_items.length} ítem${_items.length == 1 ? '' : 's'}';
+    return _totalParts > 0 ? '$count · ${formatCurrency(_totalParts)}' : count;
+  }
 
   double get _maintenanceCost =>
       double.tryParse(_maintenanceCostController.text.trim()) ?? 0;
 
   double get _total => _maintenanceCost + _totalParts;
 
+  /// Devuelve la clave de la primera fila con una categoría que no existe en el
+  /// catálogo del vehículo (o sin categoría).
+  int? _firstItemWithoutCategory(List<MaintenanceCategory> categories) {
+    if (categories.isEmpty) return null;
+    for (final draft in _items) {
+      if (!categories.any((c) => c.key == draft.item.category)) {
+        return draft.key;
+      }
+    }
+    return null;
+  }
+
+  /// Expande la fila indicada, la lleva a la vista y muestra el error inline.
+  void _revealItem(int key) {
+    final draft = _items.firstWhere((draft) => draft.key == key);
+    setState(() => _expandedItemKey = key);
+    _scheduleReveal(draft);
+    _formKey.currentState?.validate();
+  }
+
   Future<void> _save() async {
+    final missingCategoryKey = _firstItemWithoutCategory(_vehicleCategories());
+    if (missingCategoryKey != null) {
+      final position = _items.indexWhere(
+        (draft) => draft.key == missingCategoryKey,
+      );
+      _revealItem(missingCategoryKey);
+      AppSnackBar.error('Elige la categoría del ítem ${position + 1}');
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) return;
 
-    final validItems = _items.toList();
+    final validItems = _items.map((draft) => draft.item).toList();
     final vehicleId = _vehicle?.id ?? widget.vehicleId;
     if (vehicleId == null) return;
 
@@ -532,15 +640,14 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
         ? const <VehicleComponent>[]
         : ref.watch(vehicleComponentsProvider(currentVehicleId)).valueOrNull ??
               const <VehicleComponent>[];
-    List<VehicleComponent> eligibleComponents(int index) {
-      final item = _items[index];
+    List<VehicleComponent> eligibleComponents(_ItemDraft draft) {
       final used = _items
-          .map((row) => row.componentId)
+          .map((row) => row.item.componentId)
           .whereType<int>()
           .toSet();
       return allComponents.where((component) {
-        if (component.id == item.componentId) return true;
-        if (component.categoryKey != item.category) return false;
+        if (component.id == draft.item.componentId) return true;
+        if (component.categoryKey != draft.item.category) return false;
         return component.id != null && !used.contains(component.id);
       }).toList();
     }
@@ -692,14 +799,12 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    _items.isEmpty
-                                        ? 'Sin ítems'
-                                        : '${_items.length} ítem${_items.length == 1 ? '' : 's'}',
+                                    _itemsSummary,
                                     style: theme.textTheme.bodyMedium,
                                   ),
                                 ),
                                 TextButton.icon(
-                                  onPressed: _addItem,
+                                  onPressed: () => _addItem(vehicleCategories),
                                   icon: const Icon(Icons.add),
                                   label: const Text('Agregar'),
                                 ),
@@ -718,20 +823,27 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                               )
                             else ...[
                               const SizedBox(height: AppSpacing.sm),
-                              ..._items.asMap().entries.map(
-                                (entry) => ItemFormRow(
-                                  key: ValueKey(
-                                    entry.value.createdAt.toIso8601String(),
-                                  ),
-                                  item: entry.value,
+                              ..._items.asMap().entries.map((entry) {
+                                final draft = entry.value;
+                                return ItemFormRow(
+                                  key: draft.rowKey,
+                                  item: draft.item,
                                   index: entry.key,
                                   canRemove: true,
                                   categories: vehicleCategories,
-                                  components: eligibleComponents(entry.key),
-                                  onRemove: () => _removeItem(entry.key),
+                                  components: eligibleComponents(draft),
+                                  expanded: _expandedItemKey == draft.key,
+                                  isNew: _highlightItemKey == draft.key,
+                                  onToggle: () => _toggleItem(draft.key),
+                                  onRemove: () => _removeItem(draft.key),
                                   onChanged: (updated) =>
-                                      _updateItem(entry.key, updated),
-                                ),
+                                      _updateItem(draft.key, updated),
+                                );
+                              }),
+                              OutlinedButton.icon(
+                                onPressed: () => _addItem(vehicleCategories),
+                                icon: const Icon(Icons.add),
+                                label: const Text('Agregar ítem'),
                               ),
                             ],
                           ],
@@ -778,4 +890,19 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
       ),
     );
   }
+}
+
+/// Fila del formulario en edición. Mantiene una clave estable por fila (no
+/// depende de `createdAt`, que solo tiene precisión de segundos) y la
+/// [GlobalKey] que se usa para llevarla a la vista al agregarla.
+class _ItemDraft {
+  _ItemDraft({required this.key, required this.item, GlobalKey? rowKey})
+    : rowKey = rowKey ?? GlobalKey();
+
+  final int key;
+  final GlobalKey rowKey;
+  final MaintenanceItem item;
+
+  _ItemDraft copyWith({MaintenanceItem? item}) =>
+      _ItemDraft(key: key, rowKey: rowKey, item: item ?? this.item);
 }

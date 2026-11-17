@@ -115,7 +115,9 @@ Ver `docs/code-style.md` para ejemplos de modelos freezed y estado asíncrono.
 - Formatos `es_CO`: moneda `$ 1.250` y kilometraje `15.000 km`.
 - `MaterialApp.router` usa `locale: es_CO` y `flutter_localizations`.
 - Formularios: `FormSection`, `StickyBottomBar`, validación inline y guardia de
-  cambios sin guardar.
+  cambios sin guardar. Las listas editables largas (ítems de mantenimiento) usan
+  `ItemFormRow` colapsable, botón de agregar al final de la lista y auto-scroll
+  al ítem nuevo.
 
 ## Arquitectura
 
@@ -125,7 +127,7 @@ lib/
 ├── core/
 │   ├── app_info.dart            # Identidad, versión y licencia
 │   ├── theme/                   # Tokens, Barlow, temas light+dark, ThemeExtension
-│   ├── database/                # SQLite helper + DDL (v21) + factory FFI + plantillas de componentes
+│   ├── database/                # SQLite helper + DDL (v22) + factory FFI + plantillas de componentes
 │   ├── backup/                  # Copia ZIP (JSON + adjuntos) y exportación CSV
 │   ├── files/                   # Almacenamiento local de adjuntos
 │   ├── notifications/           # Notificaciones locales y sincronización
@@ -180,7 +182,7 @@ lib/
 | `Checklist` / `ChecklistItem` | `checklists` / `checklist_items` | vehicleId, vehicleType, name, label, sortOrder |
 | `InspectionRun` / `InspectionAnswer` | `inspection_runs` / `inspection_answers` | vehicleId, checklistId, date, odometer, itemId, status |
 | `Budget` | `budgets` | vehicleId, period (YYYY-MM), amount |
-| `VehicleComponent` | `components` | vehicleId, name, type, position, installedAt, installedKm, intervalKm/Months, warningKm/Days, active, isSystem, categoryKey |
+| `VehicleComponent` | `components` | vehicleId, name, type, position, positionCode, installedAt, installedKm, intervalKm/Months, warningKm/Days, active, isSystem, categoryKey |
 
 Categorías de mantenimiento por tipo: car/truck (11), motorcycle (9), bike (7),
 scooter (6), other (1) = 45 por defecto. El seed vive en
@@ -194,8 +196,9 @@ ocurra primero** entre kilometraje y fecha. `maintenance_items.category` guarda
 la `key` (ej: `car_oil`).
 
 Los **componentes** son piezas con vida útil (llantas, batería, cadena, frenos,
-suspensión). Cada llanta es un componente individual y `position` es texto
-libre, así que el camión se maneja con el mismo formulario
+suspensión). Cada llanta es un componente individual. La posición de llantas y
+frenos usa un código estable (`position_code`: `front_left`, `rear_left`,
+`front`, `rear`, `spare`) y el camión conserva texto libre
 (`Eje 2 izquierda exterior`). El reemplazo **no** es una cuenta aparte: se
 registra como ítem del mantenimiento con `maintenance_items.component_id` y el
 costo vive en el mantenimiento. El historial del componente se deriva de esos

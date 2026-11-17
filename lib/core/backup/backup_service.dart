@@ -13,7 +13,7 @@ import '../settings/app_preferences.dart';
 import '../utils/user_error.dart';
 
 const _backupFormat = 'motorcheck-backup';
-const _backupSchemaVersion = 21;
+const _backupSchemaVersion = 22;
 
 const _tables = <String>[
   'vehicles',

@@ -35,7 +35,8 @@ void main() {
         name: 'Llanta delantera',
         type: 'tire',
         categoryKey: 'car_tires',
-        position: 'Delantera',
+        position: 'Delantera izquierda',
+        positionCode: 'front_left',
         installedAt: now,
         installedKm: 150000,
         intervalKm: 10000,
@@ -49,6 +50,7 @@ void main() {
     expect(components, hasLength(1));
     expect(components.first.name, 'Llanta delantera');
     expect(components.first.categoryKey, 'car_tires');
+    expect(components.first.positionCode, 'front_left');
     expect(components.first.active, isTrue);
     expect(components.first.isSystem, isFalse);
 
@@ -85,13 +87,66 @@ void main() {
     expect(again, 0);
 
     final components = await repo.getByVehicleId(vehicleId);
-    expect(components.where((c) => c.type == 'tire'), hasLength(4));
-    expect(components.where((c) => c.type == 'brakes'), hasLength(2));
+    final tires = components.where((c) => c.type == 'tire').toList();
+    expect(tires, hasLength(4));
+    expect(tires.map((c) => c.positionCode).toSet(), {
+      'front_left',
+      'front_right',
+      'rear_left',
+      'rear_right',
+    });
+    final brakes = components.where((c) => c.type == 'brakes').toList();
+    expect(brakes, hasLength(2));
+    expect(brakes.map((c) => c.positionCode).toSet(), {'front', 'rear'});
     expect(components.where((c) => c.isSystem), hasLength(7));
 
     await expectLater(
       repo.delete(components.first.id!),
       throwsA(isA<StateError>()),
+    );
+  });
+
+  test('detecta posiciones duplicadas y respeta la exclusión', () async {
+    final vehicleId = await createVehicle();
+    final repo = ComponentsRepository();
+    final now = DateTime(2026, 1, 10);
+
+    final firstId = await repo.insert(
+      VehicleComponent(
+        vehicleId: vehicleId,
+        name: 'Llanta delantera izquierda',
+        type: 'tire',
+        positionCode: 'front_left',
+        installedAt: now,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    expect(
+      await repo.existsAtPosition(
+        vehicleId: vehicleId,
+        type: 'tire',
+        positionCode: 'front_left',
+      ),
+      isTrue,
+    );
+    expect(
+      await repo.existsAtPosition(
+        vehicleId: vehicleId,
+        type: 'tire',
+        positionCode: 'front_left',
+        excludeId: firstId,
+      ),
+      isFalse,
+    );
+    expect(
+      await repo.existsAtPosition(
+        vehicleId: vehicleId,
+        type: 'tire',
+        positionCode: 'front_right',
+      ),
+      isFalse,
     );
   });
 

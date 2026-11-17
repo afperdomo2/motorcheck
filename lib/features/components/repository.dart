@@ -58,6 +58,25 @@ class ComponentsRepository {
     await db.delete('components', where: 'id = ?', whereArgs: [id]);
   }
 
+  /// Comprueba si ya existe un componente del mismo tipo en esa posición.
+  Future<bool> existsAtPosition({
+    required int vehicleId,
+    required String type,
+    required String? positionCode,
+    int? excludeId,
+  }) async {
+    if (positionCode == null) return false;
+    final db = await _db.database;
+    final maps = await db.query(
+      'components',
+      columns: ['id'],
+      where: 'vehicle_id = ? AND type = ? AND position_code = ? AND id != ?',
+      whereArgs: [vehicleId, type, positionCode, excludeId ?? -1],
+      limit: 1,
+    );
+    return maps.isNotEmpty;
+  }
+
   /// Convierte la plantilla actual en componentes normales (borrables).
   /// Se usa cuando el vehículo cambia de tipo y la plantilla anterior deja de
   /// aplicar.
@@ -89,8 +108,15 @@ class ComponentsRepository {
       final existing = await db.query(
         'components',
         columns: ['id'],
-        where: 'vehicle_id = ? AND name = ?',
-        whereArgs: [vehicleId, template.name],
+        where:
+            'vehicle_id = ? AND (name = ? OR '
+            '(position_code IS NOT NULL AND position_code = ? AND type = ?))',
+        whereArgs: [
+          vehicleId,
+          template.name,
+          template.positionCode,
+          template.type,
+        ],
         limit: 1,
       );
       if (existing.isNotEmpty) continue;
@@ -100,6 +126,7 @@ class ComponentsRepository {
         'type': template.type,
         'category_key': template.categoryKey,
         'position': template.position,
+        'position_code': template.positionCode,
         'installed_at': formatDate(installedAt),
         'installed_km': installedKm,
         'interval_km': template.intervalKm,
@@ -164,6 +191,7 @@ class ComponentsRepository {
       'type': component.type,
       'category_key': component.categoryKey,
       'position': component.position,
+      'position_code': component.positionCode,
       'installed_at': formatDate(component.installedAt),
       'installed_km': component.installedKm,
       'interval_km': component.intervalKm,
@@ -186,6 +214,7 @@ class ComponentsRepository {
       type: (map['type'] as String?) ?? 'other',
       categoryKey: map['category_key'] as String?,
       position: map['position'] as String?,
+      positionCode: map['position_code'] as String?,
       installedAt: parseDate(map['installed_at'] as String),
       installedKm: map['installed_km'] as int?,
       intervalKm: map['interval_km'] as int?,

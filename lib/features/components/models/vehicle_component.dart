@@ -14,6 +14,7 @@ abstract class VehicleComponent with _$VehicleComponent {
     required String name,
     @Default('other') String type,
     String? position,
+    String? positionCode,
     required DateTime installedAt,
     int? installedKm,
     int? intervalKm,

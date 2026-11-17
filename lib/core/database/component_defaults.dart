@@ -8,6 +8,7 @@ class ComponentTemplate {
     required this.type,
     required this.categoryKey,
     this.position,
+    this.positionCode,
     this.intervalKm,
     this.intervalMonths,
     this.warningKm,
@@ -19,6 +20,7 @@ class ComponentTemplate {
   final String type;
   final String categoryKey;
   final String? position;
+  final String? positionCode;
   final int? intervalKm;
   final int? intervalMonths;
   final int? warningKm;
@@ -32,6 +34,7 @@ const _car = <ComponentTemplate>[
     type: 'tire',
     categoryKey: 'car_tires',
     position: 'Delantera izquierda',
+    positionCode: 'front_left',
     intervalKm: 50000,
     warningKm: 3000,
   ),
@@ -40,6 +43,7 @@ const _car = <ComponentTemplate>[
     type: 'tire',
     categoryKey: 'car_tires',
     position: 'Delantera derecha',
+    positionCode: 'front_right',
     intervalKm: 50000,
     warningKm: 3000,
   ),
@@ -48,6 +52,7 @@ const _car = <ComponentTemplate>[
     type: 'tire',
     categoryKey: 'car_tires',
     position: 'Trasera izquierda',
+    positionCode: 'rear_left',
     intervalKm: 50000,
     warningKm: 3000,
   ),
@@ -56,6 +61,7 @@ const _car = <ComponentTemplate>[
     type: 'tire',
     categoryKey: 'car_tires',
     position: 'Trasera derecha',
+    positionCode: 'rear_right',
     intervalKm: 50000,
     warningKm: 3000,
   ),
@@ -71,6 +77,7 @@ const _car = <ComponentTemplate>[
     type: 'brakes',
     categoryKey: 'car_brakes',
     position: 'Delanteros',
+    positionCode: 'front',
     intervalKm: 30000,
     warningKm: 2000,
   ),
@@ -79,6 +86,7 @@ const _car = <ComponentTemplate>[
     type: 'brakes',
     categoryKey: 'car_brakes',
     position: 'Traseros',
+    positionCode: 'rear',
     intervalKm: 30000,
     warningKm: 2000,
   ),
@@ -90,6 +98,7 @@ const _motorcycle = <ComponentTemplate>[
     type: 'tire',
     categoryKey: 'motorcycle_tires',
     position: 'Delantera',
+    positionCode: 'front',
     intervalKm: 15000,
     warningKm: 1000,
   ),
@@ -98,6 +107,7 @@ const _motorcycle = <ComponentTemplate>[
     type: 'tire',
     categoryKey: 'motorcycle_tires',
     position: 'Trasera',
+    positionCode: 'rear',
     intervalKm: 12000,
     warningKm: 1000,
   ),
@@ -114,6 +124,7 @@ const _motorcycle = <ComponentTemplate>[
     type: 'brakes',
     categoryKey: 'motorcycle_brakes',
     position: 'Delanteros',
+    positionCode: 'front',
     intervalKm: 10000,
     warningKm: 1000,
   ),
@@ -122,6 +133,7 @@ const _motorcycle = <ComponentTemplate>[
     type: 'brakes',
     categoryKey: 'motorcycle_brakes',
     position: 'Traseros',
+    positionCode: 'rear',
     intervalKm: 10000,
     warningKm: 1000,
   ),
@@ -140,6 +152,7 @@ const _bike = <ComponentTemplate>[
     type: 'tire',
     categoryKey: 'bike_tires',
     position: 'Delantera',
+    positionCode: 'front',
     intervalKm: 5000,
     warningKm: 500,
   ),
@@ -148,6 +161,7 @@ const _bike = <ComponentTemplate>[
     type: 'tire',
     categoryKey: 'bike_tires',
     position: 'Trasera',
+    positionCode: 'rear',
     intervalKm: 5000,
     warningKm: 500,
   ),
@@ -163,6 +177,7 @@ const _bike = <ComponentTemplate>[
     type: 'brakes',
     categoryKey: 'bike_brakes',
     position: 'Delanteros',
+    positionCode: 'front',
     intervalKm: 3000,
     warningKm: 300,
   ),
@@ -171,6 +186,7 @@ const _bike = <ComponentTemplate>[
     type: 'brakes',
     categoryKey: 'bike_brakes',
     position: 'Traseros',
+    positionCode: 'rear',
     intervalKm: 3000,
     warningKm: 300,
   ),
@@ -190,6 +206,7 @@ const _scooter = <ComponentTemplate>[
     type: 'tire',
     categoryKey: 'scooter_tires',
     position: 'Delantera',
+    positionCode: 'front',
     intervalKm: 5000,
     warningKm: 500,
   ),
@@ -198,6 +215,7 @@ const _scooter = <ComponentTemplate>[
     type: 'tire',
     categoryKey: 'scooter_tires',
     position: 'Trasera',
+    positionCode: 'rear',
     intervalKm: 5000,
     warningKm: 500,
   ),
@@ -213,6 +231,7 @@ const _scooter = <ComponentTemplate>[
     type: 'brakes',
     categoryKey: 'scooter_brakes',
     position: 'Delanteros',
+    positionCode: 'front',
     intervalKm: 3000,
     warningKm: 300,
   ),
@@ -221,6 +240,7 @@ const _scooter = <ComponentTemplate>[
     type: 'brakes',
     categoryKey: 'scooter_brakes',
     position: 'Traseros',
+    positionCode: 'rear',
     intervalKm: 3000,
     warningKm: 300,
   ),
@@ -263,4 +283,61 @@ String? componentCategoryKeyFor(String vehicleType, String componentType) {
     ('truck', 'suspension') => 'truck_suspension',
     _ => null,
   };
+}
+
+/// Infiere el código de posición desde un texto libre. Se usa en la migración
+/// v22 para rellenar `position_code` sin perder registros.
+String? positionCodeFromText(String? text) {
+  if (text == null) return null;
+  final value = normalizePositionText(text);
+  if (value.isEmpty) return null;
+
+  if (value.contains('repuesto') || value.contains('spare')) return 'spare';
+
+  final left = value.contains('izq');
+  final right = value.contains('der');
+  final front =
+      value.contains('delant') || value.contains('front') || value == 'del';
+  final rear = value.contains('tras') || value.contains('rear');
+
+  if (front && left) return 'front_left';
+  if (front && right) return 'front_right';
+  if (rear && left) return 'rear_left';
+  if (rear && right) return 'rear_right';
+  if (front) return 'front';
+  if (rear) return 'rear';
+  return null;
+}
+
+String normalizePositionText(String input) {
+  const accents = {
+    'á': 'a',
+    'à': 'a',
+    'ä': 'a',
+    'â': 'a',
+    'ã': 'a',
+    'é': 'e',
+    'è': 'e',
+    'ë': 'e',
+    'ê': 'e',
+    'í': 'i',
+    'ì': 'i',
+    'ï': 'i',
+    'î': 'i',
+    'ó': 'o',
+    'ò': 'o',
+    'ö': 'o',
+    'ô': 'o',
+    'õ': 'o',
+    'ú': 'u',
+    'ù': 'u',
+    'ü': 'u',
+    'û': 'u',
+    'ñ': 'n',
+  };
+  final buffer = StringBuffer();
+  for (final char in input.toLowerCase().split('')) {
+    buffer.write(accents[char] ?? char);
+  }
+  return buffer.toString().trim();
 }

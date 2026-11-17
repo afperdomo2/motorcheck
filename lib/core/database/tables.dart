@@ -309,6 +309,7 @@ CREATE TABLE IF NOT EXISTS components (
   name TEXT NOT NULL,
   type TEXT NOT NULL DEFAULT 'other',
   position TEXT,
+  position_code TEXT,
   installed_at TEXT NOT NULL,
   installed_km INTEGER,
   interval_km INTEGER,
@@ -328,5 +329,11 @@ CREATE TABLE IF NOT EXISTS components (
   static const createComponentsVehicleIndex = '''
 CREATE INDEX IF NOT EXISTS idx_components_vehicle
   ON components(vehicle_id, active)
+''';
+
+  static const createComponentsPositionIndex = '''
+CREATE UNIQUE INDEX IF NOT EXISTS idx_components_vehicle_type_position
+  ON components(vehicle_id, type, position_code)
+  WHERE position_code IS NOT NULL
 ''';
 }

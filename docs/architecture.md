@@ -175,6 +175,8 @@ Recordatorios · salud · historial · PDF
 
 - Un componente es una **posición o pieza con vida útil**: 4 llantas y 2 ejes
   de frenos en un carro, 2 llantas + kit de arrastre + 2 frenos en una moto.
+- La posición es estructurada (`position_code`) para llantas y frenos; el
+  camión y las piezas sin eje usan texto libre.
 - El reemplazo se registra como un **ítem del mantenimiento** con
   `component_id`; no hay una segunda cuenta ni un costo duplicado.
 - El historial del componente se deriva de esos ítems, así que borrar el

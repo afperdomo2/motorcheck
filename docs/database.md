@@ -273,7 +273,8 @@ carro o cada posición de un camión).
 | vehicle_id | INTEGER | NOT NULL, FK → vehicles(id) ON DELETE CASCADE |
 | name | TEXT | NOT NULL |
 | type | TEXT | NOT NULL DEFAULT 'other' (tire, battery, chain, brakes, suspension, other) |
-| position | TEXT | Texto libre: "Delantera", "Eje 2 izquierda exterior" |
+| position | TEXT | Etiqueta visible: "Delantera izquierda", "Eje 2 izquierda exterior" |
+| position_code | TEXT | Código estable: `front_left`, `front_right`, `rear_left`, `rear_right`, `front`, `rear`, `spare`; `NULL` para camión, batería, cadena u "otro" |
 | installed_at | TEXT | NOT NULL (YYYY-MM-DD) |
 | installed_km | INTEGER | Kilometraje al instalar |
 | interval_km | INTEGER | Cada cuántos km se cambia o revisa |
@@ -553,6 +554,7 @@ CREATE TABLE components (
   name TEXT NOT NULL,
   type TEXT NOT NULL DEFAULT 'other',
   position TEXT,
+  position_code TEXT,
   installed_at TEXT NOT NULL,
   installed_km INTEGER,
   interval_km INTEGER,
@@ -569,6 +571,9 @@ CREATE TABLE components (
 );
 CREATE INDEX idx_components_vehicle
   ON components(vehicle_id, active);
+CREATE UNIQUE INDEX idx_components_vehicle_type_position
+  ON components(vehicle_id, type, position_code)
+  WHERE position_code IS NOT NULL;
 
 -- El reemplazo vive en maintenance_items.component_id
 ```
@@ -838,7 +843,7 @@ El borrado es hard-delete, pero el repositorio verifica que la categoría no est
 
 ## Versión de Base de Datos
 
-Versión actual: **21**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
+Versión actual: **22**. Migraciones incrementales vía `onUpgrade` en `DatabaseHelper`:
 - v2: agregó `current_mileage`
 - v3: agregó `workshops` + `maintenance_cost` + `workshop_id` en maintenances
 - v4: reestructuró `maintenance_items` (renombró columnas)
@@ -861,6 +866,8 @@ Versión actual: **21**. Migraciones incrementales vía `onUpgrade` en `Database
 - v21: `is_system` y `category_key` en components, `component_id` en
   maintenance_items, migración de `component_services` a mantenimientos y
   plantillas por tipo de vehículo
+- v22: `position_code` en components (posición estructurada) + relleno desde el
+  texto existente + índice único de posición
 
 ## Respaldo
 

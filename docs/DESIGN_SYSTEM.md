@@ -128,6 +128,7 @@ Archivos:
 | `StatTile` | `shared/widgets/stat_tile.dart` | métrica compacta |
 | `FormSection` | `shared/widgets/form_section.dart` | grupo de formulario |
 | `StickyBottomBar` | `shared/widgets/sticky_bottom_bar.dart` | acción fija con safe area |
+| `ItemFormRow` | `features/maintenance/widgets/item_form_row.dart` | fila-acordeón de ítems: resumen colapsado y campos al expandir |
 | `MonthHeader` | `features/maintenance/widgets/month_header.dart` | cabecera de mes con total |
 | `DateField` | `shared/widgets/date_field.dart` | fecha con selector |
 | `AppSnackBar` | `shared/widgets/app_snack_bar.dart` | feedback global |
@@ -183,6 +184,17 @@ con total, cards con costo y detalle de items.
 
 Secciones, una columna, validación inline, barra inferior fija, guardia de
 cambios sin guardar y snackbar de éxito.
+
+**Listas editables largas** (ítems del mantenimiento): cada fila es un
+acordeón. Colapsada muestra el resumen `Ítem N · categoría · costo`; expandida
+muestra sus campos. Solo hay una fila abierta a la vez y la recién agregada se
+abre, se lleva a la vista con `Scrollable.ensureVisible` y se resalta con borde
+primario ~1,6 s. El botón de agregar se repite al final de la lista para no
+volver al encabezado. El ítem nuevo arranca en la categoría «General» del tipo
+de vehículo; si el catálogo no la tiene, arranca vacío y es obligatorio elegir.
+Si una fila no tiene categoría válida, el resumen lo avisa en ámbar y, al
+guardar, el formulario la expande y la lleva a la vista en vez de fallar en
+silencio.
 
 ### Ajustes
 

@@ -36,7 +36,7 @@ class DatabaseHelper {
 
     return openDatabase(
       path,
-      version: 21,
+      version: 22,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onOpen: _ensureSchemaIntegrity,
@@ -133,11 +133,15 @@ class DatabaseHelper {
     if (!await _hasColumn(db, 'components', 'category_key')) {
       await db.execute('ALTER TABLE components ADD COLUMN category_key TEXT');
     }
+    if (!await _hasColumn(db, 'components', 'position_code')) {
+      await db.execute('ALTER TABLE components ADD COLUMN position_code TEXT');
+    }
     if (!await _hasColumn(db, 'maintenance_items', 'component_id')) {
       await db.execute(
         'ALTER TABLE maintenance_items ADD COLUMN component_id INTEGER',
       );
     }
+    await db.execute(Tables.createComponentsPositionIndex);
 
     // Los backfills viven solo en `_onUpgrade` (v13/v14). Ejecutarlos en cada
     // apertura resucitaría documentos o lecturas que el usuario haya borrado.
@@ -220,6 +224,7 @@ class DatabaseHelper {
     batch.execute(Tables.createBudgetsUniqueIndex);
     batch.execute(Tables.createComponents);
     batch.execute(Tables.createComponentsVehicleIndex);
+    batch.execute(Tables.createComponentsPositionIndex);
     await batch.commit(noResult: true);
     await _seedDefaultCategories(db);
     await _seedExpenseCategories(db);
@@ -398,6 +403,35 @@ class DatabaseHelper {
       await _seedDefaultCategories(db);
       await _seedDefaultComponents(db);
     }
+    if (oldVersion < 22) {
+      if (!await _hasColumn(db, 'components', 'position_code')) {
+        await db.execute(
+          'ALTER TABLE components ADD COLUMN position_code TEXT',
+        );
+      }
+      await _backfillPositionCodes(db);
+      await db.execute(Tables.createComponentsPositionIndex);
+    }
+  }
+
+  /// Rellena `position_code` desde el texto libre de la v21.
+  Future<void> _backfillPositionCodes(Database db) async {
+    final rows = await db.query(
+      'components',
+      columns: ['id', 'type', 'position'],
+    );
+    for (final row in rows) {
+      final type = (row['type'] as String?) ?? 'other';
+      if (type != 'tire' && type != 'brakes') continue;
+      final code = positionCodeFromText(row['position'] as String?);
+      if (code == null) continue;
+      await db.update(
+        'components',
+        {'position_code': code},
+        where: 'id = ?',
+        whereArgs: [row['id']],
+      );
+    }
   }
 
   /// Convierte los servicios sueltos de la v20 en mantenimientos con su ítem,
@@ -460,8 +494,15 @@ class DatabaseHelper {
         final existing = await db.query(
           'components',
           columns: ['id'],
-          where: 'vehicle_id = ? AND name = ?',
-          whereArgs: [vehicleId, template.name],
+          where:
+              'vehicle_id = ? AND (name = ? OR '
+              '(position_code IS NOT NULL AND position_code = ? AND type = ?))',
+          whereArgs: [
+            vehicleId,
+            template.name,
+            template.positionCode,
+            template.type,
+          ],
           limit: 1,
         );
         if (existing.isNotEmpty) continue;
@@ -471,6 +512,7 @@ class DatabaseHelper {
           'type': template.type,
           'category_key': template.categoryKey,
           'position': template.position,
+          'position_code': template.positionCode,
           'installed_at': installedAt,
           'installed_km': vehicle['current_mileage'],
           'interval_km': template.intervalKm,

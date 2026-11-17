@@ -11,8 +11,11 @@ import '../../../shared/widgets/date_field.dart';
 import '../../../shared/widgets/form_section.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/sticky_bottom_bar.dart';
+import '../../vehicles/providers.dart';
+import '../models/component_position.dart';
 import '../models/vehicle_component.dart';
 import '../providers.dart';
+import '../widgets/position_selector.dart';
 
 class ComponentFormScreen extends ConsumerStatefulWidget {
   const ComponentFormScreen({
@@ -47,6 +50,8 @@ class _ComponentFormScreenState extends ConsumerState<ComponentFormScreen> {
   bool _active = true;
   bool _isSystem = false;
   String? _categoryKey;
+  String? _positionCode;
+  String? _lastAutoName;
   bool _loading = false;
   bool _saving = false;
   bool _dirty = false;
@@ -62,7 +67,9 @@ class _ComponentFormScreenState extends ConsumerState<ComponentFormScreen> {
       Future.microtask(_load);
     } else if (widget.spare) {
       _type = 'tire';
+      _positionCode = 'spare';
       _nameController.text = 'Llanta de repuesto';
+      _lastAutoName = 'Llanta de repuesto';
       _positionController.text = 'Repuesto';
       _intervalMonthsController.text = '72';
       _warningDaysController.text = '45';
@@ -90,6 +97,10 @@ class _ComponentFormScreenState extends ConsumerState<ComponentFormScreen> {
       _type = component.type;
       _isSystem = component.isSystem;
       _categoryKey = component.categoryKey;
+      _positionCode = component.positionCode;
+      _lastAutoName = component.positionCode != null
+          ? componentNameForPosition(component.type, component.positionCode!)
+          : null;
       _installedAt = component.installedAt;
       _active = component.active;
       _createdAt = component.createdAt;
@@ -133,8 +144,72 @@ class _ComponentFormScreenState extends ConsumerState<ComponentFormScreen> {
     }
   }
 
+  void _onPositionChanged(String? code) {
+    setState(() {
+      _positionCode = code;
+      _positionController.text = code == null
+          ? ''
+          : positionLabelFor(code, componentType: _type);
+      final suggestion = code == null
+          ? null
+          : componentNameForPosition(_type, code);
+      final current = _nameController.text.trim();
+      if (suggestion != null && (current.isEmpty || current == _lastAutoName)) {
+        _nameController.text = suggestion;
+        _lastAutoName = suggestion;
+      }
+      _dirty = true;
+    });
+  }
+
+  void _onTypeChanged(String type, String vehicleType) {
+    final codes = positionCodesFor(vehicleType, type);
+    setState(() {
+      final previousAuto = _lastAutoName;
+      _type = type;
+      if (_positionCode != null && !codes.contains(_positionCode)) {
+        _positionCode = null;
+        _positionController.text = '';
+      }
+      final suggestion = _positionCode == null
+          ? null
+          : componentNameForPosition(type, _positionCode!);
+      final current = _nameController.text.trim();
+      if (suggestion != null && (current.isEmpty || current == previousAuto)) {
+        _nameController.text = suggestion;
+        _lastAutoName = suggestion;
+      }
+      _dirty = true;
+    });
+  }
+
   Future<void> _save() async {
+    if (_saving) return;
     if (!_formKey.currentState!.validate()) return;
+
+    final vehicle = await ref.read(
+      selectedVehicleProvider(widget.vehicleId).future,
+    );
+    final vehicleType = vehicle?.type ?? 'other';
+    final codes = positionCodesFor(vehicleType, _type);
+    final positionCode = codes.contains(_positionCode) ? _positionCode : null;
+
+    final duplicated = await ref
+        .read(componentsRepositoryProvider)
+        .existsAtPosition(
+          vehicleId: widget.vehicleId,
+          type: _type,
+          positionCode: positionCode,
+          excludeId: widget.componentId,
+        );
+    if (duplicated) {
+      AppSnackBar.error(
+        'Ya existe ${componentTypeFor(_type).label.toLowerCase()} en esa '
+        'posición',
+      );
+      return;
+    }
+    if (!mounted) return;
     setState(() => _saving = true);
 
     final now = DateTime.now();
@@ -146,6 +221,7 @@ class _ComponentFormScreenState extends ConsumerState<ComponentFormScreen> {
       position: _positionController.text.trim().isEmpty
           ? null
           : _positionController.text.trim(),
+      positionCode: positionCode,
       installedAt: _installedAt,
       installedKm: _toInt(_installedKmController),
       intervalKm: _toInt(_intervalKmController),
@@ -205,6 +281,14 @@ class _ComponentFormScreenState extends ConsumerState<ComponentFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final vehicleType =
+        ref
+            .watch(selectedVehicleProvider(widget.vehicleId))
+            .valueOrNull
+            ?.type ??
+        'other';
+    final positionCodes = positionCodesFor(vehicleType, _type);
+
     return PopScope(
       canPop: !_dirty && !_saving,
       onPopInvokedWithResult: (didPop, result) {
@@ -269,12 +353,28 @@ class _ComponentFormScreenState extends ConsumerState<ComponentFormScreen> {
                                         ? null
                                         : (value) {
                                             if (value == null) return;
-                                            setState(() {
-                                              _type = value;
-                                              _dirty = true;
-                                            });
+                                            _onTypeChanged(value, vehicleType);
                                           },
                                   ),
+                                  if (positionCodes.isNotEmpty) ...[
+                                    const SizedBox(height: AppSpacing.lg),
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        'Posición',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.labelLarge,
+                                      ),
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    PositionSelector(
+                                      componentType: _type,
+                                      codes: positionCodes,
+                                      selected: _positionCode,
+                                      onChanged: _onPositionChanged,
+                                    ),
+                                  ],
                                   const SizedBox(height: AppSpacing.lg),
                                   TextFormField(
                                     controller: _nameController,
@@ -293,17 +393,20 @@ class _ComponentFormScreenState extends ConsumerState<ComponentFormScreen> {
                                       return null;
                                     },
                                   ),
-                                  const SizedBox(height: AppSpacing.lg),
-                                  TextFormField(
-                                    controller: _positionController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Posición (opcional)',
-                                      hintText: 'Ej: Eje 2 izquierda exterior',
-                                      prefixIcon: Icon(Icons.place_outlined),
+                                  if (positionCodes.isEmpty) ...[
+                                    const SizedBox(height: AppSpacing.lg),
+                                    TextFormField(
+                                      controller: _positionController,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Posición (opcional)',
+                                        hintText:
+                                            'Ej: Eje 2 izquierda exterior',
+                                        prefixIcon: Icon(Icons.place_outlined),
+                                      ),
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
                                     ),
-                                    textCapitalization:
-                                        TextCapitalization.sentences,
-                                  ),
+                                  ],
                                 ],
                               ),
                             ),
