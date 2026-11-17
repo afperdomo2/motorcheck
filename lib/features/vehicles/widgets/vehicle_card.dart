@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/meta_row.dart';
+import '../../../shared/widgets/plate_badge.dart';
 import '../../../shared/widgets/vehicle_avatar.dart';
 import '../models/vehicle.dart';
 
@@ -21,8 +24,13 @@ class VehicleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final semantic = AppSemanticColors.of(context);
+    final tint = semantic
+        .vehicleColor(vehicle.type)
+        .withValues(alpha: theme.brightness == Brightness.dark ? 0.14 : 0.06);
 
     return Card(
+      color: tint,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -70,15 +78,12 @@ class VehicleCard extends StatelessWidget {
                     Wrap(
                       spacing: AppSpacing.md,
                       runSpacing: AppSpacing.xs,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        _Meta(
-                          icon: vehicleTypeIcon(vehicle.type),
-                          text: vehicleTypeLabel(vehicle.type),
-                        ),
                         if (vehicle.plate != null)
-                          _Meta(icon: Icons.pin_outlined, text: vehicle.plate!),
+                          PlateBadge(plate: vehicle.plate),
                         if (vehicle.currentMileage != null)
-                          _Meta(
+                          MetaRow(
                             icon: Icons.speed,
                             text: formatMileage(vehicle.currentMileage),
                           ),
@@ -109,31 +114,6 @@ class VehicleCard extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _Meta extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _Meta({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
     );
   }
 }

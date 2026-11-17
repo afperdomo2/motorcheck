@@ -10,7 +10,7 @@ import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
-import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/skeleton_block.dart';
 import '../models/expense.dart';
 import '../providers.dart';
 import '../widgets/expense_card.dart';
@@ -32,7 +32,7 @@ class ExpensesView extends ConsumerWidget {
         await ref.read(expensesForVehicleProvider(vehicleId).future);
       },
       child: expensesAsync.when(
-        loading: () => const LoadingIndicator(),
+        loading: () => const SkeletonList(),
         error: (error, _) => ErrorState(
           message: 'No se pudieron cargar los gastos',
           onRetry: () => ref.invalidate(expensesForVehicleProvider(vehicleId)),

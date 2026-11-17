@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/battery_gauge.dart';
+import '../../../shared/widgets/budget_status_style.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/money_row.dart';
 import '../budget_status.dart';
 import '../providers.dart';
 import '../widgets/budget_dialog.dart';
@@ -145,17 +147,17 @@ class _MonthCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             const Divider(height: 1),
             const SizedBox(height: AppSpacing.sm),
-            _MoneyRow(
+            MoneyRow(
               icon: Icons.build_outlined,
               label: 'Mantenimiento',
               value: finance.currentMonthMaintenance,
             ),
-            _MoneyRow(
+            MoneyRow(
               icon: Icons.local_gas_station_outlined,
               label: 'Combustible',
               value: finance.currentMonthFuel,
             ),
-            _MoneyRow(
+            MoneyRow(
               icon: Icons.receipt_long_outlined,
               label: 'Gastos del vehículo',
               value: finance.currentMonthExpenses,
@@ -280,12 +282,8 @@ class _BudgetCard extends ConsumerWidget {
 
         final progress = (spent / budget.amount).clamp(0.0, 1.5);
         final status = budgetStatusFor(spent: spent, amount: budget.amount);
-        final semantic = AppSemanticColors.of(context);
-        final color = switch (status) {
-          BudgetStatus.ok => semantic.success,
-          BudgetStatus.warning => semantic.warning,
-          BudgetStatus.exceeded => semantic.danger,
-        };
+        final color = budgetColor(context, status);
+        final percent = ((spent / budget.amount) * 100).round();
         final leftMessage = spent > budget.amount
             ? 'Superado por ${formatCurrency(spent - budget.amount)}'
             : status == BudgetStatus.exceeded
@@ -338,14 +336,11 @@ class _BudgetCard extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    value: progress.clamp(0.0, 1.0),
-                    minHeight: 8,
-                    backgroundColor: theme.colorScheme.surfaceContainer,
-                    color: color,
-                  ),
+                BudgetBar(
+                  ratio: progress,
+                  color: color,
+                  semanticsLabel: 'Presupuesto $percent por ciento',
+                  semanticsValue: '${percent.clamp(0, 100)} %',
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Wrap(
@@ -372,39 +367,6 @@ class _BudgetCard extends ConsumerWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _MoneyRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final double value;
-
-  const _MoneyRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.sm),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
-          Text(
-            formatCurrency(value),
-            style: theme.textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

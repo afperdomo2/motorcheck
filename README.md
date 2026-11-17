@@ -5,7 +5,7 @@ Aplicación Flutter para el seguimiento del mantenimiento personal de vehículos
 ## Características
 
 - Registro de múltiples vehículos (carros, motos, bicicletas, patinetas eléctricas y camiones)
-- Vehículo seleccionado por defecto
+- Vehículo actual con último seleccionado persistido y principal como respaldo
 - Registro de mantenimientos con múltiples items (cambio de aceite, llantas, filtros, frenos, etc.)
 - Costos de mano de obra y repuestos por item
 - Próximos mantenimientos por kilometraje **o por tiempo** (lo que ocurra primero)
@@ -17,11 +17,12 @@ Aplicación Flutter para el seguimiento del mantenimiento personal de vehículos
 - Reemplazo de componentes dentro del mantenimiento, con historial por pieza y plantillas por tipo de vehículo
 - Bitácora de combustible con consumo real y costo por km
 - Gastos por vehículo o globales, con categorías y recibos
-- Resumen financiero mensual, presupuesto con alertas y gráfica de los últimos 6 meses
+- Resumen financiero mensual, presupuesto con alertas, gasto de la flota y gráfica de los últimos 6 meses
+- Registro rápido desde el FAB: mantenimiento, kilometraje, tanqueada y gasto
 - Previsualización de adjuntos de mantenimiento (imagen y PDF)
 - Recordatorios de mantenimiento, SOAT, RTM, impuesto, seguro y licencia
 - Documentos con adjuntos (PDF o imagen)
-- Pico y placa semanal con aviso en el inicio
+- Pico y placa semanal en el mosaico de inicio (solo restricciones activas)
 - Hoja de vida del vehículo en PDF
 - Copia de seguridad ZIP (datos + adjuntos) y exportación CSV
 - Almacenamiento local con SQLite (sin conexión a internet)

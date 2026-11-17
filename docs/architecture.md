@@ -139,10 +139,13 @@ La pantalla se compone de:
 - **Vencimientos:** documentos/mantenimientos/componentes con rail de
   severidad; el pico y placa no se repite aquí.
 
-`remindersProvider` unifica mantenimiento (km y fecha), documentos y pico y
-placa. El pico y placa se muestra como aviso informativo, no como advertencia.
-El FAB es el `QuickAddFab` compartido con Mantenimientos y Gastos e incluye
-kilometraje.
+`remindersProvider` unifica mantenimiento (km y fecha), documentos, pico y
+placa y presupuestos en alerta. El pico y placa se muestra como aviso
+informativo, no como advertencia. Los presupuestos aparecen en la bandeja
+(`/reminders`, filtro “Presupuesto”) y en el mosaico del Inicio; las
+notificaciones de presupuesto siguen saliendo de `BudgetAlertService` para no
+duplicarse. El FAB es el `QuickAddFab` compartido con Mantenimientos y Gastos e
+incluye kilometraje.
 
 ### Recordatorios y notificaciones
 

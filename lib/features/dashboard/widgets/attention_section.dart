@@ -6,6 +6,7 @@ import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/section_header.dart';
+import '../../../shared/widgets/severity_rail.dart';
 import '../../../shared/widgets/status_chip.dart';
 import '../../../shared/widgets/tonal_avatar.dart';
 import '../../reminders/models/reminder.dart';
@@ -21,7 +22,11 @@ class AttentionSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final remindersAsync = ref.watch(remindersProvider);
     final reminders = (remindersAsync.valueOrNull ?? const <Reminder>[])
-        .where((reminder) => reminder.kind != ReminderKind.restriction)
+        .where(
+          (reminder) =>
+              reminder.kind != ReminderKind.restriction &&
+              reminder.kind != ReminderKind.budget,
+        )
         .toList();
 
     if (reminders.isEmpty) {
@@ -77,6 +82,7 @@ class _ReminderRow extends ConsumerWidget {
       ReminderKind.document => Icons.description_outlined,
       ReminderKind.component => Icons.tire_repair,
       ReminderKind.restriction => Icons.directions_car_outlined,
+      ReminderKind.budget => Icons.savings_outlined,
     };
     final semantic = AppSemanticColors.of(context);
     final railColor = switch (reminder.severity) {
@@ -85,10 +91,8 @@ class _ReminderRow extends ConsumerWidget {
       ReminderSeverity.info => semantic.info,
     };
 
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(left: BorderSide(color: railColor, width: 4)),
-      ),
+    return SeverityRail(
+      color: railColor,
       child: InkWell(
         onTap: () => _open(context, ref),
         child: Padding(

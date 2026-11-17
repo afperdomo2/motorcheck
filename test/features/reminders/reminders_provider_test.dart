@@ -6,6 +6,7 @@ import 'package:motorcheck/features/components/models/component_status.dart';
 import 'package:motorcheck/features/components/models/vehicle_component.dart';
 import 'package:motorcheck/features/components/providers.dart';
 import 'package:motorcheck/features/documents/providers.dart';
+import 'package:motorcheck/features/finance/providers.dart';
 import 'package:motorcheck/features/maintenance/providers.dart';
 import 'package:motorcheck/features/reminders/models/reminder.dart';
 import 'package:motorcheck/features/reminders/providers.dart';
@@ -79,6 +80,9 @@ void main() {
         restrictionStatusesProvider.overrideWith(
           (ref) async => <VehicleRestrictionEntry>[],
         ),
+        budgetStatusesProvider.overrideWith(
+          (ref) async => <BudgetStatusEntry>[],
+        ),
         vehicleComponentStatusesProvider(1).overrideWith((ref) async => []),
       ],
     );
@@ -144,6 +148,9 @@ void main() {
         globalDocumentsProvider.overrideWith((ref) async => []),
         restrictionStatusesProvider.overrideWith(
           (ref) async => <VehicleRestrictionEntry>[],
+        ),
+        budgetStatusesProvider.overrideWith(
+          (ref) async => <BudgetStatusEntry>[],
         ),
         vehicleComponentStatusesProvider(1).overrideWith(
           (ref) async => [

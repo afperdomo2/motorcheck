@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
-import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/skeleton_block.dart';
 import '../models/reminder.dart';
 import '../providers.dart';
 import '../widgets/reminder_tile.dart';
@@ -34,7 +34,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen> {
           ),
           Expanded(
             child: remindersAsync.when(
-              loading: () => const LoadingIndicator(),
+              loading: () => const SkeletonList(),
               error: (error, _) => ErrorState(
                 message: 'No se pudieron calcular los recordatorios',
                 onRetry: () => ref.invalidate(remindersProvider),
@@ -102,6 +102,7 @@ class _FilterBar extends StatelessWidget {
           _chip(context, ReminderKind.document, 'Documentos'),
           _chip(context, ReminderKind.component, 'Componentes'),
           _chip(context, ReminderKind.restriction, 'Pico y placa'),
+          _chip(context, ReminderKind.budget, 'Presupuesto'),
         ],
       ),
     );

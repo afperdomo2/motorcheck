@@ -6,7 +6,7 @@ import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
-import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/skeleton_block.dart';
 import '../providers.dart';
 import '../widgets/vehicle_card.dart';
 
@@ -25,7 +25,7 @@ class VehiclesScreen extends ConsumerWidget {
         label: const Text('Agregar'),
       ),
       body: vehiclesAsync.when(
-        loading: () => const LoadingIndicator(),
+        loading: () => const SkeletonList(),
         error: (err, _) => ErrorState(
           message: 'No se pudieron cargar los vehículos',
           onRetry: () =>

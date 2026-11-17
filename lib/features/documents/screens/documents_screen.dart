@@ -8,7 +8,7 @@ import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
-import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/skeleton_block.dart';
 import '../../vehicles/providers.dart';
 import '../../../core/files/file_storage.dart';
 import '../models/vehicle_document.dart';
@@ -42,7 +42,7 @@ class DocumentsScreen extends ConsumerWidget {
         label: const Text('Agregar'),
       ),
       body: documentsAsync.when(
-        loading: () => const LoadingIndicator(),
+        loading: () => const SkeletonList(),
         error: (error, _) => ErrorState(
           message: 'No se pudieron cargar los documentos',
           onRetry: () {

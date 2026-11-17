@@ -8,7 +8,7 @@ import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/error_state.dart';
-import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/skeleton_block.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../vehicles/providers.dart';
 import '../providers.dart';
@@ -27,7 +27,7 @@ class ChecklistsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Inspecciones')),
       body: vehicleAsync.when(
-        loading: () => const LoadingIndicator(),
+        loading: () => const SkeletonList(),
         error: (error, _) => ErrorState(
           message: 'No se pudo cargar el vehículo',
           onRetry: () => ref.invalidate(selectedVehicleProvider(vehicleId)),
@@ -53,7 +53,13 @@ class ChecklistsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 checklistsAsync.when(
-                  loading: () => const LoadingIndicator(),
+                  loading: () => const Column(
+                    children: [
+                      SkeletonBlock(height: 72, radius: 16),
+                      SizedBox(height: AppSpacing.sm),
+                      SkeletonBlock(height: 72, radius: 16),
+                    ],
+                  ),
                   error: (error, _) => const ErrorState(
                     message: 'No se pudieron cargar los checklists',
                   ),
@@ -95,7 +101,13 @@ class ChecklistsScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.xl),
                 const SectionHeader(title: 'Historial', icon: Icons.history),
                 runsAsync.when(
-                  loading: () => const LoadingIndicator(),
+                  loading: () => const Column(
+                    children: [
+                      SkeletonBlock(height: 72, radius: 16),
+                      SizedBox(height: AppSpacing.sm),
+                      SkeletonBlock(height: 72, radius: 16),
+                    ],
+                  ),
                   error: (error, _) => const ErrorState(
                     message: 'No se pudo cargar el historial',
                   ),

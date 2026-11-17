@@ -6,15 +6,3 @@ BudgetStatus budgetStatusFor({required double spent, required double amount}) {
   if (spent >= amount * 0.8) return BudgetStatus.warning;
   return BudgetStatus.ok;
 }
-
-String budgetStatusLabel({
-  required BudgetStatus status,
-  required double spent,
-  required double amount,
-}) {
-  return switch (status) {
-    BudgetStatus.ok => 'Al día',
-    BudgetStatus.warning => 'Cerca del límite',
-    BudgetStatus.exceeded => spent > amount ? 'Excedido' : 'Límite alcanzado',
-  };
-}

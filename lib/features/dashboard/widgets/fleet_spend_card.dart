@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../shared/widgets/tonal_avatar.dart';
+import '../../../shared/widgets/money_row.dart';
 import '../../finance/providers.dart';
 
 /// Gasto del mes sumando todos los vehículos y los gastos globales.
@@ -52,17 +52,17 @@ class FleetSpendCard extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    _MoneyRow(
+                    MoneyRow(
                       icon: Icons.build_outlined,
                       label: 'Mantenimiento',
                       value: breakdown.maintenance,
                     ),
-                    _MoneyRow(
+                    MoneyRow(
                       icon: Icons.local_gas_station_outlined,
                       label: 'Combustible',
                       value: breakdown.fuel,
                     ),
-                    _MoneyRow(
+                    MoneyRow(
                       icon: Icons.receipt_long_outlined,
                       label: 'Otros',
                       value: breakdown.expenses,
@@ -73,54 +73,6 @@ class FleetSpendCard extends ConsumerWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _MoneyRow extends StatelessWidget {
-  const _MoneyRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final double value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-      child: Row(
-        children: [
-          TonalAvatar(icon: icon, size: 28, iconSize: 16),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              label,
-              style: theme.textTheme.bodyMedium,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Flexible(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerRight,
-              child: Text(
-                formatCurrency(value),
-                maxLines: 1,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -152,6 +152,14 @@ Archivos:
 | `StatusChip` | `shared/widgets/status_chip.dart` | estado ok/warning/danger/neutral/info |
 | `SectionHeader` | `shared/widgets/section_header.dart` | título de sección + acción |
 | `StatTile` | `shared/widgets/stat_tile.dart` | métrica compacta |
+| `PlateBadge` | `shared/widgets/plate_badge.dart` | placa en insignia |
+| `BatteryGauge` | `shared/widgets/battery_gauge.dart` | batería de progreso para presupuestos |
+| `BudgetBar` | `shared/widgets/battery_gauge.dart` | barra lineal de presupuesto |
+| `MoneyRow` | `shared/widgets/money_row.dart` | icono + etiqueta + monto |
+| `MetaRow` | `shared/widgets/meta_row.dart` | icono pequeño + texto de ficha |
+| `HealthRing` | `shared/widgets/health_ring.dart` | anillo de salud con número |
+| `SeverityRail` | `shared/widgets/severity_rail.dart` | barra lateral de severidad para filas |
+| `BudgetStatusStyle` | `shared/widgets/budget_status_style.dart` | helpers de color/estado de presupuesto |
 | `FormSection` | `shared/widgets/form_section.dart` | grupo de formulario |
 | `StickyBottomBar` | `shared/widgets/sticky_bottom_bar.dart` | acción fija con safe area |
 | `ItemFormRow` | `features/maintenance/widgets/item_form_row.dart` | fila-acordeón de ítems: resumen colapsado y campos al expandir |
@@ -236,8 +244,9 @@ filas y cards son neutrales.
 
 ### Vehículos
 
-Cards con avatar de tipo, placa/kilometraje, favorito y menú contextual.
-Detalle con editar/eliminar en menú overflow.
+Cards tintadas por tipo con avatar, placa, kilometraje, favorito y menú
+contextual. El detalle consolida la ficha, la salud en anillo, documentos, pico
+y placa, componentes y mantenimientos; editar/eliminar en menú overflow.
 
 ### Mantenimientos
 

@@ -8,9 +8,10 @@ import '../../../core/utils/formatters.dart';
 import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
-import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/health_ring.dart';
+import '../../../shared/widgets/plate_badge.dart';
 import '../../../shared/widgets/status_chip.dart';
 import '../../../shared/widgets/vehicle_avatar.dart';
 import '../../checklists/providers.dart';
@@ -135,8 +136,8 @@ class VehicleDetailScreen extends ConsumerWidget {
                   onUpdateMileage: () =>
                       MileageUpdateSheet.show(context, vehicle),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                _HealthCard(healthAsync: healthAsync),
+                const SizedBox(height: AppSpacing.sm),
+                _HealthSummary(healthAsync: healthAsync),
                 const SizedBox(height: AppSpacing.sm),
                 _InfoCard(vehicle: vehicle),
                 const SizedBox(height: AppSpacing.lg),
@@ -162,8 +163,6 @@ class VehicleDetailScreen extends ConsumerWidget {
                     vehicleId: vehicleId,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                _MetadataCard(vehicle: vehicle),
                 const SizedBox(height: AppSpacing.xxl),
               ],
             ),
@@ -240,26 +239,41 @@ class _VehicleHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.xs,
-          ),
-          decoration: BoxDecoration(
-            color: typeColor.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(vehicleTypeIcon(vehicle.type), size: 14, color: typeColor),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
-                vehicleTypeLabel(vehicle.type),
-                style: theme.textTheme.labelMedium?.copyWith(color: typeColor),
+        Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.xs,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
               ),
-            ],
-          ),
+              decoration: BoxDecoration(
+                color: typeColor.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    vehicleTypeIcon(vehicle.type),
+                    size: 14,
+                    color: typeColor,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    vehicleTypeLabel(vehicle.type),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: typeColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (vehicle.plate != null) PlateBadge(plate: vehicle.plate),
+          ],
         ),
         if (vehicle.currentMileage != null) ...[
           const SizedBox(height: AppSpacing.sm),
@@ -290,56 +304,37 @@ class _VehicleHeader extends StatelessWidget {
   }
 }
 
-class _HealthCard extends StatelessWidget {
+class _HealthSummary extends StatelessWidget {
   final AsyncValue<HealthScore> healthAsync;
 
-  const _HealthCard({required this.healthAsync});
+  const _HealthSummary({required this.healthAsync});
 
   @override
   Widget build(BuildContext context) {
     final health = healthAsync.valueOrNull;
-    if (health == null) return const SizedBox.shrink();
+    if (health == null || !health.hasData) return const SizedBox.shrink();
 
-    final status = health.value >= 90
-        ? AppStatus.ok
-        : health.value >= 70
-        ? AppStatus.warning
-        : AppStatus.danger;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Row(
-          children: [
-            Icon(
-              Icons.favorite_border,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Salud del vehículo',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    health.reasons.join(' · '),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        HealthRing(value: health.value, label: health.label),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Salud del vehículo', style: theme.textTheme.titleSmall),
+              const SizedBox(height: 2),
+              Text(
+                health.reasons.join(' · '),
+                style: theme.textTheme.bodySmall,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-            StatusChip(
-              status: status,
-              label: '${health.value}/100',
-              icon: Icons.speed,
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -499,9 +494,12 @@ class _RestrictionCard extends StatelessWidget {
                 ],
               ),
             ),
-            TextButton(
+            IconButton(
               onPressed: () => context.push('/vehicles/$vehicleId/restriction'),
-              child: Text(status.configured ? 'Editar' : 'Configurar'),
+              tooltip: status.configured
+                  ? 'Editar pico y placa'
+                  : 'Configurar pico y placa',
+              icon: Icon(status.configured ? Icons.edit_outlined : Icons.add),
             ),
           ],
         ),
@@ -592,12 +590,6 @@ class _InfoCard extends StatelessWidget {
                 label: 'Año',
                 value: vehicle.year.toString(),
               ),
-            if (vehicle.plate != null)
-              _InfoRow(
-                icon: Icons.pin_outlined,
-                label: 'Placa',
-                value: vehicle.plate!,
-              ),
             if (vehicle.color != null)
               _InfoRow(
                 icon: Icons.palette_outlined,
@@ -612,19 +604,12 @@ class _InfoCard extends StatelessWidget {
               ),
             if (vehicle.vin != null)
               _InfoRow(icon: Icons.numbers, label: 'VIN', value: vehicle.vin!),
-            if (vehicle.brand == null &&
-                vehicle.model == null &&
-                vehicle.year == null &&
-                vehicle.plate == null &&
-                vehicle.color == null &&
-                vehicle.vin == null &&
-                vehicle.currentMileage == null)
-              const EmptyState(
-                compact: true,
-                icon: Icons.info_outline,
-                title: 'Sin información adicional',
-                subtitle: 'Edita el vehículo para agregar más detalles',
-              ),
+            const Divider(height: AppSpacing.xl),
+            _InfoRow(
+              icon: Icons.date_range_outlined,
+              label: 'Creado',
+              value: formatDisplayDate(vehicle.createdAt),
+            ),
           ],
         ),
       ),
@@ -647,14 +632,26 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: AppSpacing.sm),
-          Text('$label: ', style: theme.textTheme.bodyMedium),
-          Flexible(child: Text(value, style: theme.textTheme.bodyLarge)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                Text(value, style: theme.textTheme.bodyMedium),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -686,7 +683,13 @@ class _MaintenanceSummaryCard extends StatelessWidget {
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: AppSpacing.md),
-                  const Text('Sin mantenimientos registrados'),
+                  const Expanded(
+                    child: Text(
+                      'Sin mantenimientos registrados',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -768,26 +771,6 @@ class _MaintenanceSummaryCard extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MetadataCard extends StatelessWidget {
-  final Vehicle vehicle;
-
-  const _MetadataCard({required this.vehicle});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: _InfoRow(
-          icon: Icons.date_range_outlined,
-          label: 'Creado',
-          value: formatDisplayDate(vehicle.createdAt),
         ),
       ),
     );

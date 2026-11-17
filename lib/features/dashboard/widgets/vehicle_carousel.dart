@@ -6,10 +6,10 @@ import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/user_error.dart';
+import '../../../shared/widgets/health_ring.dart';
 import '../../../shared/widgets/vehicle_avatar.dart';
 import '../../finance/providers.dart';
 import '../../maintenance/providers.dart';
-import '../../reminders/health_score.dart';
 import '../../reminders/providers.dart';
 import '../../vehicles/current_vehicle_provider.dart';
 import '../../vehicles/models/vehicle.dart';
@@ -244,7 +244,10 @@ class _VehicleSlide extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
-                  _HealthRing(health: health),
+                  HealthRing(
+                    value: health?.hasData == true ? health!.value : null,
+                    label: health?.label,
+                  ),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
@@ -294,61 +297,6 @@ class _VehicleSlide extends ConsumerWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _HealthRing extends StatelessWidget {
-  const _HealthRing({required this.health});
-
-  final HealthScore? health;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final semantic = AppSemanticColors.of(context);
-    final hasData = health?.hasData == true;
-    final value = health?.value ?? 0;
-    final color = !hasData
-        ? scheme.outline
-        : value >= 90
-        ? semantic.success
-        : value >= 70
-        ? semantic.warning
-        : semantic.danger;
-
-    return Semantics(
-      label: hasData
-          ? 'Salud $value de 100, ${health!.label}'
-          : 'Salud sin datos',
-      child: SizedBox(
-        width: 48,
-        height: 48,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(
-              width: 48,
-              height: 48,
-              child: CircularProgressIndicator(
-                value: hasData ? value / 100 : 0,
-                strokeWidth: 4,
-                strokeCap: StrokeCap.round,
-                backgroundColor: scheme.surfaceContainer,
-                color: color,
-              ),
-            ),
-            Text(
-              hasData ? '$value' : '—',
-              style: theme.textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: scheme.onSurface,
-              ),
-            ),
-          ],
         ),
       ),
     );

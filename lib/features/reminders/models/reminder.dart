@@ -1,4 +1,4 @@
-enum ReminderKind { maintenance, document, component, restriction }
+enum ReminderKind { maintenance, document, component, restriction, budget }
 
 enum ReminderSeverity { overdue, warning, info }
 
@@ -15,6 +15,7 @@ class Reminder {
     this.dueDate,
     this.remainingKm,
     this.remainingDays,
+    this.badgeLabel,
   });
 
   final String id;
@@ -29,7 +30,11 @@ class Reminder {
   final int? remainingKm;
   final int? remainingDays;
 
+  /// Etiqueta corta para el chip (por ejemplo el porcentaje de un presupuesto).
+  final String? badgeLabel;
+
   String get statusLabel {
+    if (kind == ReminderKind.budget) return badgeLabel ?? subtitle;
     if (severity == ReminderSeverity.overdue) {
       if (remainingDays != null && remainingDays! < 0) {
         return 'Vencido hace ${-remainingDays!} días';

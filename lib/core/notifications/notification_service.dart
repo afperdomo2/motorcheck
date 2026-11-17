@@ -116,6 +116,8 @@ class NotificationService {
 
       var id = 1000;
       for (final reminder in reminders) {
+        // Los presupuestos usan BudgetAlertService para no duplicar avisos.
+        if (reminder.kind == ReminderKind.budget) continue;
         final dates = _scheduleDates(reminder, settings.leadDays);
         for (final date in dates) {
           if (date.isBefore(DateTime.now())) continue;

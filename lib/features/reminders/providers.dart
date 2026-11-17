@@ -7,6 +7,8 @@ import '../components/models/vehicle_component.dart';
 import '../components/providers.dart';
 import '../documents/models/vehicle_document.dart';
 import '../documents/providers.dart';
+import '../finance/budget_status.dart';
+import '../finance/providers.dart';
 import '../maintenance/providers.dart';
 import '../restrictions/providers.dart';
 import '../restrictions/restriction_status.dart';
@@ -131,6 +133,30 @@ final remindersProvider = FutureProvider<List<Reminder>>((ref) async {
         remainingDays: entry.status.nextRestrictionDate != null
             ? DateStatus.daysUntil(entry.status.nextRestrictionDate!)
             : null,
+      ),
+    );
+  }
+
+  final budgets = await ref.watch(budgetStatusesProvider.future);
+  final now = DateTime.now();
+  final period = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+  for (final entry in budgets) {
+    final vehicleId = entry.vehicle.id;
+    if (vehicleId == null) continue;
+    if (!entry.hasBudget || entry.status == BudgetStatus.ok) continue;
+    reminders.add(
+      Reminder(
+        id: 'budget-$vehicleId-$period',
+        kind: ReminderKind.budget,
+        vehicleId: vehicleId,
+        vehicleName: entry.vehicle.name,
+        title: 'Presupuesto',
+        subtitle: entry.remainingLabel,
+        severity: entry.status == BudgetStatus.exceeded
+            ? ReminderSeverity.overdue
+            : ReminderSeverity.warning,
+        route: '/finance?vehicleId=$vehicleId',
+        badgeLabel: '${entry.percent} %',
       ),
     );
   }

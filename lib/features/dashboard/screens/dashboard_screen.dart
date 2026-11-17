@@ -78,7 +78,6 @@ class DashboardScreen extends ConsumerWidget {
     ref.invalidate(maintenancesProvider);
     ref.invalidate(budgetStatusesProvider);
     ref.invalidate(fleetMonthBreakdownProvider);
-    ref.invalidate(fleetMonthSpendProvider);
 
     final id = ref.read(currentVehicleProvider).valueOrNull?.id;
     if (id != null) {

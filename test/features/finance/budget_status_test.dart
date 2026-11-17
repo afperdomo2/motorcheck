@@ -17,23 +17,4 @@ void main() {
       BudgetStatus.exceeded,
     );
   });
-
-  test('etiqueta límite alcanzado vs excedido', () {
-    expect(
-      budgetStatusLabel(
-        status: BudgetStatus.exceeded,
-        spent: 1000000,
-        amount: 1000000,
-      ),
-      'Límite alcanzado',
-    );
-    expect(
-      budgetStatusLabel(
-        status: BudgetStatus.exceeded,
-        spent: 1200000,
-        amount: 1000000,
-      ),
-      'Excedido',
-    );
-  });
 }

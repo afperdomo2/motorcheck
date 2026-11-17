@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/meta_row.dart';
 import '../../../shared/widgets/vehicle_avatar.dart';
 import '../../vehicles/models/vehicle.dart';
 
@@ -64,9 +65,9 @@ class VehicleFicha extends StatelessWidget {
                     runSpacing: AppSpacing.xs,
                     children: [
                       if (vehicle.plate != null)
-                        _Meta(icon: Icons.pin_outlined, text: vehicle.plate!),
+                        MetaRow(icon: Icons.pin_outlined, text: vehicle.plate!),
                       if (vehicle.currentMileage != null)
-                        _Meta(
+                        MetaRow(
                           icon: Icons.speed,
                           text: formatMileage(vehicle.currentMileage),
                         ),
@@ -83,31 +84,6 @@ class VehicleFicha extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _Meta extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _Meta({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
     );
   }
 }

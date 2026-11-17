@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/user_error.dart';
+import '../../../shared/widgets/battery_gauge.dart';
+import '../../../shared/widgets/budget_status_style.dart';
+import '../../../shared/widgets/plate_badge.dart';
 import '../../../shared/widgets/status_chip.dart';
 import '../../../shared/widgets/vehicle_avatar.dart';
 import '../../finance/budget_status.dart';
@@ -22,11 +24,12 @@ class FleetStatusMosaic extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final restrictions =
-        (ref.watch(restrictionStatusesProvider).valueOrNull ?? [])
-            .where((entry) => _isActive(entry.status))
-            .toList();
-    final budgets = (ref.watch(budgetStatusesProvider).valueOrNull ?? [])
+    final restrictionsAsync = ref.watch(restrictionStatusesProvider);
+    final budgetsAsync = ref.watch(budgetStatusesProvider);
+    final restrictions = (restrictionsAsync.valueOrNull ?? [])
+        .where((entry) => _isActive(entry.status))
+        .toList();
+    final budgets = (budgetsAsync.valueOrNull ?? [])
         .where((entry) => entry.hasBudget && entry.status != BudgetStatus.ok)
         .toList();
 
@@ -56,7 +59,17 @@ class FleetStatusMosaic extends ConsumerWidget {
           return byRank != 0 ? byRank : a.name.compareTo(b.name);
         });
 
-    if (tiles.isEmpty) return const SizedBox.shrink();
+    if (tiles.isEmpty) {
+      if (restrictionsAsync.hasError || budgetsAsync.hasError) {
+        return _ErrorCard(
+          onRetry: () {
+            ref.invalidate(restrictionStatusesProvider);
+            ref.invalidate(budgetStatusesProvider);
+          },
+        );
+      }
+      return const SizedBox.shrink();
+    }
 
     final scale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6);
     final width = 160 * scale;
@@ -135,37 +148,41 @@ class _PlateTile extends StatelessWidget {
         ? 'Próx. ${status.nextLabel}'
         : status.todayLabel;
 
-    return _TileSurface(
-      onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _PlateBadge(plate: vehicle.plate),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            vehicle.name,
-            style: theme.textTheme.titleSmall,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          StatusChip(
-            status: AppStatus.info,
-            label: chipLabel,
-            icon: today
-                ? Icons.do_not_disturb_on_outlined
-                : Icons.directions_car_outlined,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            detail,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
+    return Semantics(
+      button: true,
+      label: 'Pico y placa de ${vehicle.name}: $chipLabel',
+      child: _TileSurface(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            PlateBadge(plate: vehicle.plate),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              vehicle.name,
+              style: theme.textTheme.titleSmall,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            const SizedBox(height: AppSpacing.xs),
+            StatusChip(
+              status: AppStatus.info,
+              label: chipLabel,
+              icon: today
+                  ? Icons.do_not_disturb_on_outlined
+                  : Icons.directions_car_outlined,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              detail,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -186,46 +203,51 @@ class _BudgetTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final color = _budgetColor(context, entry.status);
+    final color = budgetColor(context, entry.status);
 
-    return _TileSurface(
-      onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              VehicleAvatar(type: entry.vehicle.type, size: 28),
-              const SizedBox(width: AppSpacing.xs + 2),
-              Expanded(
-                child: Text(
-                  entry.vehicle.name,
-                  style: theme.textTheme.titleSmall,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+    return Semantics(
+      button: true,
+      label:
+          'Presupuesto de ${entry.vehicle.name}: ${entry.percent} por ciento',
+      child: _TileSurface(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                VehicleAvatar(type: entry.vehicle.type, size: 28),
+                const SizedBox(width: AppSpacing.xs + 2),
+                Expanded(
+                  child: Text(
+                    entry.vehicle.name,
+                    style: theme.textTheme.titleSmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          StatusChip(
-            status: _appStatus(entry.status),
-            label: '${entry.percent} %',
-            icon: Icons.savings_outlined,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          _BatteryGauge(ratio: entry.ratio.clamp(0.0, 1.0), color: color),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            '${formatCompactCurrency(entry.spent)} / '
-            '${formatCompactCurrency(entry.amount)}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
+              ],
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            const SizedBox(height: AppSpacing.xs),
+            StatusChip(
+              status: budgetAppStatus(entry.status),
+              label: '${entry.percent} %',
+              icon: Icons.savings_outlined,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            BatteryGauge(ratio: entry.ratio.clamp(0.0, 1.0), color: color),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              '${formatCompactCurrency(entry.spent)} / '
+              '${formatCompactCurrency(entry.amount)}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -255,91 +277,34 @@ class _TileSurface extends StatelessWidget {
   }
 }
 
-class _PlateBadge extends StatelessWidget {
-  const _PlateBadge({required this.plate});
+class _ErrorCard extends StatelessWidget {
+  const _ErrorCard({required this.onRetry});
 
-  final String? plate;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: scheme.outlineVariant),
-      ),
-      child: Text(
-        plate ?? 'Sin placa',
-        style: theme.textTheme.labelLarge?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.1,
-        ),
-      ),
-    );
-  }
-}
-
-class _BatteryGauge extends StatelessWidget {
-  const _BatteryGauge({required this.ratio, required this.color});
-
-  final double ratio;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            height: 22,
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              color: scheme.surface,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: scheme.outlineVariant),
-            ),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: ratio,
-              heightFactor: 1,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(3),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            children: [
+              Icon(Icons.error_outline, color: theme.colorScheme.error),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(
+                  'No se pudo cargar el estado de la flota',
+                  style: theme.textTheme.bodyMedium,
                 ),
               ),
-            ),
+              TextButton(onPressed: onRetry, child: const Text('Reintentar')),
+            ],
           ),
         ),
-        const SizedBox(width: 2),
-        Container(
-          width: 4,
-          height: 10,
-          decoration: BoxDecoration(
-            color: scheme.outlineVariant,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-      ],
+      ),
     );
   }
-}
-
-AppStatus _appStatus(BudgetStatus status) => switch (status) {
-  BudgetStatus.exceeded => AppStatus.danger,
-  BudgetStatus.warning => AppStatus.warning,
-  BudgetStatus.ok => AppStatus.ok,
-};
-
-Color _budgetColor(BuildContext context, BudgetStatus status) {
-  final semantic = AppSemanticColors.of(context);
-  return switch (status) {
-    BudgetStatus.ok => semantic.success,
-    BudgetStatus.warning => semantic.warning,
-    BudgetStatus.exceeded => semantic.danger,
-  };
 }

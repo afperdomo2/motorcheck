@@ -215,11 +215,6 @@ final fleetMonthBreakdownProvider = FutureProvider<MonthSpendBreakdown>((
   );
 });
 
-final fleetMonthSpendProvider = FutureProvider<double>((ref) async {
-  final breakdown = await ref.watch(fleetMonthBreakdownProvider.future);
-  return breakdown.total;
-});
-
 final budgetStatusesProvider = FutureProvider<List<BudgetStatusEntry>>((
   ref,
 ) async {

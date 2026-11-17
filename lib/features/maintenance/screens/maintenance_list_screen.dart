@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
-import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/skeleton_block.dart';
 import '../../../shared/widgets/quick_add_fab.dart';
 import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../settings/models/maintenance_category.dart';
@@ -51,7 +51,7 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
           _buildVehicleSelector(context),
           Expanded(
             child: maintenancesAsync.when(
-              loading: () => const LoadingIndicator(),
+              loading: () => const SkeletonList(),
               error: (err, _) => ErrorState(
                 message: 'No se pudieron cargar los mantenimientos',
                 onRetry: () => ref

@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
-import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/skeleton_block.dart';
 import '../../vehicles/providers.dart';
 import '../models/component_status.dart';
 import '../models/vehicle_component.dart';
@@ -71,7 +71,7 @@ class _ComponentsScreenState extends ConsumerState<ComponentsScreen> {
         label: const Text('Agregar'),
       ),
       body: statusesAsync.when(
-        loading: () => const LoadingIndicator(),
+        loading: () => const SkeletonList(),
         error: (error, _) => ErrorState(
           message: 'No se pudieron cargar los componentes',
           onRetry: () => ref.invalidate(
