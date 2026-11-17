@@ -25,9 +25,12 @@ test/                           # Espejo de lib/
 │   ├── fuel/                   # Tanqueadas y consumo real
 │   ├── expenses/               # Gastos y categorías
 │   ├── finance/                # Resumen y gráfica mensual
+│   ├── components/             # Componentes, estado e historial
 │   ├── restrictions/           # Evaluación de pico y placa
 │   ├── reminders/              # Bandeja, salud y widget
 │   └── reports/                # Generación de PDF
+├── routes/                     # Navegación y barra inferior
+├── helpers/                    # `TestDatabase` para aislar SQLite
 └── shared/widgets/             # Widgets dumb
 ```
 
@@ -51,7 +54,9 @@ flutter test --coverage                         # Con cobertura
 5. **Imports del proyecto en tests**: siempre `package:motorcheck/...` (nunca relativos)
 6. Usar `setUp`/`setUpAll` para arreglos comunes
 7. Preferir `mocktail` sobre `mockito` (sin generación de código)
-8. `sqflite_common_ffi` para pruebas de BD en memoria
+8. `sqflite_common_ffi` para pruebas de BD; usa `TestDatabase.setUp()` /
+   `tearDown()` (`test/helpers/database_test_helper.dart`) para aislar la base
+   en un directorio temporal por archivo de test
 9. Widget tests: envolver en `MaterialApp` + `Scaffold`, usar `tester.pumpWidget()`
 10. **NO ejecutar `flutter test` tras cambios en archivos `.md` o documentación**
 
@@ -122,15 +127,15 @@ void main() {
 - `category_repository_test.dart`: clave estable, orden y duplicados.
 - `maintenance_search_screen_test.dart`: búsqueda por categoría, estado sin
   resultados y ausencia de overflow a 360×640 con text scale 2.0.
-- `documents_repository_test.dart`: latest-wins, actualización del vigente y
-  conservación del historial.
-- `reminders_provider_test.dart`: un solo recordatorio por tipo de documento.
+- `documents_repository_test.dart`: latest-wins, actualización del vigente,
+  conservación del historial, CRUD por vehículo/global y cascada.
+- `reminders_provider_test.dart`: un solo recordatorio por tipo de documento;
+  componentes vencidos/próximos y exclusión de inactivos.
 - `database_backfill_test.dart`: abrir la base no recrea documentos ni lecturas
   borradas.
 - `documents_screen_test.dart`: chips Vigente/Histórico sin overflow a 200 %.
 - `mileage_repository_test.dart`: lecturas, promedio km/día y kilometraje
   monotónico.
-- `documents_repository_test.dart`: CRUD por vehículo/global y cascada.
 - `restriction_status_test.dart`: día, hora, próxima restricción y exención.
 - `health_score_test.dart`: descuentos y etiquetas de salud.
 - `backup_service_test.dart`: exportar, inspeccionar, restaurar y rechazar
@@ -163,8 +168,6 @@ void main() {
   derivado del mantenimiento y liberación al cambiar de tipo.
 - `components_screen_test.dart`: lista, estado vacío y formulario a 360 px con
   text scale 2.0.
-- `reminders_provider_test.dart`: componentes vencidos/próximos y exclusión de
-  inactivos.
 
 ---
 

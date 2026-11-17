@@ -24,7 +24,7 @@
 |--------|------|-------------|
 | id | INTEGER | PRIMARY KEY AUTOINCREMENT |
 | name | TEXT | NOT NULL |
-| type | TEXT | NOT NULL (car, motorcycle, bike, truck, other) |
+| type | TEXT | NOT NULL (car, motorcycle, bike, scooter, truck, other) |
 | brand | TEXT | |
 | model | TEXT | |
 | year | INTEGER | |
@@ -73,6 +73,7 @@
 | category | TEXT | DEFAULT 'general' |
 | parts_cost | REAL | DEFAULT 0 |
 | notes | TEXT | |
+| component_id | INTEGER | FK → components(id) ON DELETE SET NULL; NULL = trabajo/repuesto sin componente |
 | created_at | TEXT | NOT NULL (ISO 8601) |
 
 ### mileage_readings
@@ -574,6 +575,8 @@ CREATE INDEX idx_components_vehicle
 
 ## Relaciones
 
+### Vista rápida (terminal)
+
 ```
 workshops (1) ────< (N) maintenances (1) ────< (N) maintenance_items
                     │
@@ -591,6 +594,187 @@ checklists (1) ──────< (N) checklist_items
 inspection_runs (1) ─< (N) inspection_answers
 expense_categories (1) ────< (N) expenses
 ```
+
+### Diagrama entidad-relación (v21)
+
+Vista completa con claves y cardinalidades. Las relaciones punteadas
+(`..`) son claves lógicas sin `FOREIGN KEY` física (`category_key` y
+`maintenance_items.category`). GitHub e IDEs renderizan Mermaid; si no,
+usa la vista rápida de arriba.
+
+```mermaid
+erDiagram
+  vehicles ||--o{ maintenances : tiene
+  vehicles ||--o{ mileage_readings : registra
+  vehicles |o--o{ documents : posee
+  vehicles ||--o| vehicle_restrictions : "pico y placa"
+  vehicles ||--o{ fuel_logs : tanquea
+  vehicles |o--o{ expenses : "gastos globales"
+  vehicles ||--o{ budgets : presupuesta
+  vehicles ||--o{ components : tiene
+  vehicles |o--o{ checklists : plantillas
+  vehicles ||--o{ inspection_runs : inspecciona
+
+  workshops |o--o{ maintenances : atiende
+  maintenances ||--o{ maintenance_items : contiene
+  maintenances ||--o{ maintenance_attachments : adjunta
+  maintenance_items |o--o{ maintenance_attachments : "adjunto de ítem"
+  components |o--o{ maintenance_items : reemplaza
+  maintenance_categories ||..o{ maintenance_items : "category = key"
+
+  expense_categories ||..o{ expenses : category_key
+  checklists ||--o{ checklist_items : contiene
+  checklists ||--o{ inspection_runs : aplica
+  inspection_runs ||--o{ inspection_answers : responde
+  checklist_items ||--o{ inspection_answers : evalua
+
+  vehicles {
+    INTEGER id PK
+    TEXT name
+    TEXT type
+    TEXT plate
+    INTEGER current_mileage
+    INTEGER is_default
+  }
+
+  workshops {
+    INTEGER id PK
+    TEXT name
+    TEXT location
+  }
+
+  maintenances {
+    INTEGER id PK
+    INTEGER vehicle_id FK
+    INTEGER workshop_id FK
+    TEXT date
+    INTEGER mileage
+    REAL maintenance_cost
+    REAL total_parts_cost
+  }
+
+  maintenance_items {
+    INTEGER id PK
+    INTEGER maintenance_id FK
+    INTEGER component_id FK
+    TEXT category
+    REAL parts_cost
+  }
+
+  maintenance_attachments {
+    INTEGER id PK
+    INTEGER maintenance_id FK
+    INTEGER item_id FK
+    TEXT name
+    TEXT file_path
+  }
+
+  maintenance_categories {
+    INTEGER id PK
+    TEXT key UK
+    TEXT name
+    TEXT vehicle_type
+    INTEGER interval_km
+    INTEGER interval_months
+  }
+
+  mileage_readings {
+    INTEGER id PK
+    INTEGER vehicle_id FK
+    TEXT date
+    INTEGER mileage
+    TEXT source
+  }
+
+  documents {
+    INTEGER id PK
+    INTEGER vehicle_id FK
+    TEXT type
+    TEXT expires_at
+    TEXT file_path
+  }
+
+  vehicle_restrictions {
+    INTEGER id PK
+    INTEGER vehicle_id FK
+    INTEGER enabled
+    TEXT city
+    TEXT days
+  }
+
+  expense_categories {
+    INTEGER id PK
+    TEXT key UK
+    TEXT name
+  }
+
+  fuel_logs {
+    INTEGER id PK
+    INTEGER vehicle_id FK
+    TEXT date
+    INTEGER odometer
+    REAL total_cost
+    INTEGER full_tank
+  }
+
+  expenses {
+    INTEGER id PK
+    INTEGER vehicle_id FK
+    TEXT category_key FK
+    TEXT date
+    REAL amount
+    TEXT receipt_path
+  }
+
+  budgets {
+    INTEGER id PK
+    INTEGER vehicle_id FK
+    TEXT period
+    REAL amount
+  }
+
+  checklists {
+    INTEGER id PK
+    INTEGER vehicle_id FK
+    TEXT vehicle_type
+    TEXT name
+  }
+
+  checklist_items {
+    INTEGER id PK
+    INTEGER checklist_id FK
+    TEXT label
+    INTEGER sort_order
+  }
+
+  inspection_runs {
+    INTEGER id PK
+    INTEGER vehicle_id FK
+    INTEGER checklist_id FK
+    TEXT date
+    INTEGER odometer
+  }
+
+  inspection_answers {
+    INTEGER id PK
+    INTEGER run_id FK
+    INTEGER item_id FK
+    TEXT status
+  }
+
+  components {
+    INTEGER id PK
+    INTEGER vehicle_id FK
+    TEXT name
+    TEXT type
+    TEXT position
+    INTEGER active
+    INTEGER is_system
+    TEXT category_key
+  }
+```
+
+### Reglas de integridad
 
 - Eliminar un vehículo → cascada a mantenimientos, items, lecturas de km,
   documentos, componentes y regla de pico y placa
@@ -613,6 +797,7 @@ expense_categories (1) ────< (N) expenses
 | car | Carro |
 | motorcycle | Moto |
 | bike | Bicicleta |
+| scooter | Patineta eléctrica |
 | truck | Camión |
 | other | Otro |
 
@@ -630,7 +815,7 @@ almacena la `key` de la tabla como FK lógico (ej: `car_engine`, `motorcycle_oil
 | key | TEXT | NOT NULL UNIQUE |
 | name | TEXT | NOT NULL (nombre visible, ej: "Motor", "Aceite") |
 | icon_name | TEXT | NOT NULL DEFAULT 'build' (nombre de Material Icon) |
-| vehicle_type | TEXT | NOT NULL (car / motorcycle / bike / truck / other) |
+| vehicle_type | TEXT | NOT NULL (car / motorcycle / bike / scooter / truck / other) |
 | sort_order | INTEGER | DEFAULT 0 |
 | interval_km | INTEGER | NULL (km recomendados entre mantenimientos) |
 | warning_km | INTEGER | NULL (avisar cuando falten X km) |
@@ -638,14 +823,15 @@ almacena la `key` de la tabla como FK lógico (ej: `car_engine`, `motorcycle_oil
 | warning_days | INTEGER | NULL (avisar cuando falten X días) |
 | created_at | TEXT | NOT NULL (ISO 8601) |
 
-### Seed Inicial (38 categorías por defecto)
+### Seed Inicial (45 categorías por defecto)
 
 | Tipo Vehículo | Keys |
 |--------------|------|
 | car | car_engine, car_oil, car_brakes, car_transmission, car_suspension, car_tires, car_filters, car_battery, car_ac, car_electrical, car_general |
 | motorcycle | motorcycle_engine, motorcycle_oil, motorcycle_chain, motorcycle_brakes, motorcycle_tires, motorcycle_filters, motorcycle_battery, motorcycle_suspension, motorcycle_general |
-| bike | bike_brakes, bike_tires, bike_chain, bike_transmission, bike_suspension, bike_general |
+| bike | bike_brakes, bike_tires, bike_chain, bike_transmission, bike_suspension, bike_battery, bike_general |
 | truck | truck_engine, truck_oil, truck_brakes, truck_transmission, truck_suspension, truck_tires, truck_filters, truck_battery, truck_ac, truck_electrical, truck_general |
+| scooter | scooter_tires, scooter_brakes, scooter_battery, scooter_suspension, scooter_electrical, scooter_general |
 | other | other_general |
 
 El borrado es hard-delete, pero el repositorio verifica que la categoría no esté en uso en `maintenance_items` antes de eliminar.

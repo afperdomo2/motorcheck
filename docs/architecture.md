@@ -36,7 +36,7 @@ lib/
 ├── core/                    # Infraestructura compartida
 │   ├── app_info.dart        # Nombre, versión y datos de licencia
 │   ├── theme/               # Sistema de diseño (light + dark)
-│   ├── database/            # SQLite v20 + factory FFI (escritorio)
+│   ├── database/            # SQLite v21 + factory FFI (escritorio)
 │   ├── backup/              # ZIP (datos + adjuntos) y CSV
 │   ├── files/               # Almacenamiento local de adjuntos
 │   ├── notifications/       # Notificaciones locales y sincronización

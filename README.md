@@ -98,6 +98,7 @@ lib/
 │   ├── expenses/          # Gastos y categorías
 │   ├── finance/           # Resumen, presupuesto y costo por km
 │   ├── checklists/        # Inspecciones pre-viaje
+│   ├── components/        # Llantas, batería, cadena, frenos y suspensión
 │   ├── restrictions/      # Pico y placa
 │   ├── reminders/         # Bandeja de recordatorios
 │   ├── reports/           # Hoja de vida PDF
@@ -107,7 +108,10 @@ lib/
 └── routes/                # Configuración de rutas (5 tabs)
 ```
 
-Ver la carpeta `docs/` para documentación detallada de arquitectura, base de datos, sistema de diseño y testing.
+Ver `docs/` para la documentación detallada: [`architecture.md`](docs/architecture.md),
+[`database.md`](docs/database.md), [`code-style.md`](docs/code-style.md),
+[`DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) y [`testing.md`](docs/testing.md).
+Los planes históricos de implementación viven en [`docs/plans/`](docs/plans/).
 
 ## Configuración del Entorno
 

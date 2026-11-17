@@ -31,10 +31,15 @@ flutter build linux --release --no-tree-shake-icons
 ```yaml
 pre-commit:
   parallel: true
-  format:  dart format {staged_files} --set-exit-if-changed  (solo *.dart)
-  analyze: flutter analyze                                  (solo *.dart)
-  test:    flutter test                                     (suite completa)
+  commands:
+    format:  dart format {staged_files} --set-exit-if-changed  (glob *.dart)
+    analyze: flutter analyze                                  (glob *.dart)
+    test:    flutter test
 ```
+
+`analysis_options.yaml` excluye `*.g.dart`, `*.freezed.dart`, `build/` y los
+directorios de plataforma (`android/`, `linux/`, etc.): **`flutter analyze` no
+revisa el código nativo**. Para tocarlo, compila o ejecuta la app.
 
 ## Plataformas y Build
 
@@ -68,6 +73,7 @@ pre-commit:
 13. **Sincronización AGENTS.md ↔ docs/**: si modificas un archivo en `docs/`, revisa si la sección correspondiente en AGENTS.md necesita actualizarse. Tras cualquier cambio en modelos, providers, features o arquitectura, verifica que ambos reflejen el estado real del código.
 14. **Kilometraje**: `vehicles.current_mileage` solo sube automáticamente; un mantenimiento con km menor se permite pero no baja el vehículo; la corrección manual se hace desde Editar vehículo
 15. **Responsive**: en escritorio el contenido se centra con máximo 720 px y las hojas con 640 px; probar text scale 1.3 y 2.0 sin overflow
+16. **Versiones**: `pubspec.yaml` (`version`) y `AppInfo.version` (`lib/core/app_info.dart`) deben coincidir. Al subir la versión de SQLite, actualiza también `_backupSchemaVersion` en `lib/core/backup/backup_service.dart` y `docs/database.md`
 
 ## Convenciones de Código
 
@@ -119,7 +125,7 @@ lib/
 ├── core/
 │   ├── app_info.dart            # Identidad, versión y licencia
 │   ├── theme/                   # Tokens, Barlow, temas light+dark, ThemeExtension
-│   ├── database/                # SQLite helper + DDL (v21) + factory FFI
+│   ├── database/                # SQLite helper + DDL (v21) + factory FFI + plantillas de componentes
 │   ├── backup/                  # Copia ZIP (JSON + adjuntos) y exportación CSV
 │   ├── files/                   # Almacenamiento local de adjuntos
 │   ├── notifications/           # Notificaciones locales y sincronización
@@ -161,8 +167,8 @@ lib/
 | Modelo | Tabla | Campos clave |
 |--------|-------|-------------|
 | `Vehicle` | `vehicles` | name, type (car/motorcycle/bike/scooter/truck/other), brand, plate, vin, currentMileage, soatExpiresAt/rtmExpiresAt (legado), isDefault |
-| `Maintenance` | `maintenances` | vehicleId, date, mileage, maintenanceCost, workshopId, notes |
-| `MaintenanceItem` | `maintenance_items` | maintenanceId, category, partsCost, notes |
+| `Maintenance` | `maintenances` | vehicleId, date, mileage, maintenanceCost, totalPartsCost, workshopId, notes |
+| `MaintenanceItem` | `maintenance_items` | maintenanceId, category, partsCost, notes, componentId (nullable) |
 | `Workshop` | `workshops` | name, location |
 | `MileageReading` | `mileage_readings` | vehicleId, date, mileage, source |
 | `VehicleDocument` | `documents` | vehicleId (nullable), type, number, issuedAt, expiresAt, filePath |
@@ -177,10 +183,15 @@ lib/
 | `VehicleComponent` | `components` | vehicleId, name, type, position, installedAt, installedKm, intervalKm/Months, warningKm/Days, active, isSystem, categoryKey |
 
 Categorías de mantenimiento por tipo: car/truck (11), motorcycle (9), bike (7),
-scooter (6), other (1).
-Definidas en `lib/features/maintenance/categories.dart`. Cada categoría puede tener
-`interval_km`/`warning_km` y `interval_months`/`warning_days`; el próximo servicio
-se calcula con **lo que ocurra primero** entre kilometraje y fecha.
+scooter (6), other (1) = 45 por defecto. El seed vive en
+`DatabaseHelper._seedDefaultCategories` (`lib/core/database/database_helper.dart`)
+y se guarda en la tabla `maintenance_categories`; el usuario las edita en
+**Ajustes → Categorías**. `lib/features/maintenance/categories.dart` solo
+contiene el catálogo de íconos (`icon_name` → `IconData`), no las categorías.
+Cada categoría puede tener `interval_km`/`warning_km` y
+`interval_months`/`warning_days`; el próximo servicio se calcula con **lo que
+ocurra primero** entre kilometraje y fecha. `maintenance_items.category` guarda
+la `key` (ej: `car_oil`).
 
 Los **componentes** son piezas con vida útil (llantas, batería, cadena, frenos,
 suspensión). Cada llanta es un componente individual y `position` es texto
@@ -207,14 +218,16 @@ ejecutan solo en `_onUpgrade`, nunca en cada apertura.
 
 ## Tests
 
-```bash
-flutter test                              # todas
-flutter test test/features/vehicles/      # por feature
-flutter test --name "formatea"            # por nombre (regex)
-flutter test --concurrency 1              # SQLite sin race conditions
-```
+Convenciones: archivos en `test/` reflejando `lib/`, imports
+`package:motorcheck/...` en tests, `group()` + descripciones en español,
+mocktail sin code-gen, `MaterialApp` + `Scaffold` en widget tests.
 
-**Convenciones**: archivos en `test/` reflejando `lib/`, imports `package:motorcheck/...` en tests, `group()` + descripciones en español, `sqflite_common_ffi` + `sqfliteFfiInit()` en `setUpAll`, mocktail sin code-gen, `MaterialApp` + `Scaffold` en widget tests.
+- `test/flutter_test_config.dart` inicializa `es_CO` para toda la suite.
+- Para repositorios con SQLite usa `TestDatabase.setUp()` / `tearDown()` de
+  `test/helpers/database_test_helper.dart`: aísla `motorcheck.db` en un
+  directorio temporal por archivo de test. No abras la base compartida.
+- Los tests de migración/backfill sí configuran `sqfliteFfiInit()` y
+  `databaseFactory` directamente.
 
 ## Seguridad
 
@@ -263,10 +276,15 @@ Resume lo hecho con un diagrama del flujo resultante, qué cambió en la UI o en
 | `dart-best-practices` | Convenciones y features del lenguaje |
 | `dart-add-unit-test` | Pruebas unitarias de lógica |
 | `dart-run-static-analysis` | `dart analyze` y `dart fix --apply` |
+| `ui-ux-pro-max` | Paletas, tipografía, UX, charts y guidelines de interfaz |
 | `find-skills` | Descubrir/instalar nuevos skills desde skills.sh |
 
 **Context7 MCP**: documentación actualizada de librerías (resolver ID → `query-docs`).
-**Dart MCP Server**: `analyze_files`, `pub_dev_search`, `pub`, `lsp`, `dtd`, `flutter_driver_command`.
+**Dart MCP Server**: `analyze_files`, `hot_reload`/`hot_restart`, `widget_inspector`,
+`get_runtime_errors`, `pub`, `lsp`, `dtd`, `flutter_driver_command`. Las
+herramientas de app en vivo requieren conectar primero con `dtd`
+(`listDtdUris` → `connect`). Tras cambios en código Flutter, haz hot reload o
+restart si la app está corriendo.
 
 Los skills se declaran en `skills-lock.json` (versionado) y sus archivos viven en `.agents/` (gitignored). Para restaurarlos tras clonar:
 
@@ -278,8 +296,14 @@ npx skills experimental_install --no-frozen-lockfile
 
 | Documento | Contenido |
 |-----------|-----------|
+| `README.md` | Características, tecnologías, instalación y build |
 | `docs/architecture.md` | Stack, estructura, Smart/Dumb, flujo de datos |
-| `docs/database.md` | Esquema SQL, tablas, relaciones, migraciones |
+| `docs/database.md` | Esquema SQL, diagrama ER, tablas, relaciones, migraciones |
 | `docs/code-style.md` | Imports, nombrado, widgets, estado asíncrono, errores |
 | `docs/DESIGN_SYSTEM.md` | Colores, tipografía, espaciado, componentes |
 | `docs/testing.md` | Estrategia, ejecución, mocktail, SQLite |
+| `docs/plans/*.md` | Planes históricos de implementación (contexto, no norma vigente) |
+
+`docs/` es la fuente de verdad detallada; este archivo resume lo que un agente
+necesita para no equivocarse. Si el código y un doc discrepan, gana el código y
+hay que corregir el doc.
