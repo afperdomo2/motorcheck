@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_radii.dart';
 import '../../core/theme/app_spacing.dart';
+import 'tonal_avatar.dart';
 
 class FormSection extends StatelessWidget {
   final String title;
@@ -18,7 +18,6 @@ class FormSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
 
     return Card(
       child: Padding(
@@ -29,19 +28,7 @@ class FormSection extends StatelessWidget {
             Row(
               children: [
                 if (icon != null) ...[
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: scheme.primaryContainer,
-                      borderRadius: AppRadii.smAll,
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 18,
-                      color: scheme.onPrimaryContainer,
-                    ),
-                  ),
+                  TonalAvatar(icon: icon!, size: 32, iconSize: 18),
                   const SizedBox(width: AppSpacing.md),
                 ],
                 Expanded(

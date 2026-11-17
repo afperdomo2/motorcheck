@@ -45,12 +45,23 @@ class AppColors {
   static const successContainerDark = Color(0xFF064E3B);
   static const onSuccessContainerDark = Color(0xFFA7F3D0);
 
-  static const warningLight = Color(0xFFB45309);
-  static const warningContainerLight = Color(0xFFFDE68A);
-  static const onWarningContainerLight = Color(0xFF92400E);
-  static const warningDark = Color(0xFFFBBF24);
-  static const warningContainerDark = Color(0xFF4A3208);
-  static const onWarningContainerDark = Color(0xFFFDE68A);
+  // Advertencia: durazno propio, distinto del ámbar de marca. El ámbar
+  // comunica acción o selección; la severidad tiene su propia rampa.
+  static const warningLight = Color(0xFFC2410C);
+  static const warningContainerLight = Color(0xFFFFEDD5);
+  static const onWarningContainerLight = Color(0xFF9A3412);
+  static const warningDark = Color(0xFFFDBA74);
+  static const warningContainerDark = Color(0xFF431407);
+  static const onWarningContainerDark = Color(0xFFFED7AA);
+
+  // Aviso informativo: grafito, nunca ámbar, para no confundirse con una
+  // advertencia ni con la marca.
+  static const infoLight = Color(0xFF475569);
+  static const infoContainerLight = Color(0xFFE2E8F0);
+  static const onInfoContainerLight = Color(0xFF1E293B);
+  static const infoDark = Color(0xFFCBD5E1);
+  static const infoContainerDark = Color(0xFF334155);
+  static const onInfoContainerDark = Color(0xFFE2E8F0);
 
   static const dangerLight = Color(0xFFB91C1C);
   static const dangerContainerLight = Color(0xFFFEE2E2);

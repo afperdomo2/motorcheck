@@ -22,7 +22,7 @@ class PicoYPlacaBanner extends ConsumerWidget {
     final entry = restricted.first;
 
     return Card(
-      color: semantic.warningContainer,
+      color: semantic.infoContainer,
       child: InkWell(
         onTap: () => context.push('/vehicles/${entry.vehicle.id}/restriction'),
         borderRadius: BorderRadius.circular(12),
@@ -32,7 +32,7 @@ class PicoYPlacaBanner extends ConsumerWidget {
             children: [
               Icon(
                 Icons.do_not_disturb_on_outlined,
-                color: semantic.onWarningContainer,
+                color: semantic.onInfoContainer,
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -42,20 +42,20 @@ class PicoYPlacaBanner extends ConsumerWidget {
                     Text(
                       'Pico y placa hoy',
                       style: theme.textTheme.titleSmall?.copyWith(
-                        color: semantic.onWarningContainer,
+                        color: semantic.onInfoContainer,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${entry.vehicle.name} · ${entry.status.todayLabel}',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: semantic.onWarningContainer,
+                        color: semantic.onInfoContainer,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: semantic.onWarningContainer),
+              Icon(Icons.chevron_right, color: semantic.onInfoContainer),
             ],
           ),
         ),

@@ -8,6 +8,7 @@ import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/tonal_avatar.dart';
 
 class NotificationSettingsScreen extends ConsumerWidget {
   const NotificationSettingsScreen({super.key});
@@ -204,15 +205,6 @@ class _TonalIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: scheme.primaryContainer,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Icon(icon, size: 20, color: scheme.onPrimaryContainer),
-    );
+    return TonalAvatar(icon: icon, size: 40, iconSize: 20);
   }
 }

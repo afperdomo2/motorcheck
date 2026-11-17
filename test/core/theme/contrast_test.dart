@@ -59,6 +59,11 @@ void main() {
         semanticLight.onDangerContainer,
         semanticLight.dangerContainer,
       ),
+      'info text / white': (semanticLight.info, Colors.white),
+      'info on container': (
+        semanticLight.onInfoContainer,
+        semanticLight.infoContainer,
+      ),
       'dark success on container': (
         semanticDark.onSuccessContainer,
         semanticDark.successContainer,
@@ -70,6 +75,10 @@ void main() {
       'dark danger on container': (
         semanticDark.onDangerContainer,
         semanticDark.dangerContainer,
+      ),
+      'dark info on container': (
+        semanticDark.onInfoContainer,
+        semanticDark.infoContainer,
       ),
     };
 
@@ -95,6 +104,48 @@ void main() {
       expect(
         _contrast(AppColors.outlineDark, AppColors.surfaceDark),
         greaterThanOrEqualTo(3),
+      );
+    });
+
+    test('icono decorativo neutro sobre su contenedor', () {
+      expect(
+        _contrast(
+          AppColors.onSurfaceVariantLight,
+          AppColors.surfaceContainerHighLight,
+        ),
+        greaterThanOrEqualTo(4.5),
+      );
+      expect(
+        _contrast(
+          AppColors.onSurfaceVariantDark,
+          AppColors.surfaceContainerHighDark,
+        ),
+        greaterThanOrEqualTo(4.5),
+      );
+    });
+  });
+
+  group('separación entre marca y severidad', () {
+    test('warning no reutiliza el ámbar de la marca en claro', () {
+      final scheme = AppTheme.light.colorScheme;
+      expect(semanticLight.warning, isNot(scheme.primary));
+      expect(semanticLight.warningContainer, isNot(scheme.primaryContainer));
+    });
+
+    test('warning no reutiliza el ámbar de la marca en oscuro', () {
+      final scheme = AppTheme.dark.colorScheme;
+      expect(semanticDark.warning, isNot(scheme.primary));
+      expect(semanticDark.warningContainer, isNot(scheme.primaryContainer));
+    });
+
+    test('info no reutiliza el ámbar de la marca', () {
+      expect(
+        semanticLight.infoContainer,
+        isNot(AppTheme.light.colorScheme.primaryContainer),
+      );
+      expect(
+        semanticDark.infoContainer,
+        isNot(AppTheme.dark.colorScheme.primaryContainer),
       );
     });
   });

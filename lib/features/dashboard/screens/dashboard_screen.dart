@@ -6,8 +6,8 @@ import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
-import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../vehicles/providers.dart';
+import '../../vehicles/vehicle_selection.dart';
 import '../providers.dart';
 import '../widgets/favorite_vehicle_card.dart';
 import '../widgets/finance_summary_card.dart';
@@ -126,20 +126,10 @@ class DashboardScreen extends ConsumerWidget {
   }
 
   Future<void> _addMaintenance(BuildContext context, WidgetRef ref) async {
-    final vehicles = ref.read(vehiclesProvider).valueOrNull ?? [];
-    if (vehicles.isEmpty) return;
+    final vehicle = await pickVehicleOrUseSingle(context, ref);
+    if (vehicle == null || !context.mounted) return;
 
-    if (vehicles.length == 1) {
-      if (context.mounted) {
-        context.push('/maintenance/add?vehicleId=${vehicles.first.id}');
-      }
-      return;
-    }
-
-    final selected = await VehicleSelectorSheet.show(context);
-    if (selected != null && context.mounted) {
-      context.push('/maintenance/add?vehicleId=${selected.id}');
-    }
+    context.push('/maintenance/add?vehicleId=${vehicle.id}');
   }
 
   static String _greeting(int hour) {

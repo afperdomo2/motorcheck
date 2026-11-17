@@ -6,6 +6,7 @@ import '../../../core/backup/backup_providers.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/theme_mode_provider.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/tonal_avatar.dart';
 import '../providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -212,15 +213,6 @@ class _TonalIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: scheme.primaryContainer,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Icon(icon, size: 20, color: scheme.onPrimaryContainer),
-    );
+    return TonalAvatar(icon: icon, size: 40, iconSize: 20);
   }
 }

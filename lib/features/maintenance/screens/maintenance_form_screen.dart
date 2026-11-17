@@ -13,10 +13,11 @@ import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/date_field.dart';
 import '../../../shared/widgets/form_section.dart';
 import '../../../shared/widgets/sticky_bottom_bar.dart';
-import '../../../shared/widgets/vehicle_selector_sheet.dart';
+import '../../../shared/widgets/tonal_avatar.dart';
 import '../../components/models/component_status.dart';
 import '../../components/providers.dart';
 import '../../vehicles/providers.dart';
+import '../../vehicles/vehicle_selection.dart';
 import '../../finance/budget_alert_service.dart';
 import '../../vehicles/models/vehicle.dart';
 import '../../settings/models/maintenance_category.dart';
@@ -117,14 +118,10 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
   }
 
   Future<void> _loadVehicle() async {
-    final vehicleId = widget.vehicleId ?? ref.read(selectedVehicleIdProvider);
-    if (vehicleId == null) {
-      if (mounted) setState(() => _vehicleLoaded = true);
-      return;
-    }
-    final vehicle = await ref
-        .read(vehicleRepositoryProvider)
-        .getById(vehicleId);
+    final vehicle = await resolveVehicleForNewRecord(
+      ref,
+      preferredVehicleId: widget.vehicleId,
+    );
     if (!mounted) return;
     setState(() {
       _vehicleCurrentMileage = vehicle?.currentMileage;
@@ -140,7 +137,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
   }
 
   Future<void> _pickVehicle() async {
-    final selected = await VehicleSelectorSheet.show(context);
+    final selected = await pickVehicleOrUseSingle(context, ref);
     if (selected == null || selected.id == null || !mounted) return;
     if (selected.id == _vehicle?.id) return;
 
@@ -579,13 +576,15 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     );
   }
 
-  Widget? _buildVehicleHeader() {
+  Widget? _buildVehicleHeader({required bool canChangeVehicle}) {
     final vehicle = _vehicle;
     if (vehicle != null) {
       return Card(
         child: VehicleFicha(
           vehicle: vehicle,
-          onTap: _isEditing || widget.componentId != null ? null : _pickVehicle,
+          onTap: _isEditing || widget.componentId != null || !canChangeVehicle
+              ? null
+              : _pickVehicle,
         ),
       );
     }
@@ -601,17 +600,11 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.directions_car_outlined,
-                  color: theme.colorScheme.onPrimaryContainer,
-                ),
+              const TonalAvatar(
+                icon: Icons.directions_car_outlined,
+                size: 48,
+                iconSize: 24,
+                circular: true,
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -662,7 +655,14 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
 
     final theme = Theme.of(context);
     final semantic = AppSemanticColors.of(context);
-    final vehicleHeader = _buildVehicleHeader();
+    // Con un solo vehículo no hay nada que elegir: la ficha deja de ser
+    // interactiva. Mientras la lista carga se mantiene el comportamiento
+    // anterior (se permite abrir el selector).
+    final canChangeVehicle =
+        ref.watch(vehiclesProvider).valueOrNull?.length != 1;
+    final vehicleHeader = _buildVehicleHeader(
+      canChangeVehicle: canChangeVehicle,
+    );
 
     return PopScope(
       canPop: !_dirty && !_isLoading,

@@ -7,6 +7,7 @@ import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/tonal_avatar.dart';
 import '../expense_icons.dart';
 import '../models/expense_category.dart';
 import '../providers.dart';
@@ -43,18 +44,10 @@ class ExpenseCategoriesScreen extends ConsumerWidget {
                 Card(
                   margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                   child: ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        expenseIconFor(category.iconName),
-                        size: 20,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      ),
+                    leading: TonalAvatar(
+                      icon: expenseIconFor(category.iconName),
+                      size: 40,
+                      iconSize: 20,
                     ),
                     title: Text(category.name),
                     subtitle: Text('Orden ${category.sortOrder}'),

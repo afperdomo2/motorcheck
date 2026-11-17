@@ -5,11 +5,13 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/tonal_avatar.dart';
 import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../settings/models/maintenance_category.dart';
 import '../../settings/providers.dart';
 import '../../vehicles/models/vehicle.dart';
 import '../../vehicles/providers.dart';
+import '../../vehicles/vehicle_selection.dart';
 import '../models/maintenance.dart';
 import '../models/workshop.dart';
 import '../providers.dart';
@@ -31,6 +33,7 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
     final vehiclesAsync = ref.watch(vehiclesProvider);
     final selectedVehicleId = ref.watch(selectedVehicleIdProvider);
     final maintenancesAsync = ref.watch(maintenancesNotifierProvider);
+    final hasVehicles = vehiclesAsync.valueOrNull?.isNotEmpty ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -43,10 +46,9 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
           ),
         ],
       ),
-      floatingActionButton: selectedVehicleId != null
+      floatingActionButton: hasVehicles
           ? FloatingActionButton.extended(
-              onPressed: () =>
-                  context.push('/maintenance/add?vehicleId=$selectedVehicleId'),
+              onPressed: _addMaintenance,
               tooltip: 'Registrar mantenimiento',
               icon: const Icon(Icons.add),
               label: const Text('Registrar'),
@@ -233,17 +235,11 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Row(
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.directions_car_outlined,
-                    color: theme.colorScheme.onPrimaryContainer,
-                  ),
+                const TonalAvatar(
+                  icon: Icons.directions_car_outlined,
+                  size: 48,
+                  iconSize: 24,
+                  circular: true,
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
@@ -275,6 +271,13 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
         onTap: () => _selectVehicle(context),
       ),
     );
+  }
+
+  Future<void> _addMaintenance() async {
+    final vehicle = await pickVehicleOrUseSingle(context, ref);
+    if (vehicle == null || !mounted) return;
+
+    context.push('/maintenance/add?vehicleId=${vehicle.id}');
   }
 
   Future<void> _selectVehicle(BuildContext context) async {

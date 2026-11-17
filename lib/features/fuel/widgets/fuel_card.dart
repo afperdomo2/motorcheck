@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/tonal_avatar.dart';
 import '../models/fuel_log.dart';
 
 class FuelCard extends StatelessWidget {
@@ -30,19 +31,7 @@ class FuelCard extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  type.icon,
-                  size: 20,
-                  color: theme.colorScheme.onPrimaryContainer,
-                ),
-              ),
+              TonalAvatar(icon: type.icon, size: 42, iconSize: 20),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(

@@ -4,6 +4,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/date_status.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/status_chip.dart';
+import '../../../shared/widgets/tonal_avatar.dart';
 import '../models/vehicle_document.dart';
 
 class DocumentCard extends StatelessWidget {
@@ -48,18 +49,7 @@ class DocumentCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  type.icon,
-                  color: theme.colorScheme.onPrimaryContainer,
-                ),
-              ),
+              TonalAvatar(icon: type.icon, size: 44, iconSize: 24),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(

@@ -110,8 +110,13 @@ Ver `docs/code-style.md` para ejemplos de modelos freezed y estado asíncrono.
   `lib/core/theme/`.
 - Identidad visual: grafito + ámbar industrial. El azul está reservado para el
   tipo de vehículo “carro”; no se usa como color de marca.
+- **Ámbar = acción o selección** (CTA, FAB, foco, chip activo). No se usa como
+  decoración ni como severidad: los iconos decorativos van en `TonalAvatar`
+  (superficie neutra) y la severidad tiene su rampa propia (`success`, `info`,
+  `warning` durazno, `danger` rojo). `warning` nunca reutiliza `primary`.
 - Tipografía: Barlow y Barlow Semi Condensed empaquetadas en `assets/fonts/`.
 - Estados siempre con icono + texto + color (`StatusChip`), nunca solo color.
+  Solo `warning` y `danger` usan relleno; `ok`, `info` y `neutral` no.
 - Formatos `es_CO`: moneda `$ 1.250` y kilometraje `15.000 km`.
 - `MaterialApp.router` usa `locale: es_CO` y `flutter_localizations`.
 - Formularios: `FormSection`, `StickyBottomBar`, validación inline y guardia de

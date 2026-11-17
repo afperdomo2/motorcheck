@@ -5,12 +5,26 @@
 
 ## 1. Principios
 
-1. **Un solo acento:** el ámbar significa acción o atención.
+1. **Un solo acento:** el ámbar significa **acción o selección** (CTA, FAB,
+   foco, chip activo). No se usa como decoración ni como color de severidad.
 2. **Superficies tonales:** cards con borde de 1 px, sin sombras.
 3. **Mobile-first:** una columna, targets de 48 dp y 8 dp entre acciones.
 4. **Paridad light/dark:** todo color nace de un token del tema.
 5. **Estado con icono + texto + color**, nunca solo color.
 6. **Español de Colombia** en textos, fechas, moneda y date pickers.
+
+### Qué color le toca a qué
+
+```
+¿el color comunica algo?
+├── no → tono neutro      surfaceContainerHigh + onSurfaceVariant
+└── sí
+     ├── acción / selección / foco → ÁMBAR    primary · primaryContainer
+     ├── vencido / falla           → ROJO     danger · dangerContainer
+     ├── próximo a vencer          → DURAZNO  warning · warningContainer
+     ├── dato / aviso del día      → GRAFITO  info · infoContainer
+     └── todo en orden             → VERDE    success (icono + texto, sin relleno)
+```
 
 ## 2. Paleta
 
@@ -47,14 +61,25 @@
 
 ### Estados semánticos
 
-| Estado | Light | Dark |
-|---|---|---|
-| success | `#047857` | `#34D399` |
-| warning | `#B45309` | `#FBBF24` |
-| danger | `#B91C1C` | `#F87171` |
+| Estado | Light | Dark | Uso |
+|---|---|---|---|
+| success | `#047857` | `#34D399` | al día, guardado |
+| warning | `#C2410C` | `#FDBA74` | próximo a vencer, cerca del límite |
+| info | `#475569` | `#CBD5E1` | dato o aviso sin urgencia |
+| danger | `#B91C1C` | `#F87171` | vencido, falla, error |
 
-Cada estado tiene contenedor y color `on*` propio. En texto siempre se usa
-el par `onContainer / container`.
+Contenedores: warning `#FFEDD5` / `#431407`, info `#E2E8F0` / `#334155`,
+danger `#FEE2E2` / `#5C1A1A`, success `#D1FAE5` / `#064E3B`. En texto siempre se
+usa el par `onContainer / container`.
+
+**El warning no reutiliza el ámbar:** `warning` y `warningContainer` son
+distintos de `primary` y `primaryContainer` en ambos temas. Un test
+(`test/core/theme/contrast_test.dart`) lo verifica para que la ambigüedad no
+vuelva.
+
+**Peso visual:** solo `warning` y `danger` se dibujan con relleno. `ok`, `info`
+y `neutral` van sin relleno o con superficie tonal, para que la alerta sea la
+única nota fuerte de la pantalla.
 
 ### Identidad por vehículo
 
@@ -123,7 +148,8 @@ Archivos:
 | Componente | Archivo | Uso |
 |---|---|---|
 | `VehicleAvatar` | `shared/widgets/vehicle_avatar.dart` | avatar por tipo |
-| `StatusChip` | `shared/widgets/status_chip.dart` | estado ok/warning/danger/neutral |
+| `TonalAvatar` | `shared/widgets/tonal_avatar.dart` | icono decorativo en caja tonal neutra (o `tone: warning`) |
+| `StatusChip` | `shared/widgets/status_chip.dart` | estado ok/warning/danger/neutral/info |
 | `SectionHeader` | `shared/widgets/section_header.dart` | título de sección + acción |
 | `StatTile` | `shared/widgets/stat_tile.dart` | métrica compacta |
 | `FormSection` | `shared/widgets/form_section.dart` | grupo de formulario |
@@ -149,6 +175,8 @@ Archivos:
 
 ```dart
 StatusChip(status: AppStatus.warning, label: 'Vence en 12 días', icon: Icons.schedule)
+TonalAvatar(icon: Icons.build_outlined)
+TonalAvatar(icon: Icons.error_outline, size: 36, iconSize: 20, tone: TonalAvatarTone.warning)
 VehicleAvatar(type: 'car', size: 48)
 FormSection(title: 'Documentos', icon: Icons.description_outlined, child: ...)
 StickyBottomBar(child: FilledButton(...))

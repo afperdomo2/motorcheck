@@ -95,14 +95,16 @@ void main() {
     WidgetTester tester, {
     int? vehicleId,
     int? maintenanceId,
+    List<Vehicle>? vehicles,
     List<MaintenanceCategory> categories = const [],
   }) async {
+    final availableVehicles = vehicles ?? [toyota, mazda];
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           vehicleRepositoryProvider.overrideWithValue(vehicleRepo),
           maintenanceRepositoryProvider.overrideWithValue(maintenanceRepo),
-          vehiclesProvider.overrideWith((ref) async => [toyota, mazda]),
+          vehiclesProvider.overrideWith((ref) async => availableVehicles),
           workshopsProvider.overrideWith((ref) async => []),
           maintenanceCategoriesProvider.overrideWith((ref) async => categories),
           vehicleComponentsProvider(1).overrideWith((ref) async => []),
@@ -183,6 +185,27 @@ void main() {
     expect(find.text('Toyota Corolla'), findsNothing);
     expect(find.text('XYZ-987'), findsOneWidget);
     expect(find.text('12000'), findsOneWidget);
+  });
+
+  testWidgets('al crear con un solo vehículo no abre el selector', (
+    tester,
+  ) async {
+    await pumpForm(tester, vehicleId: 1, vehicles: [toyota]);
+
+    await tester.tap(find.text('Toyota Corolla'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Selecciona un vehículo'), findsNothing);
+    expect(find.text('Toyota Corolla'), findsOneWidget);
+  });
+
+  testWidgets('al crear sin vehículo indicado usa el único registrado', (
+    tester,
+  ) async {
+    await pumpForm(tester, vehicles: [toyota]);
+
+    expect(find.text('Selecciona un vehículo'), findsNothing);
+    expect(find.text('Toyota Corolla'), findsOneWidget);
   });
 
   testWidgets('al editar la ficha no cambia de vehículo', (tester) async {

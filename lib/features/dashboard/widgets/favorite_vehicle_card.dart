@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/date_status.dart';
 import '../../../core/utils/formatters.dart';
@@ -336,7 +335,7 @@ class _ActionItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final semantic = AppSemanticColors.of(context);
+    final scheme = theme.colorScheme;
 
     return Expanded(
       child: InkWell(
@@ -349,7 +348,7 @@ class _ActionItem extends StatelessWidget {
               Badge(
                 isLabelVisible: badge != null,
                 label: Text('$badge'),
-                child: Icon(icon, size: 24, color: semantic.accentText),
+                child: Icon(icon, size: 24, color: scheme.onSurfaceVariant),
               ),
               const SizedBox(height: 6),
               Text(

@@ -211,13 +211,13 @@ class _CategoryChips extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer,
+              color: theme.colorScheme.surfaceContainer,
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
               '+$remaining',
               style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_semantic_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import 'tonal_avatar.dart';
 
 class StatTile extends StatelessWidget {
   final IconData icon;
@@ -20,22 +20,12 @@ class StatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final semantic = AppSemanticColors.of(context);
 
     final content = Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: scheme.primaryContainer,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, size: 20, color: semantic.accentText),
-          ),
+          TonalAvatar(icon: icon),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/tonal_avatar.dart';
 import '../../components/models/component_status.dart';
 import '../../components/models/vehicle_component.dart';
 import '../../settings/models/maintenance_category.dart';
@@ -182,28 +183,18 @@ class _ItemFormRowState extends State<ItemFormRow> {
 
     return Row(
       children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: missing
-                ? semantic.warningContainer
-                : scheme.primaryContainer,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            missing
-                ? Icons.error_outline
-                : component != null
-                ? componentTypeFor(component.type).icon
-                : category == null
-                ? Icons.build_outlined
-                : MaintenanceCategories.iconByName(category.iconName),
-            size: 20,
-            color: missing
-                ? semantic.onWarningContainer
-                : scheme.onPrimaryContainer,
-          ),
+        TonalAvatar(
+          icon: missing
+              ? Icons.error_outline
+              : component != null
+              ? componentTypeFor(component.type).icon
+              : category == null
+              ? Icons.build_outlined
+              : MaintenanceCategories.iconByName(category.iconName),
+          size: 36,
+          iconSize: 20,
+          circular: true,
+          tone: missing ? TonalAvatarTone.warning : TonalAvatarTone.neutral,
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(

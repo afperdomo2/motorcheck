@@ -4,6 +4,11 @@ import '../../core/theme/app_semantic_colors.dart';
 
 enum AppStatus { ok, warning, danger, neutral, info }
 
+/// Etiqueta de estado con icono, texto y color.
+///
+/// La jerarquía es por peso visual, no solo por color: solo `warning` y
+/// `danger` usan relleno; `ok` e `info` son texto con icono para no competir
+/// con las alertas ni con el ámbar de marca.
 class StatusChip extends StatelessWidget {
   final AppStatus status;
   final String label;
@@ -23,11 +28,7 @@ class StatusChip extends StatelessWidget {
     final semantic = AppSemanticColors.of(context);
 
     final (background, foreground, defaultIcon) = switch (status) {
-      AppStatus.ok => (
-        semantic.successContainer,
-        semantic.onSuccessContainer,
-        Icons.check_circle_outline,
-      ),
+      AppStatus.ok => (null, semantic.success, Icons.check_circle_outline),
       AppStatus.warning => (
         semantic.warningContainer,
         semantic.onWarningContainer,
@@ -38,11 +39,7 @@ class StatusChip extends StatelessWidget {
         semantic.onDangerContainer,
         Icons.error_outline,
       ),
-      AppStatus.info => (
-        scheme.primaryContainer,
-        scheme.onPrimaryContainer,
-        Icons.info_outline,
-      ),
+      AppStatus.info => (null, semantic.info, Icons.info_outline),
       AppStatus.neutral => (
         scheme.surfaceContainer,
         scheme.onSurfaceVariant,
@@ -52,10 +49,12 @@ class StatusChip extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
+      decoration: background == null
+          ? null
+          : BoxDecoration(
+              color: background,
+              borderRadius: BorderRadius.circular(999),
+            ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

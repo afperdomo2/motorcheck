@@ -15,6 +15,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     required this.onWarning,
     required this.warningContainer,
     required this.onWarningContainer,
+    required this.info,
+    required this.onInfo,
+    required this.infoContainer,
+    required this.onInfoContainer,
     required this.danger,
     required this.onDanger,
     required this.dangerContainer,
@@ -37,6 +41,11 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   final Color onWarning;
   final Color warningContainer;
   final Color onWarningContainer;
+
+  final Color info;
+  final Color onInfo;
+  final Color infoContainer;
+  final Color onInfoContainer;
 
   final Color danger;
   final Color onDanger;
@@ -79,6 +88,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     onWarning: Colors.white,
     warningContainer: AppColors.warningContainerLight,
     onWarningContainer: AppColors.onWarningContainerLight,
+    info: AppColors.infoLight,
+    onInfo: Colors.white,
+    infoContainer: AppColors.infoContainerLight,
+    onInfoContainer: AppColors.onInfoContainerLight,
     danger: AppColors.dangerLight,
     onDanger: Colors.white,
     dangerContainer: AppColors.dangerContainerLight,
@@ -101,6 +114,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     onWarning: Color(0xFF201607),
     warningContainer: AppColors.warningContainerDark,
     onWarningContainer: AppColors.onWarningContainerDark,
+    info: AppColors.infoDark,
+    onInfo: Color(0xFF0F172A),
+    infoContainer: AppColors.infoContainerDark,
+    onInfoContainer: AppColors.onInfoContainerDark,
     danger: AppColors.dangerDark,
     onDanger: Color(0xFF2A0A0A),
     dangerContainer: AppColors.dangerContainerDark,
@@ -124,6 +141,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     Color? onWarning,
     Color? warningContainer,
     Color? onWarningContainer,
+    Color? info,
+    Color? onInfo,
+    Color? infoContainer,
+    Color? onInfoContainer,
     Color? danger,
     Color? onDanger,
     Color? dangerContainer,
@@ -145,6 +166,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       onWarning: onWarning ?? this.onWarning,
       warningContainer: warningContainer ?? this.warningContainer,
       onWarningContainer: onWarningContainer ?? this.onWarningContainer,
+      info: info ?? this.info,
+      onInfo: onInfo ?? this.onInfo,
+      infoContainer: infoContainer ?? this.infoContainer,
+      onInfoContainer: onInfoContainer ?? this.onInfoContainer,
       danger: danger ?? this.danger,
       onDanger: onDanger ?? this.onDanger,
       dangerContainer: dangerContainer ?? this.dangerContainer,
@@ -187,6 +212,10 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
         other.onWarningContainer,
         t,
       )!,
+      info: Color.lerp(info, other.info, t)!,
+      onInfo: Color.lerp(onInfo, other.onInfo, t)!,
+      infoContainer: Color.lerp(infoContainer, other.infoContainer, t)!,
+      onInfoContainer: Color.lerp(onInfoContainer, other.onInfoContainer, t)!,
       danger: Color.lerp(danger, other.danger, t)!,
       onDanger: Color.lerp(onDanger, other.onDanger, t)!,
       dangerContainer: Color.lerp(dangerContainer, other.dangerContainer, t)!,

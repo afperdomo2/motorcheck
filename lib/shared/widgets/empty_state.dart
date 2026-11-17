@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_spacing.dart';
+import 'tonal_avatar.dart';
 
 class EmptyState extends StatelessWidget {
   final IconData icon;
@@ -23,7 +24,6 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final iconSize = compact ? 40.0 : 88.0;
     final iconGlyph = compact ? 20.0 : 40.0;
     final titleGap = compact ? AppSpacing.md : AppSpacing.xl;
@@ -36,18 +36,11 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: iconSize,
-              height: iconSize,
-              decoration: BoxDecoration(
-                color: scheme.primaryContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                size: iconGlyph,
-                color: scheme.onPrimaryContainer,
-              ),
+            TonalAvatar(
+              icon: icon,
+              size: iconSize,
+              iconSize: iconGlyph,
+              circular: true,
             ),
             SizedBox(height: titleGap),
             Text(

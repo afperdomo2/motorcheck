@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/tonal_avatar.dart';
 import '../expense_icons.dart';
 import '../models/expense.dart';
 import '../models/expense_category.dart';
@@ -35,19 +36,7 @@ class ExpenseCard extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: theme.colorScheme.onPrimaryContainer,
-                ),
-              ),
+              TonalAvatar(icon: icon, size: 42, iconSize: 20),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
