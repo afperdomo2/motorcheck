@@ -85,7 +85,7 @@ class BudgetAlertService {
         id: 9000 + vehicleId,
         title: title,
         body: body,
-        payload: '/finance',
+        payload: '/finance?vehicleId=$vehicleId&section=budgets',
       );
       await prefs.setInt(key, threshold);
     } catch (error) {

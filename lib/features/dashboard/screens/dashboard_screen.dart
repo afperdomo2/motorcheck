@@ -25,6 +25,7 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
+    final currentId = ref.watch(currentVehicleProvider).valueOrNull?.id;
 
     return Scaffold(
       appBar: AppBar(title: Text(_greeting(DateTime.now().hour))),
@@ -61,7 +62,26 @@ class DashboardScreen extends ConsumerWidget {
                   const VehicleSwitcher(),
                   const SizedBox(height: AppSpacing.md),
                 ],
-                const FavoriteVehicleCard(),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position:
+                          Tween<Offset>(
+                            begin: const Offset(0.06, 0),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
+                      child: child,
+                    ),
+                  ),
+                  child: FavoriteVehicleCard(key: ValueKey(currentId)),
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 const AttentionSection(),
                 const SizedBox(height: AppSpacing.lg),
@@ -85,7 +105,6 @@ class DashboardScreen extends ConsumerWidget {
     ref.invalidate(maintenancesProvider);
     ref.invalidate(dashboardRecentMaintenancesProvider);
     ref.invalidate(budgetStatusesProvider);
-    ref.invalidate(budgetAlertsProvider);
     ref.invalidate(fleetMonthSpendProvider);
 
     final id = ref.read(currentVehicleProvider).valueOrNull?.id;

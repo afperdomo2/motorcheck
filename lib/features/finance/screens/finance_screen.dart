@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
@@ -18,11 +19,57 @@ import '../widgets/budgets_view.dart';
 import '../widgets/finance_section_selector.dart';
 import 'finance_summary_view.dart';
 
-class FinanceScreen extends ConsumerWidget {
+class FinanceScreen extends ConsumerStatefulWidget {
   const FinanceScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FinanceScreen> createState() => _FinanceScreenState();
+}
+
+class _FinanceScreenState extends ConsumerState<FinanceScreen> {
+  Uri? _appliedUri;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (GoRouter.maybeOf(context) == null) return;
+    final uri = GoRouterState.of(context).uri;
+    if (_appliedUri == uri) return;
+    _appliedUri = uri;
+    _applyRouteQuery(uri);
+  }
+
+  /// Aplica `?section=budgets` y `?vehicleId=…` que llegan desde una
+  /// notificación o un deep link, sin mutar estado durante el build.
+  void _applyRouteQuery(Uri uri) {
+    final section = uri.queryParameters['section'];
+    final vehicleId = int.tryParse(uri.queryParameters['vehicleId'] ?? '');
+    if (section != 'budgets' && vehicleId == null) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      if (section == 'budgets') {
+        ref.read(financeSectionProvider.notifier).state =
+            FinanceSection.budgets;
+      }
+      if (vehicleId != null) {
+        try {
+          await ref
+              .read(vehiclesNotifierProvider.notifier)
+              .selectVehicle(vehicleId);
+        } catch (error, stackTrace) {
+          logError(
+            'seleccionar vehículo desde notificación',
+            error,
+            stackTrace,
+          );
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
     final current = ref.watch(currentVehicleProvider).valueOrNull;
     final section = ref.watch(financeSectionProvider);
@@ -69,7 +116,7 @@ class FinanceScreen extends ConsumerWidget {
                 child: Card(
                   child: VehicleFicha(
                     vehicle: selected,
-                    onTap: () => _selectVehicle(context, ref),
+                    onTap: () => _selectVehicle(context),
                   ),
                 ),
               ),
@@ -105,7 +152,7 @@ class FinanceScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _selectVehicle(BuildContext context, WidgetRef ref) async {
+  Future<void> _selectVehicle(BuildContext context) async {
     final selected = await VehicleSelectorSheet.show(context);
     if (selected?.id == null) return;
     await ref

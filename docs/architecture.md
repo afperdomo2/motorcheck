@@ -223,7 +223,8 @@ Recordatorios · salud · historial · PDF
 - **Presupuesto:** límite mensual por vehículo. Inicio muestra la barra del
   vehículo actual y las filas de presupuestos en riesgo en Atención; la vista
   completa con todos los vehículos está en `Gastos → Presupuestos`. Notificación
-  local al cruzar el 80 % o el 100 %.
+  local al cruzar el 80 % o el 100 %, que abre `Gastos → Presupuestos` del
+  vehículo correspondiente.
 
 
 `fuel_logs` y `expenses` actualizan el kilometraje cuando corresponde. Los

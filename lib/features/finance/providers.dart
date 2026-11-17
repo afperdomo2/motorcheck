@@ -192,29 +192,6 @@ final budgetStatusesProvider = FutureProvider<List<BudgetStatusEntry>>((
   return entries;
 });
 
-final budgetAlertsProvider = FutureProvider<List<BudgetStatusEntry>>((
-  ref,
-) async {
-  final entries = await ref.watch(budgetStatusesProvider.future);
-  final alerts =
-      entries
-          .where((entry) => entry.hasBudget && entry.status != BudgetStatus.ok)
-          .toList()
-        ..sort((a, b) {
-          final rankA = _budgetRank(a.status);
-          final rankB = _budgetRank(b.status);
-          if (rankA != rankB) return rankA.compareTo(rankB);
-          return b.ratio.compareTo(a.ratio);
-        });
-  return alerts;
-});
-
-int _budgetRank(BudgetStatus status) => switch (status) {
-  BudgetStatus.exceeded => 0,
-  BudgetStatus.warning => 1,
-  BudgetStatus.ok => 2,
-};
-
 class BudgetNotifier extends Notifier<AsyncValue<void>> {
   BudgetRepository get _repo => ref.read(budgetRepositoryProvider);
 
@@ -236,7 +213,6 @@ class BudgetNotifier extends Notifier<AsyncValue<void>> {
       );
       ref.invalidate(budgetForVehicleProvider(vehicleId));
       ref.invalidate(budgetStatusesProvider);
-      ref.invalidate(budgetAlertsProvider);
       state = const AsyncValue.data(null);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -250,7 +226,6 @@ class BudgetNotifier extends Notifier<AsyncValue<void>> {
       await _repo.delete(vehicleId, _repo.currentPeriod);
       ref.invalidate(budgetForVehicleProvider(vehicleId));
       ref.invalidate(budgetStatusesProvider);
-      ref.invalidate(budgetAlertsProvider);
       state = const AsyncValue.data(null);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
