@@ -115,37 +115,68 @@ class BudgetStatusEntry {
   }
 }
 
+class MonthSpendBreakdown {
+  const MonthSpendBreakdown({
+    required this.maintenance,
+    required this.fuel,
+    required this.expenses,
+  });
+
+  final double maintenance;
+  final double fuel;
+  final double expenses;
+
+  double get total => maintenance + fuel + expenses;
+}
+
+final vehicleMonthBreakdownProvider =
+    FutureProvider.family<MonthSpendBreakdown, int>((ref, vehicleId) async {
+      final maintenances = await ref.watch(maintenancesProvider.future);
+      final fuelLogs = await ref.watch(fuelLogsProvider(vehicleId).future);
+      final expenses = await ref.watch(
+        vehicleExpensesProvider(vehicleId).future,
+      );
+      final now = DateTime.now();
+
+      final maintenanceSpent = maintenances
+          .where(
+            (item) =>
+                item.vehicleId == vehicleId &&
+                item.date.year == now.year &&
+                item.date.month == now.month,
+          )
+          .fold<double>(
+            0,
+            (sum, item) => sum + item.maintenanceCost + item.totalPartsCost,
+          );
+      final fuelSpent = fuelLogs
+          .where(
+            (log) => log.date.year == now.year && log.date.month == now.month,
+          )
+          .fold<double>(0, (sum, log) => sum + log.totalCost);
+      final expenseSpent = expenses
+          .where(
+            (expense) =>
+                expense.date.year == now.year &&
+                expense.date.month == now.month,
+          )
+          .fold<double>(0, (sum, expense) => sum + expense.amount);
+
+      return MonthSpendBreakdown(
+        maintenance: maintenanceSpent,
+        fuel: fuelSpent,
+        expenses: expenseSpent,
+      );
+    });
+
 final vehicleMonthSpendProvider = FutureProvider.family<double, int>((
   ref,
   vehicleId,
 ) async {
-  final maintenances = await ref.watch(maintenancesProvider.future);
-  final fuelLogs = await ref.watch(fuelLogsProvider(vehicleId).future);
-  final expenses = await ref.watch(vehicleExpensesProvider(vehicleId).future);
-  final now = DateTime.now();
-
-  final maintenanceSpent = maintenances
-      .where(
-        (item) =>
-            item.vehicleId == vehicleId &&
-            item.date.year == now.year &&
-            item.date.month == now.month,
-      )
-      .fold<double>(
-        0,
-        (sum, item) => sum + item.maintenanceCost + item.totalPartsCost,
-      );
-  final fuelSpent = fuelLogs
-      .where((log) => log.date.year == now.year && log.date.month == now.month)
-      .fold<double>(0, (sum, log) => sum + log.totalCost);
-  final expenseSpent = expenses
-      .where(
-        (expense) =>
-            expense.date.year == now.year && expense.date.month == now.month,
-      )
-      .fold<double>(0, (sum, expense) => sum + expense.amount);
-
-  return maintenanceSpent + fuelSpent + expenseSpent;
+  final breakdown = await ref.watch(
+    vehicleMonthBreakdownProvider(vehicleId).future,
+  );
+  return breakdown.total;
 });
 
 final globalMonthExpensesProvider = FutureProvider<double>((ref) async {
@@ -159,16 +190,34 @@ final globalMonthExpensesProvider = FutureProvider<double>((ref) async {
       .fold<double>(0, (sum, expense) => sum + expense.amount);
 });
 
-final fleetMonthSpendProvider = FutureProvider<double>((ref) async {
+final fleetMonthBreakdownProvider = FutureProvider<MonthSpendBreakdown>((
+  ref,
+) async {
   final vehicles = await ref.watch(vehiclesProvider.future);
-  var total = 0.0;
+  var maintenance = 0.0;
+  var fuel = 0.0;
+  var expenses = 0.0;
+
   for (final vehicle in vehicles) {
     final id = vehicle.id;
     if (id == null) continue;
-    total += await ref.watch(vehicleMonthSpendProvider(id).future);
+    final breakdown = await ref.watch(vehicleMonthBreakdownProvider(id).future);
+    maintenance += breakdown.maintenance;
+    fuel += breakdown.fuel;
+    expenses += breakdown.expenses;
   }
-  total += await ref.watch(globalMonthExpensesProvider.future);
-  return total;
+
+  expenses += await ref.watch(globalMonthExpensesProvider.future);
+  return MonthSpendBreakdown(
+    maintenance: maintenance,
+    fuel: fuel,
+    expenses: expenses,
+  );
+});
+
+final fleetMonthSpendProvider = FutureProvider<double>((ref) async {
+  final breakdown = await ref.watch(fleetMonthBreakdownProvider.future);
+  return breakdown.total;
 });
 
 final budgetStatusesProvider = FutureProvider<List<BudgetStatusEntry>>((

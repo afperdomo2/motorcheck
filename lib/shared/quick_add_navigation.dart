@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/vehicles/vehicle_selection.dart';
+import '../features/vehicles/widgets/mileage_update_sheet.dart';
 
 /// Registro rápido disponible desde el FAB unificado.
 ///
@@ -13,6 +14,11 @@ enum QuickAddAction {
     label: 'Mantenimiento',
     semanticLabel: 'Registrar mantenimiento',
     icon: Icons.build_outlined,
+  ),
+  mileage(
+    label: 'Kilometraje',
+    semanticLabel: 'Actualizar kilometraje',
+    icon: Icons.speed,
   ),
   fuel(
     label: 'Tanqueada',
@@ -47,10 +53,14 @@ Future<void> startQuickAdd(
   final vehicle = await pickVehicleOrUseSingle(context, ref);
   if (vehicle == null || !context.mounted) return;
 
-  final path = switch (action) {
-    QuickAddAction.maintenance => '/maintenance/add',
-    QuickAddAction.fuel => '/finance/fuel/add',
-    QuickAddAction.expense => '/finance/expenses/add',
-  };
-  context.push('$path?vehicleId=${vehicle.id}');
+  switch (action) {
+    case QuickAddAction.mileage:
+      await MileageUpdateSheet.show(context, vehicle);
+    case QuickAddAction.maintenance:
+      context.push('/maintenance/add?vehicleId=${vehicle.id}');
+    case QuickAddAction.fuel:
+      context.push('/finance/fuel/add?vehicleId=${vehicle.id}');
+    case QuickAddAction.expense:
+      context.push('/finance/expenses/add?vehicleId=${vehicle.id}');
+  }
 }

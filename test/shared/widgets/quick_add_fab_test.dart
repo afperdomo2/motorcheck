@@ -54,13 +54,14 @@ void main() {
     expect(find.byType(FloatingActionButton), findsNothing);
   });
 
-  testWidgets('al tocar despliega las tres acciones', (tester) async {
+  testWidgets('al tocar despliega las cuatro acciones', (tester) async {
     await pumpFab(tester);
     expect(find.text('Mantenimiento'), findsNothing);
 
     await openMenu(tester);
 
     expect(find.text('Mantenimiento'), findsOneWidget);
+    expect(find.text('Kilometraje'), findsOneWidget);
     expect(find.text('Tanqueada'), findsOneWidget);
     expect(find.text('Gasto'), findsOneWidget);
   });
@@ -107,5 +108,18 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Mantenimiento'), findsNothing);
+  });
+
+  testWidgets('el menú de cuatro acciones cabe con texto al 200 %', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await pumpFab(tester);
+    await openMenu(tester);
+
+    expect(find.text('Kilometraje'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

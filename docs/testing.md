@@ -150,8 +150,15 @@ void main() {
 - `expense_repository_test.dart`: gastos por vehículo/global y categorías en uso.
 - `finance_provider_test.dart`: suma de mantenimiento + combustible + gastos.
 - `finance_screen_test.dart`: tres secciones y 5.ª pestaña a 360 px.
-- `finance_summary_view_test.dart` y `finance_summary_card_test.dart`: sin
-  overflow con text scale 2.0.
+- `finance_summary_view_test.dart`: sin overflow con text scale 2.0.
+- `vehicle_carousel_test.dart`: cambio de vehículo por deslizamiento y
+  360 px con text scale 2.0.
+- `fleet_status_mosaic_test.dart`: mezcla pico y placa + presupuestos en alerta.
+- `fleet_spend_card_test.dart`: gasto de la flota a 360 px con text scale 2.0.
+- `dashboard_screen_test.dart`: composición completa del Inicio.
+- `finance_deep_link_test.dart`: el deep link selecciona el vehículo.
+- `fleet_breakdown_test.dart`: suma del gasto de la flota.
+- `quick_add_fab_test.dart`: menú de cuatro acciones, cierre y teclado.
 - `navigation_bar_test.dart`: cinco pestañas a 360 px con text scale 2.0.
 - `checklist_repository_test.dart`: seed pre-viaje, run y respuestas.
 - `maintenance_attachment_repository_test.dart`: CRUD de adjuntos.

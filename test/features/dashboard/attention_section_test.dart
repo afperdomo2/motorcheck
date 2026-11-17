@@ -2,66 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:motorcheck/features/dashboard/widgets/attention_section.dart';
-import 'package:motorcheck/features/finance/models/budget.dart';
-import 'package:motorcheck/features/finance/providers.dart';
 import 'package:motorcheck/features/reminders/models/reminder.dart';
 import 'package:motorcheck/features/reminders/providers.dart';
-import 'package:motorcheck/features/vehicles/models/vehicle.dart';
 
-Vehicle _vehicle(int id, String name, String type) {
-  return Vehicle(
-    id: id,
-    name: name,
-    type: type,
-    createdAt: DateTime(2024),
-    updatedAt: DateTime(2024),
-  );
-}
+const _document = Reminder(
+  id: 'document-1',
+  kind: ReminderKind.document,
+  vehicleId: 1,
+  vehicleName: 'Mazda 33',
+  title: 'SOAT',
+  subtitle: 'SOAT',
+  severity: ReminderSeverity.warning,
+  route: '/vehicles/1/documents',
+  remainingDays: 12,
+);
 
-BudgetStatusEntry _budgetEntry({
-  required Vehicle vehicle,
-  required double amount,
-  required double spent,
-}) {
-  return BudgetStatusEntry(
-    vehicle: vehicle,
-    budget: Budget(
-      vehicleId: vehicle.id,
-      period: '2026-11',
-      amount: amount,
-      createdAt: DateTime(2024),
-      updatedAt: DateTime(2024),
-    ),
-    spent: spent,
-  );
-}
-
-Reminder _documentReminder() {
-  return const Reminder(
-    id: 'document-1',
-    kind: ReminderKind.document,
-    vehicleId: 2,
-    vehicleName: 'Moto',
-    title: 'SOAT',
-    subtitle: 'SOAT',
-    severity: ReminderSeverity.warning,
-    route: '/vehicles/2/documents',
-    remainingDays: 12,
-  );
-}
+const _restriction = Reminder(
+  id: 'restriction-1',
+  kind: ReminderKind.restriction,
+  vehicleId: 1,
+  vehicleName: 'Mazda 33',
+  title: 'Pico y placa',
+  subtitle: 'Hoy no circulas',
+  severity: ReminderSeverity.info,
+  route: '/vehicles/1/restriction',
+);
 
 Future<void> _pump(
   WidgetTester tester, {
   required List<Reminder> reminders,
-  required List<BudgetStatusEntry> budgets,
   double textScale = 1,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [
-        remindersProvider.overrideWith((ref) async => reminders),
-        budgetStatusesProvider.overrideWith((ref) async => budgets),
-      ],
+      overrides: [remindersProvider.overrideWith((ref) async => reminders)],
       child: MaterialApp(
         home: MediaQuery(
           data: MediaQueryData(
@@ -82,56 +56,23 @@ Future<void> _pump(
 }
 
 void main() {
-  testWidgets('muestra vencimientos y presupuestos de todos los vehículos', (
-    tester,
-  ) async {
-    final bici = _vehicle(1, 'Bici', 'bike');
-    final carro = _vehicle(3, 'Carro', 'car');
+  testWidgets('muestra vencimientos y excluye el pico y placa', (tester) async {
+    await _pump(tester, reminders: [_document, _restriction]);
 
-    await _pump(
-      tester,
-      reminders: [_documentReminder()],
-      budgets: [
-        _budgetEntry(vehicle: bici, amount: 700000, spent: 784000),
-        _budgetEntry(vehicle: carro, amount: 600000, spent: 270000),
-      ],
-    );
-
-    expect(find.text('Atención · 2'), findsOneWidget);
     expect(find.text('Vencimientos'), findsOneWidget);
     expect(find.text('SOAT'), findsOneWidget);
-    expect(find.text('Presupuestos'), findsOneWidget);
-    expect(find.text('Bici'), findsOneWidget);
-    expect(find.text('Carro'), findsOneWidget);
-    expect(find.text('112 %'), findsOneWidget);
-    expect(find.text('45 %'), findsOneWidget);
+    expect(find.text('Pico y placa'), findsNothing);
   });
 
-  testWidgets(
-    'se oculta cuando no hay vencimientos ni presupuestos en riesgo',
-    (tester) async {
-      final carro = _vehicle(3, 'Carro', 'car');
+  testWidgets('se oculta cuando no hay vencimientos', (tester) async {
+    await _pump(tester, reminders: [_restriction]);
 
-      await _pump(
-        tester,
-        reminders: const [],
-        budgets: [_budgetEntry(vehicle: carro, amount: 600000, spent: 270000)],
-      );
-
-      expect(find.text('Atención'), findsNothing);
-      expect(find.byType(Card), findsNothing);
-    },
-  );
+    expect(find.text('Vencimientos'), findsNothing);
+    expect(find.byType(Card), findsNothing);
+  });
 
   testWidgets('no desborda a 360 px con texto al 200 %', (tester) async {
-    final bici = _vehicle(1, 'Bicicleta Trek eléctrica', 'bike');
-
-    await _pump(
-      tester,
-      reminders: [_documentReminder()],
-      budgets: [_budgetEntry(vehicle: bici, amount: 700000, spent: 784000)],
-      textScale: 2,
-    );
+    await _pump(tester, reminders: [_document, _restriction], textScale: 2);
 
     expect(tester.takeException(), isNull);
   });

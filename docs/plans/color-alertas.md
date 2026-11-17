@@ -4,9 +4,10 @@
 > deja de ser decoración y deja de significar severidad. Sin cambios en SQLite
 > ni en la lógica de negocio.
 >
-> **Actualización posterior:** el banner de pico y placa se integró en la
-> sección global `AttentionSection` del Inicio; `pico_y_placa_banner.dart` ya
-> no existe. El pico y placa se mantiene como aviso informativo.
+> **Actualización posterior:** el pico y placa vive en la tira
+> `RestrictionStrip` del Inicio (todos los vehículos configurados) y se
+> mantiene como aviso informativo; `pico_y_placa_banner.dart` ya no existe.
+> `AttentionSection` quedó solo con vencimientos.
 
 ## Problema
 

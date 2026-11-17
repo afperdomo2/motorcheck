@@ -16,6 +16,24 @@ void main() {
     });
   });
 
+  group('formatCompactCurrency', () {
+    test('abrevia miles', () {
+      expect(formatCompactCurrency(620000), '\$ 620k');
+    });
+
+    test('abrevia millones con decimal', () {
+      expect(formatCompactCurrency(1200000), '\$ 1,2M');
+    });
+
+    test('no deja ,0 en millones enteros', () {
+      expect(formatCompactCurrency(1000000), '\$ 1M');
+    });
+
+    test('deja los montos pequeños completos', () {
+      expect(formatCompactCurrency(500), '\$ 500');
+    });
+  });
+
   group('formatDate', () {
     test('formatea fecha correctamente', () {
       final date = DateTime(2024, 3, 15);

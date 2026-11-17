@@ -57,16 +57,6 @@ class FinanceSectionSelector extends StatelessWidget {
             compact: compact,
             onTap: onChanged,
           ),
-          _Segment(
-            section: FinanceSection.budgets,
-            selected: selected == FinanceSection.budgets,
-            icon: Icons.savings_outlined,
-            selectedIcon: Icons.savings,
-            label: 'Presupuestos',
-            compactLabel: 'Presup.',
-            compact: compact,
-            onTap: onChanged,
-          ),
         ],
       ),
     );

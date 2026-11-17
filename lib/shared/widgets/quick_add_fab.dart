@@ -166,7 +166,9 @@ class _QuickAddFabState extends ConsumerState<QuickAddFab>
               followerAnchor: Alignment.bottomRight,
               offset: const Offset(0, -AppSpacing.md),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 280),
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.sizeOf(context).width - AppSpacing.xxl,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -254,18 +256,22 @@ class _QuickAddActionButton extends StatelessWidget {
                 horizontal: AppSpacing.lg,
                 vertical: 14,
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    action.label,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: scheme.onSurface,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      action.label,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: scheme.onSurface,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Icon(action.icon, size: 20, color: scheme.primary),
-                ],
+                    const SizedBox(width: AppSpacing.md),
+                    Icon(action.icon, size: 20, color: scheme.primary),
+                  ],
+                ),
               ),
             ),
           ),

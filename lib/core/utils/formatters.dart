@@ -35,6 +35,23 @@ String formatWeekdayDay(DateTime date) {
 
 String formatCurrency(double amount) => _currencyFormat.format(amount);
 
+/// Monto abreviado para tarjetas pequeñas: `$ 620k`, `$ 1,2M`, `$ 13,6M`.
+String formatCompactCurrency(double amount) {
+  final abs = amount.abs();
+  if (abs >= 1000000) {
+    final millions = (amount / 1000000).toStringAsFixed(1).replaceAll('.', ',');
+    final label = millions.endsWith(',0')
+        ? millions.substring(0, millions.length - 2)
+        : millions;
+    return '\$ ${label}M';
+  }
+  if (abs >= 1000) {
+    final thousands = (amount / 1000).round();
+    return '\$ ${_numberFormat.format(thousands)}k';
+  }
+  return formatCurrency(amount);
+}
+
 String formatDateTime(DateTime dateTime) => _dateTimeFormat.format(dateTime);
 
 DateTime parseDateTime(String dateTime) => _dateTimeFormat.parse(dateTime);

@@ -126,14 +126,15 @@ Ver `docs/code-style.md` para ejemplos de modelos freezed y estado asíncrono.
   pestañas **Servicios** (por defecto, categorías en chips) y **Piezas**
   (componentes, asignan su categoría solas).
 - **Registro rápido**: Inicio, Mantenimientos y Gastos comparten un único FAB
-  expandible (`QuickAddFab`) con mantenimiento, tanqueada y gasto. Con un solo
-  vehículo registra directo; con dos o más pide el vehículo antes de navegar.
-  No se muestra en detalles ni en Vehículos/Ajustes.
+  expandible (`QuickAddFab`) con mantenimiento, kilometraje, tanqueada y gasto.
+  Con un solo vehículo registra directo; con dos o más pide el vehículo antes
+  de navegar. No se muestra en detalles ni en Vehículos/Ajustes.
 - **Inicio**: usa `currentVehicleProvider` (último seleccionado → principal →
-  primero) y comparte ese vehículo con Mantenimientos y Gastos. “Atención” es
-  global (vencimientos de todos + presupuestos en riesgo); el gasto del mes es
-  del vehículo actual y la vista completa de presupuestos vive en
-  `Gastos → Presupuestos`.
+  primero) y comparte ese vehículo con Mantenimientos y Gastos. Tiene carrusel
+  con deslizamiento (altura natural), mosaico de pico y placa + presupuestos en
+  alerta, gasto del mes de la flota y vencimientos con rail de severidad. El
+  kilometraje se registra desde el FAB; el presupuesto se define y consulta por
+  vehículo en `Gastos → Resumen`.
 
 ## Arquitectura
 

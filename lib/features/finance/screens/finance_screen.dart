@@ -15,7 +15,6 @@ import '../../maintenance/widgets/vehicle_ficha.dart';
 import '../../vehicles/current_vehicle_provider.dart';
 import '../../vehicles/providers.dart';
 import '../finance_section.dart';
-import '../widgets/budgets_view.dart';
 import '../widgets/finance_section_selector.dart';
 import 'finance_summary_view.dart';
 
@@ -39,31 +38,22 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     _applyRouteQuery(uri);
   }
 
-  /// Aplica `?section=budgets` y `?vehicleId=…` que llegan desde una
-  /// notificación o un deep link, sin mutar estado durante el build.
+  /// Aplica `?vehicleId=…` que llega desde una notificación o un deep link,
+  /// sin mutar estado durante el build. Un `?section=` desconocido (por
+  /// ejemplo `budgets` de notificaciones antiguas) se ignora y se queda en
+  /// la sección actual.
   void _applyRouteQuery(Uri uri) {
-    final section = uri.queryParameters['section'];
     final vehicleId = int.tryParse(uri.queryParameters['vehicleId'] ?? '');
-    if (section != 'budgets' && vehicleId == null) return;
+    if (vehicleId == null) return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      if (section == 'budgets') {
-        ref.read(financeSectionProvider.notifier).state =
-            FinanceSection.budgets;
-      }
-      if (vehicleId != null) {
-        try {
-          await ref
-              .read(vehiclesNotifierProvider.notifier)
-              .selectVehicle(vehicleId);
-        } catch (error, stackTrace) {
-          logError(
-            'seleccionar vehículo desde notificación',
-            error,
-            stackTrace,
-          );
-        }
+      try {
+        await ref
+            .read(vehiclesNotifierProvider.notifier)
+            .selectVehicle(vehicleId);
+      } catch (error, stackTrace) {
+        logError('seleccionar vehículo desde notificación', error, stackTrace);
       }
     });
   }
@@ -142,7 +132,6 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                   FinanceSection.expenses => ExpensesView(
                     vehicleId: selected.id!,
                   ),
-                  FinanceSection.budgets => const BudgetsView(),
                 },
               ),
             ],
