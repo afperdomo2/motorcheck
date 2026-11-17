@@ -147,12 +147,18 @@ class _Bar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final height = (value / maxValue * 100).clamp(2.0, 100.0);
-    return Container(
-      width: 7,
-      height: height,
-      decoration: BoxDecoration(
-        color: value > 0 ? color : color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(3),
+    final barColor = value > 0 ? color : color.withValues(alpha: 0.15);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: height),
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
+      builder: (context, animatedHeight, _) => Container(
+        width: 7,
+        height: animatedHeight,
+        decoration: BoxDecoration(
+          color: barColor,
+          borderRadius: BorderRadius.circular(3),
+        ),
       ),
     );
   }

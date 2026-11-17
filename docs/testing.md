@@ -162,6 +162,9 @@ void main() {
 - `reminders_screen_test.dart`: filtros, presupuestos y estado vacío.
 - `mileage_update_sheet_test.dart`: validación del kilometraje.
 - `vehicle_detail_screen_test.dart`: ficha consolidada a 200 %.
+- `vehicle_form_screen_test.dart`: validación de año y VIN.
+- `expense_form_screen_test.dart` y `fuel_form_screen_test.dart`: validación de campos.
+- `maintenance_list_screen_test.dart`: filtro por vehículo, vacío y 200 %.
 - `navigation_bar_test.dart`: cinco pestañas a 360 px con text scale 2.0.
 - `checklist_repository_test.dart`: seed pre-viaje, run y respuestas.
 - `maintenance_attachment_repository_test.dart`: CRUD de adjuntos.
