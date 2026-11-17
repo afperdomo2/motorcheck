@@ -6,29 +6,26 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/quick_add_fab.dart';
 import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../expenses/screens/expenses_view.dart';
 import '../../fuel/screens/fuel_list_view.dart';
 import '../../maintenance/widgets/vehicle_ficha.dart';
-import '../../vehicles/models/vehicle.dart';
+import '../../vehicles/current_vehicle_provider.dart';
 import '../../vehicles/providers.dart';
+import '../finance_section.dart';
+import '../widgets/budgets_view.dart';
 import '../widgets/finance_section_selector.dart';
 import 'finance_summary_view.dart';
 
-class FinanceScreen extends ConsumerStatefulWidget {
+class FinanceScreen extends ConsumerWidget {
   const FinanceScreen({super.key});
 
   @override
-  ConsumerState<FinanceScreen> createState() => _FinanceScreenState();
-}
-
-class _FinanceScreenState extends ConsumerState<FinanceScreen> {
-  FinanceSection _section = FinanceSection.summary;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
-    final selectedId = ref.watch(selectedVehicleIdProvider);
+    final current = ref.watch(currentVehicleProvider).valueOrNull;
+    final section = ref.watch(financeSectionProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -41,7 +38,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           ),
         ],
       ),
-      floatingActionButton: _buildFab(selectedId),
+      floatingActionButton: const QuickAddFab(),
       body: vehiclesAsync.when(
         loading: () => const LoadingIndicator(),
         error: (error, _) => ErrorState(
@@ -59,8 +56,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             );
           }
 
-          final selected =
-              _selectedVehicle(vehicles, selectedId) ?? vehicles.first;
+          final selected = current ?? vehicles.first;
           return Column(
             children: [
               Padding(
@@ -73,7 +69,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                 child: Card(
                   child: VehicleFicha(
                     vehicle: selected,
-                    onTap: () => _selectVehicle(context),
+                    onTap: () => _selectVehicle(context, ref),
                   ),
                 ),
               ),
@@ -85,12 +81,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                   AppSpacing.xs,
                 ),
                 child: FinanceSectionSelector(
-                  selected: _section,
-                  onChanged: (section) => setState(() => _section = section),
+                  selected: section,
+                  onChanged: (value) =>
+                      ref.read(financeSectionProvider.notifier).state = value,
                 ),
               ),
               Expanded(
-                child: switch (_section) {
+                child: switch (section) {
                   FinanceSection.summary => FinanceSummaryView(
                     vehicleId: selected.id!,
                   ),
@@ -98,6 +95,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                   FinanceSection.expenses => ExpensesView(
                     vehicleId: selected.id!,
                   ),
+                  FinanceSection.budgets => const BudgetsView(),
                 },
               ),
             ],
@@ -107,40 +105,11 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  Widget? _buildFab(int? selectedId) {
-    final vehicles = ref.read(vehiclesProvider).valueOrNull ?? [];
-    final id = selectedId ?? (vehicles.isNotEmpty ? vehicles.first.id : null);
-    if (id == null) return null;
-    if (_section == FinanceSection.fuel) {
-      return FloatingActionButton.extended(
-        onPressed: () => context.push('/finance/fuel/add?vehicleId=$id'),
-        icon: const Icon(Icons.local_gas_station),
-        label: const Text('Tanqueada'),
-      );
-    }
-    if (_section == FinanceSection.expenses) {
-      return FloatingActionButton.extended(
-        onPressed: () => context.push('/finance/expenses/add?vehicleId=$id'),
-        icon: const Icon(Icons.receipt_long),
-        label: const Text('Gasto'),
-      );
-    }
-    return null;
-  }
-
-  Future<void> _selectVehicle(BuildContext context) async {
+  Future<void> _selectVehicle(BuildContext context, WidgetRef ref) async {
     final selected = await VehicleSelectorSheet.show(context);
     if (selected?.id == null) return;
     await ref
         .read(vehiclesNotifierProvider.notifier)
         .selectVehicle(selected!.id!);
-  }
-
-  Vehicle? _selectedVehicle(List<Vehicle> vehicles, int? selectedId) {
-    if (selectedId == null) return null;
-    for (final vehicle in vehicles) {
-      if (vehicle.id == selectedId) return vehicle;
-    }
-    return null;
   }
 }

@@ -6,7 +6,6 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/app_snack_bar.dart';
-import '../../dashboard/providers.dart';
 import '../../maintenance/providers.dart';
 import '../../reminders/providers.dart';
 import '../models/vehicle.dart';
@@ -61,8 +60,6 @@ class _MileageUpdateSheetState extends ConsumerState<MileageUpdateSheet> {
           .updateMileage(widget.vehicle.id!, mileage);
       ref.invalidate(upcomingMaintenanceProvider);
       ref.invalidate(maintenanceAttentionCountProvider);
-      ref.invalidate(dashboardSummaryProvider);
-      ref.invalidate(dashboardUpcomingProvider);
       ref.invalidate(vehicleMaintenanceSummaryProvider(widget.vehicle.id!));
       ref.invalidate(vehicleHealthProvider(widget.vehicle.id!));
       ref.invalidate(remindersProvider);

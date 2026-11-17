@@ -125,6 +125,15 @@ Ver `docs/code-style.md` para ejemplos de modelos freezed y estado asíncrono.
   al ítem nuevo. Cada ítem se elige con un único selector “¿Qué se hizo?” con
   pestañas **Servicios** (por defecto, categorías en chips) y **Piezas**
   (componentes, asignan su categoría solas).
+- **Registro rápido**: Inicio, Mantenimientos y Gastos comparten un único FAB
+  expandible (`QuickAddFab`) con mantenimiento, tanqueada y gasto. Con un solo
+  vehículo registra directo; con dos o más pide el vehículo antes de navegar.
+  No se muestra en detalles ni en Vehículos/Ajustes.
+- **Inicio**: usa `currentVehicleProvider` (último seleccionado → principal →
+  primero) y comparte ese vehículo con Mantenimientos y Gastos. “Atención” es
+  global (vencimientos de todos + presupuestos en riesgo); el gasto del mes es
+  del vehículo actual y la vista completa de presupuestos vive en
+  `Gastos → Presupuestos`.
 
 ## Arquitectura
 

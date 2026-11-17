@@ -162,6 +162,27 @@ Archivos:
 | `ErrorState` | `shared/widgets/error_state.dart` | error con reintento |
 | `LoadingIndicator` | `shared/widgets/loading_indicator.dart` | carga |
 | `showConfirmDialog` | `shared/widgets/confirm_dialog.dart` | confirmación destructiva |
+| `QuickAddFab` | `shared/widgets/quick_add_fab.dart` | FAB expandible de registro rápido (mantenimiento, tanqueada, gasto) |
+
+### Registro rápido
+
+Un único FAB expandible en **Inicio, Mantenimientos y Gastos**. Cerrado muestra
+un `+`; al abrirlo rota a `×`, atenúa el contenido con un scrim y despliega las
+acciones de abajo hacia arriba (la más cercana al pulgar entra primero):
+
+1. Mantenimiento
+2. Tanqueada
+3. Gasto
+
+- Con un solo vehículo registra directo; con dos o más abre
+  `VehicleSelectorSheet` antes de navegar.
+- Sin vehículos el botón no se muestra: la vista ya ofrece crearlo.
+- Al cambiar de pestaña se cierra al instante (las ramas conservan su estado y
+  desactivan sus tickers).
+- Respeta `MediaQuery.disableAnimations`, cierra con Escape o el botón atrás, y
+  cada acción mantiene un target de 48 dp y etiqueta visible.
+- No aparece en detalles ni en Vehículos/Ajustes, que conservan su acción
+  propia.
 
 ### Documentos
 
@@ -193,10 +214,22 @@ AppSnackBar.success('Vehículo guardado')
 
 ### Inicio
 
-Saludo + estado del **vehículo por defecto** (o el primero si no hay
-predeterminado): card del vehículo con documentos, próximos por km,
-documentos por vencer (globales), gasto del mes y actividad reciente. FAB
-“Registrar”.
+Saludo y rail de vehículos (solo con dos o más). La pantalla se lee en cuatro
+bloques:
+
+1. **Hero del vehículo actual:** avatar, nombre, placa/kilometraje, chip de
+   salud, línea de pico y placa (si está configurada) y dos acciones. Sin
+   “Detalles” duplicado: la card completa y el chevron llevan al detalle.
+2. **Atención:** vencimientos globales y presupuestos en riesgo. Los
+   presupuestos en riesgo se muestran con barra semántica y chip de porcentaje;
+   la batería completa vive en `Gastos → Presupuestos`.
+3. **Gasto del mes:** total, barra de presupuesto del vehículo actual, tres
+   filas (mantenimiento, combustible, otros) y una línea secundaria con el
+   total de todos los vehículos.
+4. **Últimos mantenimientos:** tres filas.
+
+El FAB es el `QuickAddFab` compartido. El ámbar se reserva para el FAB, la
+selección del rail y las acciones; los iconos de filas y cards son neutrales.
 
 ### Vehículos
 

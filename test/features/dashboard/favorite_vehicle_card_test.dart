@@ -5,21 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:motorcheck/features/dashboard/widgets/favorite_vehicle_card.dart';
 import 'package:motorcheck/features/maintenance/providers.dart';
+import 'package:motorcheck/features/restrictions/providers.dart';
+import 'package:motorcheck/features/restrictions/restriction_status.dart';
 import 'package:motorcheck/features/settings/models/maintenance_category.dart';
 import 'package:motorcheck/features/vehicles/models/vehicle.dart';
 import 'package:motorcheck/features/vehicles/providers.dart';
-import 'package:motorcheck/features/vehicles/repository.dart';
-
-class _FakeVehicleRepository extends VehicleRepository {
-  @override
-  Future<List<Vehicle>> getAll() async => [];
-
-  @override
-  Future<int?> getLastSelectedId() async => null;
-
-  @override
-  Future<void> markLastSelected(int id) async {}
-}
 
 Vehicle _vehicle({
   int id = 1,
@@ -47,10 +37,6 @@ GoRouter _router() {
         builder: (_, _) => const Scaffold(body: FavoriteVehicleCard()),
       ),
       GoRoute(
-        path: '/maintenance',
-        builder: (_, _) => const Scaffold(body: Text('PantallaMantenimientos')),
-      ),
-      GoRoute(
         path: '/vehicles/:id',
         builder: (_, _) => const Scaffold(body: Text('PantallaDetalles')),
       ),
@@ -58,13 +44,16 @@ GoRouter _router() {
         path: '/vehicles/:id/upcoming',
         builder: (_, _) => const Scaffold(body: Text('PantallaProximos')),
       ),
+      GoRoute(
+        path: '/vehicles/:id/restriction',
+        builder: (_, _) => const Scaffold(body: Text('PantallaRestriccion')),
+      ),
     ],
   );
 }
 
-List<Override> _overrides(Vehicle? defaultVehicle, List<Vehicle> vehicles) {
+List<Override> _overrides(List<Vehicle> vehicles) {
   return [
-    defaultVehicleProvider.overrideWith((ref) async => defaultVehicle),
     vehiclesProvider.overrideWith((ref) async => vehicles),
     upcomingMaintenanceProvider(1).overrideWith((ref) async => []),
   ];
@@ -94,18 +83,19 @@ void main() {
     await initializeDateFormatting('es');
   });
 
-  testWidgets('muestra el vehículo predeterminado', (tester) async {
+  testWidgets('muestra el vehículo principal y sus acciones', (tester) async {
     final vehicle = _vehicle(isDefault: true);
 
-    await _pump(tester, _overrides(vehicle, [vehicle]));
+    await _pump(tester, _overrides([vehicle]));
 
     expect(find.text('Mi Carro'), findsOneWidget);
-    expect(find.text('Mantenimientos'), findsOneWidget);
-    expect(find.text('Detalles'), findsOneWidget);
+    expect(find.text('Actualizar km'), findsOneWidget);
     expect(find.text('Próximos'), findsOneWidget);
+    expect(find.text('Detalles'), findsNothing);
+    expect(find.text('Mantenimientos'), findsNothing);
   });
 
-  testWidgets('usa el primer vehículo como respaldo sin predeterminado', (
+  testWidgets('usa el primer vehículo como respaldo sin principal', (
     tester,
   ) async {
     final vehicles = [
@@ -113,43 +103,26 @@ void main() {
       _vehicle(id: 2, name: 'Segundo'),
     ];
 
-    await _pump(tester, _overrides(null, vehicles));
+    await _pump(tester, _overrides(vehicles));
 
     expect(find.text('Primero'), findsOneWidget);
     expect(find.text('Segundo'), findsNothing);
   });
 
   testWidgets('no se muestra cuando no hay vehículos', (tester) async {
-    await _pump(tester, _overrides(null, []));
+    await _pump(tester, _overrides([]));
 
     expect(find.byType(Card), findsNothing);
   });
 
-  testWidgets('tocar Mantenimientos selecciona el vehículo y navega', (
-    tester,
-  ) async {
-    final vehicle = _vehicle(isDefault: true);
-    final overrides = [
-      ..._overrides(vehicle, [vehicle]),
-      vehicleRepositoryProvider.overrideWithValue(_FakeVehicleRepository()),
-    ];
-    final container = await _pump(tester, overrides);
-
-    await tester.tap(find.text('Mantenimientos'));
-    await tester.pumpAndSettle();
-
-    expect(container.read(selectedVehicleIdProvider), 1);
-    expect(find.text('PantallaMantenimientos'), findsOneWidget);
-  });
-
-  testWidgets('tocar Detalles navega a la pantalla de detalles', (
+  testWidgets('tocar la tarjeta navega a la pantalla de detalles', (
     tester,
   ) async {
     final vehicle = _vehicle(isDefault: true);
 
-    await _pump(tester, _overrides(vehicle, [vehicle]));
+    await _pump(tester, _overrides([vehicle]));
 
-    await tester.tap(find.text('Detalles'));
+    await tester.tap(find.text('Mi Carro'));
     await tester.pumpAndSettle();
 
     expect(find.text('PantallaDetalles'), findsOneWidget);
@@ -160,7 +133,7 @@ void main() {
   ) async {
     final vehicle = _vehicle(isDefault: true);
 
-    await _pump(tester, _overrides(vehicle, [vehicle]));
+    await _pump(tester, _overrides([vehicle]));
 
     await tester.tap(find.text('Próximos'));
     await tester.pumpAndSettle();
@@ -168,9 +141,7 @@ void main() {
     expect(find.text('PantallaProximos'), findsOneWidget);
   });
 
-  testWidgets('muestra badge con la cantidad de próximos en aviso', (
-    tester,
-  ) async {
+  testWidgets('muestra la cantidad de próximos en aviso', (tester) async {
     final vehicle = _vehicle(isDefault: true);
     final category = MaintenanceCategory(
       id: 1,
@@ -187,18 +158,75 @@ void main() {
     );
 
     final overrides = [
-      defaultVehicleProvider.overrideWith((ref) async => vehicle),
       vehiclesProvider.overrideWith((ref) async => [vehicle]),
       upcomingMaintenanceProvider(1).overrideWith((ref) async => [upcoming]),
     ];
 
     await _pump(tester, overrides);
 
-    final badges = tester
-        .widgetList<Badge>(find.byType(Badge))
-        .where((b) => b.isLabelVisible)
-        .toList();
-    expect(badges, hasLength(1));
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Próximos (1)'), findsOneWidget);
+  });
+
+  testWidgets('muestra pico y placa y navega a editarlo', (tester) async {
+    final vehicle = _vehicle(isDefault: true);
+    final status = RestrictionStatus(
+      configured: true,
+      restrictedToday: true,
+      restrictedNow: false,
+      todayLabel: 'Hoy no circulas · 06:00–21:00',
+      nextLabel: 'Martes 17 nov · 06:00–21:00',
+      nextRestrictionDate: DateTime(2026, 11, 17),
+    );
+    final overrides = [
+      ..._overrides([vehicle]),
+      vehicleRestrictionStatusProvider(1).overrideWith((ref) async => status),
+    ];
+
+    await _pump(tester, overrides);
+
+    const label = 'Pico y placa · Hoy no circulas · 06:00–21:00';
+    expect(find.text(label), findsOneWidget);
+
+    await tester.tap(find.text(label));
+    await tester.pumpAndSettle();
+
+    expect(find.text('PantallaRestriccion'), findsOneWidget);
+  });
+
+  testWidgets('no muestra pico y placa sin configurar', (tester) async {
+    final vehicle = _vehicle(isDefault: true);
+    const status = RestrictionStatus(
+      configured: false,
+      restrictedToday: false,
+      restrictedNow: false,
+      todayLabel: 'Sin configurar',
+      nextLabel: 'Configura tus días de pico y placa',
+    );
+    final overrides = [
+      ..._overrides([vehicle]),
+      vehicleRestrictionStatusProvider(1).overrideWith((ref) async => status),
+    ];
+
+    await _pump(tester, overrides);
+
+    expect(find.textContaining('Pico y placa'), findsNothing);
+  });
+
+  testWidgets('no desborda a 360 px con texto al 200 %', (tester) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    final vehicle = _vehicle(
+      isDefault: true,
+      name: 'Bicicleta Trek eléctrica de montaña',
+    );
+
+    await _pump(tester, _overrides([vehicle]));
+
+    expect(tester.takeException(), isNull);
   });
 }

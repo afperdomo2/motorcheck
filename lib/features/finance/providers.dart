@@ -5,8 +5,10 @@ import '../expenses/providers.dart';
 import '../fuel/providers.dart';
 import '../fuel/repository.dart';
 import '../maintenance/providers.dart';
+import '../vehicles/models/vehicle.dart';
 import '../vehicles/providers.dart';
 import 'budget_repository.dart';
+import 'budget_status.dart';
 import 'models/budget.dart';
 
 class MonthlyFinancePoint {
@@ -79,6 +81,140 @@ final budgetForVehicleProvider = FutureProvider.family<Budget?, int>((
   return repo.getForVehiclePeriod(vehicleId, repo.currentPeriod);
 });
 
+/// Presupuesto, gasto del mes y estado de un vehículo.
+class BudgetStatusEntry {
+  const BudgetStatusEntry({
+    required this.vehicle,
+    required this.budget,
+    required this.spent,
+  });
+
+  final Vehicle vehicle;
+  final Budget? budget;
+  final double spent;
+
+  bool get hasBudget => budget != null && budget!.amount > 0;
+
+  double get amount => budget?.amount ?? 0;
+
+  double get ratio => hasBudget ? spent / budget!.amount : 0;
+
+  int get percent => (ratio * 100).round();
+
+  BudgetStatus get status => hasBudget
+      ? budgetStatusFor(spent: spent, amount: amount)
+      : BudgetStatus.ok;
+
+  String get remainingLabel {
+    if (!hasBudget) return 'Sin presupuesto mensual';
+    if (spent > amount) {
+      return 'Excedido por ${formatCurrency(spent - amount)}';
+    }
+    if (status == BudgetStatus.exceeded) return 'Límite alcanzado';
+    return 'Quedan ${formatCurrency(amount - spent)}';
+  }
+}
+
+final vehicleMonthSpendProvider = FutureProvider.family<double, int>((
+  ref,
+  vehicleId,
+) async {
+  final maintenances = await ref.watch(maintenancesProvider.future);
+  final fuelLogs = await ref.watch(fuelLogsProvider(vehicleId).future);
+  final expenses = await ref.watch(vehicleExpensesProvider(vehicleId).future);
+  final now = DateTime.now();
+
+  final maintenanceSpent = maintenances
+      .where(
+        (item) =>
+            item.vehicleId == vehicleId &&
+            item.date.year == now.year &&
+            item.date.month == now.month,
+      )
+      .fold<double>(
+        0,
+        (sum, item) => sum + item.maintenanceCost + item.totalPartsCost,
+      );
+  final fuelSpent = fuelLogs
+      .where((log) => log.date.year == now.year && log.date.month == now.month)
+      .fold<double>(0, (sum, log) => sum + log.totalCost);
+  final expenseSpent = expenses
+      .where(
+        (expense) =>
+            expense.date.year == now.year && expense.date.month == now.month,
+      )
+      .fold<double>(0, (sum, expense) => sum + expense.amount);
+
+  return maintenanceSpent + fuelSpent + expenseSpent;
+});
+
+final globalMonthExpensesProvider = FutureProvider<double>((ref) async {
+  final expenses = await ref.watch(globalExpensesProvider.future);
+  final now = DateTime.now();
+  return expenses
+      .where(
+        (expense) =>
+            expense.date.year == now.year && expense.date.month == now.month,
+      )
+      .fold<double>(0, (sum, expense) => sum + expense.amount);
+});
+
+final fleetMonthSpendProvider = FutureProvider<double>((ref) async {
+  final vehicles = await ref.watch(vehiclesProvider.future);
+  var total = 0.0;
+  for (final vehicle in vehicles) {
+    final id = vehicle.id;
+    if (id == null) continue;
+    total += await ref.watch(vehicleMonthSpendProvider(id).future);
+  }
+  total += await ref.watch(globalMonthExpensesProvider.future);
+  return total;
+});
+
+final budgetStatusesProvider = FutureProvider<List<BudgetStatusEntry>>((
+  ref,
+) async {
+  final vehicles = await ref.watch(vehiclesProvider.future);
+  final repo = ref.watch(budgetRepositoryProvider);
+  final period = repo.currentPeriod;
+  final entries = <BudgetStatusEntry>[];
+
+  for (final vehicle in vehicles) {
+    final id = vehicle.id;
+    if (id == null) continue;
+    final budget = await repo.getForVehiclePeriod(id, period);
+    final spent = await ref.watch(vehicleMonthSpendProvider(id).future);
+    entries.add(
+      BudgetStatusEntry(vehicle: vehicle, budget: budget, spent: spent),
+    );
+  }
+
+  return entries;
+});
+
+final budgetAlertsProvider = FutureProvider<List<BudgetStatusEntry>>((
+  ref,
+) async {
+  final entries = await ref.watch(budgetStatusesProvider.future);
+  final alerts =
+      entries
+          .where((entry) => entry.hasBudget && entry.status != BudgetStatus.ok)
+          .toList()
+        ..sort((a, b) {
+          final rankA = _budgetRank(a.status);
+          final rankB = _budgetRank(b.status);
+          if (rankA != rankB) return rankA.compareTo(rankB);
+          return b.ratio.compareTo(a.ratio);
+        });
+  return alerts;
+});
+
+int _budgetRank(BudgetStatus status) => switch (status) {
+  BudgetStatus.exceeded => 0,
+  BudgetStatus.warning => 1,
+  BudgetStatus.ok => 2,
+};
+
 class BudgetNotifier extends Notifier<AsyncValue<void>> {
   BudgetRepository get _repo => ref.read(budgetRepositoryProvider);
 
@@ -99,6 +235,8 @@ class BudgetNotifier extends Notifier<AsyncValue<void>> {
         ),
       );
       ref.invalidate(budgetForVehicleProvider(vehicleId));
+      ref.invalidate(budgetStatusesProvider);
+      ref.invalidate(budgetAlertsProvider);
       state = const AsyncValue.data(null);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -111,6 +249,8 @@ class BudgetNotifier extends Notifier<AsyncValue<void>> {
     try {
       await _repo.delete(vehicleId, _repo.currentPeriod);
       ref.invalidate(budgetForVehicleProvider(vehicleId));
+      ref.invalidate(budgetStatusesProvider);
+      ref.invalidate(budgetAlertsProvider);
       state = const AsyncValue.data(null);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -124,8 +264,10 @@ final budgetNotifierProvider =
 
 final vehicleFinanceProvider =
     FutureProvider.family<VehicleFinanceSummary, int>((ref, vehicleId) async {
-      final maintenanceRepo = ref.read(maintenanceRepositoryProvider);
-      final maintenances = await maintenanceRepo.getByVehicleId(vehicleId);
+      final allMaintenances = await ref.watch(maintenancesProvider.future);
+      final maintenances = allMaintenances
+          .where((maintenance) => maintenance.vehicleId == vehicleId)
+          .toList();
       final fuelLogs = await ref.watch(fuelLogsProvider(vehicleId).future);
       final fuelStats = await ref.watch(fuelStatsProvider(vehicleId).future);
       final expenses = await ref.watch(

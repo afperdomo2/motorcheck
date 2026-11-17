@@ -5,13 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../core/utils/user_error.dart';
-import '../../../shared/widgets/app_snack_bar.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
-import '../budget_alert_service.dart';
 import '../budget_status.dart';
 import '../providers.dart';
+import '../widgets/budget_dialog.dart';
 import '../widgets/monthly_spend_chart.dart';
 
 class FinanceSummaryView extends ConsumerWidget {
@@ -271,7 +269,7 @@ class _BudgetCard extends ConsumerWidget {
                     ),
                   ),
                   TextButton(
-                    onPressed: () => _edit(context, ref),
+                    onPressed: () => showBudgetDialog(context, ref, vehicleId),
                     child: const Text('Definir'),
                   ),
                 ],
@@ -314,7 +312,12 @@ class _BudgetCard extends ConsumerWidget {
                       ),
                     ),
                     TextButton(
-                      onPressed: () => _edit(context, ref, budget.amount),
+                      onPressed: () => showBudgetDialog(
+                        context,
+                        ref,
+                        vehicleId,
+                        current: budget.amount,
+                      ),
                       child: const Text('Editar'),
                     ),
                   ],
@@ -370,60 +373,6 @@ class _BudgetCard extends ConsumerWidget {
         );
       },
     );
-  }
-
-  Future<void> _edit(
-    BuildContext context,
-    WidgetRef ref, [
-    double? current,
-  ]) async {
-    final controller = TextEditingController(
-      text: current != null ? current.toStringAsFixed(0) : '',
-    );
-    final amount = await showDialog<double>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Presupuesto mensual'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(
-            labelText: 'Límite del mes',
-            prefixIcon: Icon(Icons.attach_money),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final value = double.tryParse(
-                controller.text.trim().replaceAll(',', '.'),
-              );
-              Navigator.of(context).pop(value);
-            },
-            child: const Text('Guardar'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (amount == null || amount <= 0) return;
-
-    try {
-      await ref.read(budgetNotifierProvider.notifier).save(vehicleId, amount);
-      await BudgetAlertService().reset(vehicleId);
-      await BudgetAlertService().check(vehicleId);
-      if (!context.mounted) return;
-      AppSnackBar.success('Presupuesto actualizado');
-    } catch (error) {
-      logError('guardar presupuesto', error, StackTrace.current);
-      if (!context.mounted) return;
-      AppSnackBar.error('No se pudo guardar el presupuesto');
-    }
   }
 }
 

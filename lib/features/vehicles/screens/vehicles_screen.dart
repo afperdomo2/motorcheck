@@ -72,7 +72,16 @@ class VehiclesScreen extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                   child: VehicleCard(
                     vehicle: vehicle,
-                    onTap: () => context.push('/vehicles/${vehicle.id}'),
+                    onTap: () async {
+                      final id = vehicle.id;
+                      if (id == null) return;
+                      await ref
+                          .read(vehiclesNotifierProvider.notifier)
+                          .selectVehicle(id);
+                      if (context.mounted) {
+                        context.push('/vehicles/$id');
+                      }
+                    },
                     onSetDefault: () async {
                       final notifier = ref.read(
                         vehiclesNotifierProvider.notifier,

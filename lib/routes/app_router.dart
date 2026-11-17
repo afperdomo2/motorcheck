@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/notifications/notification_sync.dart';
+import '../shared/widgets/quick_add_fab.dart';
 import '../features/vehicles/providers.dart';
 import '../features/dashboard/screens/dashboard_screen.dart';
 import '../features/vehicles/screens/vehicles_screen.dart';
@@ -456,6 +457,8 @@ class AppShell extends ConsumerWidget {
             selectedIndex: navigationShell.currentIndex,
             labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
             onDestinationSelected: (index) {
+              // Las ramas conservan su estado: cierra el registro rápido.
+              ref.read(quickAddCloseSignalProvider.notifier).state++;
               navigationShell.goBranch(
                 index,
                 initialLocation: index == navigationShell.currentIndex,

@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
+import '../../../shared/widgets/quick_add_fab.dart';
+import '../../finance/providers.dart';
+import '../../maintenance/providers.dart';
+import '../../reminders/providers.dart';
+import '../../vehicles/current_vehicle_provider.dart';
 import '../../vehicles/providers.dart';
-import '../../vehicles/vehicle_selection.dart';
 import '../providers.dart';
+import '../widgets/attention_section.dart';
 import '../widgets/favorite_vehicle_card.dart';
 import '../widgets/finance_summary_card.dart';
-import '../widgets/pico_y_placa_banner.dart';
-import '../widgets/quick_stats.dart';
 import '../widgets/recent_activity.dart';
-import '../widgets/reminders_summary.dart';
+import '../widgets/vehicle_switcher.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -22,31 +25,10 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
-    final summaryAsync = ref.watch(dashboardSummaryProvider);
-    final targetAsync = ref.watch(dashboardVehicleProvider);
-    final target = targetAsync.valueOrNull;
-    final subtitle = targetAsync.isLoading
-        ? 'Cargando…'
-        : target == null
-        ? 'Agrega tu primer vehículo'
-        : [
-            target.name,
-            if (target.currentMileage != null)
-              formatMileage(target.currentMileage),
-          ].join(' · ');
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_greeting(DateTime.now().hour)),
-        actions: [
-          IconButton(
-            onPressed: () => _refresh(ref),
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Actualizar',
-          ),
-        ],
-      ),
-      floatingActionButton: _buildFab(context, ref),
+      appBar: AppBar(title: Text(_greeting(DateTime.now().hour))),
+      floatingActionButton: const QuickAddFab(),
       body: vehiclesAsync.when(
         loading: () => const LoadingIndicator(),
         error: (err, _) => ErrorState(
@@ -64,40 +46,31 @@ class DashboardScreen extends ConsumerWidget {
             );
           }
 
-          return summaryAsync.when(
-            loading: () => const LoadingIndicator(),
-            error: (err, _) => ErrorState(
-              message: 'No se pudo cargar el resumen',
-              onRetry: () => ref.invalidate(dashboardSummaryProvider),
+          return RefreshIndicator(
+            onRefresh: () => _refresh(ref),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.xxxl * 2,
+              ),
+              children: [
+                if (vehicles.length > 1) ...[
+                  const VehicleSwitcher(),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+                const FavoriteVehicleCard(),
+                const SizedBox(height: AppSpacing.lg),
+                const AttentionSection(),
+                const SizedBox(height: AppSpacing.lg),
+                const FinanceSummaryCard(),
+                const SizedBox(height: AppSpacing.lg),
+                const RecentActivity(),
+                const SizedBox(height: AppSpacing.xxl),
+              ],
             ),
-            data: (summary) {
-              return RefreshIndicator(
-                onRefresh: () => _refresh(ref),
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  children: [
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    const PicoYPlacaBanner(),
-                    const SizedBox(height: AppSpacing.md),
-                    const FavoriteVehicleCard(),
-                    const SizedBox(height: AppSpacing.md),
-                    const FinanceSummaryCard(),
-                    const SizedBox(height: AppSpacing.lg),
-                    const RemindersSummary(),
-                    const SizedBox(height: AppSpacing.lg),
-                    QuickStats(summary: summary),
-                    const SizedBox(height: AppSpacing.lg),
-                    RecentActivity(summary: summary),
-                    const SizedBox(height: AppSpacing.xxl),
-                  ],
-                ),
-              );
-            },
           );
         },
       ),
@@ -107,29 +80,28 @@ class DashboardScreen extends ConsumerWidget {
   Future<void> _refresh(WidgetRef ref) async {
     ref.invalidate(vehiclesProvider);
     ref.invalidate(defaultVehicleProvider);
-    ref.invalidate(dashboardVehicleProvider);
-    ref.invalidate(dashboardSummaryProvider);
-    ref.invalidate(dashboardUpcomingProvider);
-    await ref.read(dashboardSummaryProvider.future);
-  }
+    ref.invalidate(currentVehicleProvider);
+    ref.invalidate(remindersProvider);
+    ref.invalidate(maintenancesProvider);
+    ref.invalidate(dashboardRecentMaintenancesProvider);
+    ref.invalidate(budgetStatusesProvider);
+    ref.invalidate(budgetAlertsProvider);
+    ref.invalidate(fleetMonthSpendProvider);
 
-  Widget? _buildFab(BuildContext context, WidgetRef ref) {
-    final vehicles = ref.watch(vehiclesProvider).valueOrNull ?? [];
-    if (vehicles.isEmpty) return null;
+    final id = ref.read(currentVehicleProvider).valueOrNull?.id;
+    if (id != null) {
+      ref.invalidate(vehicleFinanceProvider(id));
+      ref.invalidate(vehicleMonthSpendProvider(id));
+      ref.invalidate(budgetForVehicleProvider(id));
+      ref.invalidate(vehicleHealthProvider(id));
+      ref.invalidate(upcomingMaintenanceProvider(id));
+    }
 
-    return FloatingActionButton.extended(
-      onPressed: () => _addMaintenance(context, ref),
-      tooltip: 'Registrar mantenimiento',
-      icon: const Icon(Icons.add),
-      label: const Text('Registrar'),
-    );
-  }
-
-  Future<void> _addMaintenance(BuildContext context, WidgetRef ref) async {
-    final vehicle = await pickVehicleOrUseSingle(context, ref);
-    if (vehicle == null || !context.mounted) return;
-
-    context.push('/maintenance/add?vehicleId=${vehicle.id}');
+    try {
+      await ref.read(currentVehicleProvider.future);
+    } catch (_) {
+      // Las secciones muestran su propio estado de error.
+    }
   }
 
   static String _greeting(int hour) {

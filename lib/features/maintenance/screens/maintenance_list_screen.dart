@@ -5,13 +5,12 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/widgets/loading_indicator.dart';
-import '../../../shared/widgets/tonal_avatar.dart';
+import '../../../shared/widgets/quick_add_fab.dart';
 import '../../../shared/widgets/vehicle_selector_sheet.dart';
 import '../../settings/models/maintenance_category.dart';
 import '../../settings/providers.dart';
-import '../../vehicles/models/vehicle.dart';
+import '../../vehicles/current_vehicle_provider.dart';
 import '../../vehicles/providers.dart';
-import '../../vehicles/vehicle_selection.dart';
 import '../models/maintenance.dart';
 import '../models/workshop.dart';
 import '../providers.dart';
@@ -31,9 +30,9 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
   @override
   Widget build(BuildContext context) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
-    final selectedVehicleId = ref.watch(selectedVehicleIdProvider);
+    final currentVehicle = ref.watch(currentVehicleProvider).valueOrNull;
+    final selectedVehicleId = currentVehicle?.id;
     final maintenancesAsync = ref.watch(maintenancesNotifierProvider);
-    final hasVehicles = vehiclesAsync.valueOrNull?.isNotEmpty ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -46,14 +45,7 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
           ),
         ],
       ),
-      floatingActionButton: hasVehicles
-          ? FloatingActionButton.extended(
-              onPressed: _addMaintenance,
-              tooltip: 'Registrar mantenimiento',
-              icon: const Icon(Icons.add),
-              label: const Text('Registrar'),
-            )
-          : null,
+      floatingActionButton: const QuickAddFab(),
       body: Column(
         children: [
           _buildVehicleSelector(context),
@@ -207,57 +199,8 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
   }
 
   Widget _buildVehicleSelector(BuildContext context) {
-    final vehicles = ref.watch(vehiclesProvider).valueOrNull ?? [];
-    if (vehicles.isEmpty) return const SizedBox.shrink();
-
-    final selectedVehicleId = ref.watch(selectedVehicleIdProvider);
-    Vehicle? selectedVehicle;
-    for (final v in vehicles) {
-      if (v.id == selectedVehicleId) {
-        selectedVehicle = v;
-        break;
-      }
-    }
-
-    final theme = Theme.of(context);
-
-    if (selectedVehicle == null) {
-      return Card(
-        margin: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.sm,
-          AppSpacing.lg,
-          0,
-        ),
-        child: InkWell(
-          onTap: () => _selectVehicle(context),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Row(
-              children: [
-                const TonalAvatar(
-                  icon: Icons.directions_car_outlined,
-                  size: 48,
-                  iconSize: 24,
-                  circular: true,
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Text(
-                    'Selecciona un vehículo',
-                    style: theme.textTheme.titleMedium,
-                  ),
-                ),
-                Icon(
-                  Icons.expand_more,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
+    final currentVehicle = ref.watch(currentVehicleProvider).valueOrNull;
+    if (currentVehicle == null) return const SizedBox.shrink();
 
     return Card(
       margin: const EdgeInsets.fromLTRB(
@@ -267,17 +210,10 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
         0,
       ),
       child: VehicleFicha(
-        vehicle: selectedVehicle,
+        vehicle: currentVehicle,
         onTap: () => _selectVehicle(context),
       ),
     );
-  }
-
-  Future<void> _addMaintenance() async {
-    final vehicle = await pickVehicleOrUseSingle(context, ref);
-    if (vehicle == null || !mounted) return;
-
-    context.push('/maintenance/add?vehicleId=${vehicle.id}');
   }
 
   Future<void> _selectVehicle(BuildContext context) async {

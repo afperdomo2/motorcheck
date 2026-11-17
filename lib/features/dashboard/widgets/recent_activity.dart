@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../core/utils/user_error.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../../shared/widgets/vehicle_avatar.dart';
 import '../../maintenance/models/maintenance.dart';
@@ -11,86 +11,75 @@ import '../../maintenance/models/maintenance_item.dart';
 import '../../maintenance/providers.dart';
 import '../../settings/models/maintenance_category.dart';
 import '../../settings/providers.dart';
+import '../../vehicles/current_vehicle_provider.dart';
 import '../../vehicles/models/vehicle.dart';
-import '../../vehicles/providers.dart';
 import '../providers.dart';
 
 class RecentActivity extends ConsumerWidget {
-  final DashboardSummary summary;
-
-  const RecentActivity({super.key, required this.summary});
+  const RecentActivity({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (summary.recentMaintenances.isEmpty) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Center(
-            child: Text(
-              'Sin mantenimientos registrados',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-        ),
-      );
-    }
-
-    final ids = summary.recentMaintenances.map((m) => m.id!).toList()..sort();
-    final itemsAsync = ref.watch(workshopItemsProvider(ids.join(',')));
-    final itemsByMaintenance = itemsAsync.valueOrNull ?? {};
-    final vehicles = ref.watch(vehiclesProvider).valueOrNull ?? [];
-    final categoriesAsync = ref.watch(maintenanceCategoriesProvider);
-    final categoryMap = <String, MaintenanceCategory>{
-      for (final c in categoriesAsync.valueOrNull ?? <MaintenanceCategory>[])
-        c.key: c,
-    };
+    final maintenancesAsync = ref.watch(dashboardRecentMaintenancesProvider);
+    final maintenances = maintenancesAsync.valueOrNull ?? const [];
+    final vehicle = ref.watch(currentVehicleProvider).valueOrNull;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: 'Actividad reciente',
+          title: 'Últimos mantenimientos',
           actionLabel: 'Ver todo',
-          onAction: () async {
-            try {
-              final target = await ref.read(dashboardVehicleProvider.future);
-              if (target?.id != null) {
-                await ref
-                    .read(vehiclesNotifierProvider.notifier)
-                    .selectVehicle(target!.id!);
-              }
-            } catch (error) {
-              logError(
-                'abrir mantenimientos desde inicio',
-                error,
-                StackTrace.current,
-              );
-            }
-            if (context.mounted) context.go('/maintenance');
-          },
+          onAction: () => context.go('/maintenance'),
         ),
-        Card(
-          child: Column(
-            children: [
-              for (var i = 0; i < summary.recentMaintenances.length; i++) ...[
-                if (i > 0) const Divider(),
-                _ActivityRow(
-                  maintenance: summary.recentMaintenances[i],
-                  items:
-                      itemsByMaintenance[summary.recentMaintenances[i].id] ??
-                      const [],
-                  vehicle: vehicles.cast<Vehicle?>().firstWhere(
-                    (v) => v?.id == summary.recentMaintenances[i].vehicleId,
-                    orElse: () => null,
-                  ),
-                  categoryMap: categoryMap,
-                ),
-              ],
-            ],
-          ),
-        ),
+        if (maintenancesAsync.isLoading && maintenances.isEmpty)
+          const _LoadingCard()
+        else if (maintenancesAsync.hasError)
+          _ErrorCard(
+            onRetry: () => ref.invalidate(dashboardRecentMaintenancesProvider),
+          )
+        else if (maintenances.isEmpty)
+          _EmptyCard(vehicleId: vehicle?.id)
+        else
+          _ActivityList(maintenances: maintenances, vehicle: vehicle),
       ],
+    );
+  }
+}
+
+class _ActivityList extends ConsumerWidget {
+  const _ActivityList({required this.maintenances, required this.vehicle});
+
+  final List<Maintenance> maintenances;
+  final Vehicle? vehicle;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ids = maintenances.map((maintenance) => maintenance.id!).toList()
+      ..sort();
+    final itemsByMaintenance =
+        ref.watch(workshopItemsProvider(ids.join(','))).valueOrNull ?? {};
+    final categories =
+        ref.watch(maintenanceCategoriesProvider).valueOrNull ??
+        <MaintenanceCategory>[];
+    final categoryMap = {
+      for (final category in categories) category.key: category,
+    };
+
+    return Card(
+      child: Column(
+        children: [
+          for (var i = 0; i < maintenances.length; i++) ...[
+            if (i > 0) const Divider(height: 1),
+            _ActivityRow(
+              maintenance: maintenances[i],
+              items: itemsByMaintenance[maintenances[i].id] ?? const [],
+              vehicle: vehicle,
+              categoryMap: categoryMap,
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -181,7 +170,6 @@ class _CategoryChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final unique = <String>{};
     for (final item in items) {
       unique.add(item.category);
@@ -193,35 +181,101 @@ class _CategoryChips extends StatelessWidget {
       spacing: AppSpacing.xs,
       runSpacing: AppSpacing.xs,
       children: [
-        for (final key in keys)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainer,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              categoryMap[key]?.name ?? key,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        if (remaining > 0)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainer,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              '+$remaining',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
+        for (final key in keys) _chip(context, categoryMap[key]?.name ?? key),
+        if (remaining > 0) _chip(context, '+$remaining'),
       ],
+    );
+  }
+
+  Widget _chip(BuildContext context, String label) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadingCard extends StatelessWidget {
+  const _LoadingCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Card(
+      child: Padding(
+        padding: EdgeInsets.all(AppSpacing.lg),
+        child: LinearProgressIndicator(),
+      ),
+    );
+  }
+}
+
+class _ErrorCard extends StatelessWidget {
+  const _ErrorCard({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: [
+            Icon(Icons.error_outline, color: theme.colorScheme.error),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                'No se pudieron cargar los mantenimientos',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+            TextButton(onPressed: onRetry, child: const Text('Reintentar')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyCard extends StatelessWidget {
+  const _EmptyCard({required this.vehicleId});
+
+  final int? vehicleId;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Sin mantenimientos registrados',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+            if (vehicleId != null)
+              TextButton(
+                onPressed: () =>
+                    context.push('/maintenance/add?vehicleId=$vehicleId'),
+                child: const Text('Registrar'),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

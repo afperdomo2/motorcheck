@@ -14,7 +14,7 @@ import 'package:motorcheck/features/vehicles/models/vehicle.dart';
 import 'package:motorcheck/features/vehicles/providers.dart';
 
 void main() {
-  testWidgets('las tres secciones no desbordan a 360 px', (tester) async {
+  testWidgets('las cuatro secciones no desbordan a 360 px', (tester) async {
     final now = DateTime(2026, 11, 1);
     final vehicle = Vehicle(
       id: 1,
@@ -86,6 +86,17 @@ void main() {
       createdAt: now,
       updatedAt: now,
     );
+    final budgetEntry = BudgetStatusEntry(
+      vehicle: vehicle,
+      budget: Budget(
+        vehicleId: 1,
+        period: '2026-11',
+        amount: 700000,
+        createdAt: now,
+        updatedAt: now,
+      ),
+      spent: 620000,
+    );
 
     await tester.pumpWidget(
       ProviderScope(
@@ -108,6 +119,7 @@ void main() {
           expenseCategoriesProvider.overrideWith(
             (ref) async => [expenseCategory],
           ),
+          budgetStatusesProvider.overrideWith((ref) async => [budgetEntry]),
         ],
         child: const MaterialApp(
           home: MediaQuery(
@@ -133,6 +145,10 @@ void main() {
       find.byKey(const ValueKey('finance-section-expenses')),
       findsOneWidget,
     );
+    expect(
+      find.byKey(const ValueKey('finance-section-budgets')),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byKey(const ValueKey('finance-section-fuel')));
     await tester.pumpAndSettle();
@@ -141,5 +157,10 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('finance-section-expenses')));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+
+    await tester.tap(find.byKey(const ValueKey('finance-section-budgets')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining('Presupuestos de'), findsOneWidget);
   });
 }

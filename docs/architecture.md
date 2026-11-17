@@ -119,10 +119,27 @@ Después de una mutación, invalida los providers derivados:
 
 ### Inicio
 
-El dashboard muestra el **vehículo por defecto** (o el primero si no hay
-predeterminado): salud, recordatorios, pico y placa, actividad y estadísticas.
+El dashboard muestra el **vehículo actual**: el último seleccionado, o el
+principal, o el primero. Inicio, Mantenimientos y Gastos comparten
+`currentVehicleProvider`, así que cambiar de vehículo en el rail de Inicio
+también cambia las otras dos pestañas.
+
+La pantalla se compone de:
+
+- **Hero del vehículo actual:** identidad, kilometraje, salud, línea de pico y
+  placa (cuando está configurada) y dos acciones (actualizar km y próximos).
+  La card completa abre el detalle.
+- **Atención (global):** vencimientos de todos los vehículos y presupuestos en
+  riesgo. Solo aparece cuando hay algo que mirar. La batería completa de
+  presupuestos vive en `Gastos → Presupuestos`.
+- **Gasto del mes (vehículo actual):** total, barra de presupuesto, desglose en
+  mantenimiento/combustible/otros y total monetario de todos los vehículos.
+  Costo por km y consumo se consultan en Gastos.
+- **Últimos mantenimientos:** tres filas del vehículo actual.
+
 `remindersProvider` unifica mantenimiento (km y fecha), documentos y pico y
-placa; el badge de navegación usa esa misma bandeja.
+placa. El pico y placa se muestra como aviso informativo, no como advertencia.
+El FAB es el `QuickAddFab` compartido con Mantenimientos y Gastos.
 
 ### Recordatorios y notificaciones
 
@@ -203,7 +220,9 @@ Recordatorios · salud · historial · PDF
   `core/files/` y incluidas en el ZIP de respaldo. Se previsualizan imágenes y PDF.
 - **Checklists:** plantilla pre-viaje global con 8 items; cada inspección guarda
   respuestas (`ok`, `attention`, `fail`), kilometraje y notas.
-- **Presupuesto:** límite mensual por vehículo con chip en Inicio y notificación
+- **Presupuesto:** límite mensual por vehículo. Inicio muestra la barra del
+  vehículo actual y las filas de presupuestos en riesgo en Atención; la vista
+  completa con todos los vehículos está en `Gastos → Presupuestos`. Notificación
   local al cruzar el 80 % o el 100 %.
 
 

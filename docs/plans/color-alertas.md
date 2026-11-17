@@ -3,6 +3,10 @@
 > Implementado. Identidad **grafito + ámbar industrial** sin cambios; el ámbar
 > deja de ser decoración y deja de significar severidad. Sin cambios en SQLite
 > ni en la lógica de negocio.
+>
+> **Actualización posterior:** el banner de pico y placa se integró en la
+> sección global `AttentionSection` del Inicio; `pico_y_placa_banner.dart` ya
+> no existe. El pico y placa se mantiene como aviso informativo.
 
 ## Problema
 

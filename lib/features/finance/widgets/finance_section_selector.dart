@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_spacing.dart';
-
-enum FinanceSection { summary, fuel, expenses }
+import '../finance_section.dart';
 
 class FinanceSectionSelector extends StatelessWidget {
   const FinanceSectionSelector({
@@ -55,6 +54,16 @@ class FinanceSectionSelector extends StatelessWidget {
             selectedIcon: Icons.receipt_long,
             label: 'Gastos',
             compactLabel: 'Gastos',
+            compact: compact,
+            onTap: onChanged,
+          ),
+          _Segment(
+            section: FinanceSection.budgets,
+            selected: selected == FinanceSection.budgets,
+            icon: Icons.savings_outlined,
+            selectedIcon: Icons.savings,
+            label: 'Presupuestos',
+            compactLabel: 'Presup.',
             compact: compact,
             onTap: onChanged,
           ),

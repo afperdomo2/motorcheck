@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:motorcheck/features/dashboard/providers.dart';
 import 'package:motorcheck/features/dashboard/widgets/finance_summary_card.dart';
 import 'package:motorcheck/features/finance/models/budget.dart';
 import 'package:motorcheck/features/finance/providers.dart';
 import 'package:motorcheck/features/fuel/repository.dart';
+import 'package:motorcheck/features/vehicles/current_vehicle_provider.dart';
 import 'package:motorcheck/features/vehicles/models/vehicle.dart';
 
 void main() {
@@ -48,7 +48,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          dashboardVehicleProvider.overrideWith((ref) async => vehicle),
+          currentVehicleProvider.overrideWith((ref) async => vehicle),
           vehicleFinanceProvider(1).overrideWith((ref) async => summary),
           budgetForVehicleProvider(1).overrideWith(
             (ref) async => Budget(
