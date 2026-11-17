@@ -45,10 +45,14 @@ class MaintenanceRepository {
 
   Future<List<MaintenanceItem>> getItems(int maintenanceId) async {
     final db = await _db.database;
-    final maps = await db.query(
-      'maintenance_items',
-      where: 'maintenance_id = ?',
-      whereArgs: [maintenanceId],
+    final maps = await db.rawQuery(
+      'SELECT i.*, c.name AS component_name, c.type AS component_type, '
+      'c.position AS component_position '
+      'FROM maintenance_items i '
+      'LEFT JOIN components c ON c.id = i.component_id '
+      'WHERE i.maintenance_id = ? '
+      'ORDER BY i.id',
+      [maintenanceId],
     );
     return maps.map(_itemFromMap).toList();
   }
@@ -165,7 +169,12 @@ class MaintenanceRepository {
     final db = await _db.database;
     final placeholders = ids.map((_) => '?').join(',');
     final maps = await db.rawQuery(
-      'SELECT * FROM maintenance_items WHERE maintenance_id IN ($placeholders)',
+      'SELECT i.*, c.name AS component_name, c.type AS component_type, '
+      'c.position AS component_position '
+      'FROM maintenance_items i '
+      'LEFT JOIN components c ON c.id = i.component_id '
+      'WHERE i.maintenance_id IN ($placeholders) '
+      'ORDER BY i.id',
       ids,
     );
     return maps.map(_itemFromMap).toList();
@@ -319,6 +328,9 @@ class MaintenanceRepository {
     partsCost: (m['parts_cost'] as num?)?.toDouble() ?? 0,
     notes: m['notes'] as String?,
     componentId: m['component_id'] as int?,
+    componentName: m['component_name'] as String?,
+    componentType: m['component_type'] as String?,
+    componentPosition: m['component_position'] as String?,
     createdAt: parseDateTime(m['created_at'] as String),
   );
 }

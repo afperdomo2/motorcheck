@@ -117,7 +117,9 @@ Ver `docs/code-style.md` para ejemplos de modelos freezed y estado asíncrono.
 - Formularios: `FormSection`, `StickyBottomBar`, validación inline y guardia de
   cambios sin guardar. Las listas editables largas (ítems de mantenimiento) usan
   `ItemFormRow` colapsable, botón de agregar al final de la lista y auto-scroll
-  al ítem nuevo.
+  al ítem nuevo. Cada ítem se elige con un único selector “¿Qué se hizo?” con
+  pestañas **Servicios** (por defecto, categorías en chips) y **Piezas**
+  (componentes, asignan su categoría solas).
 
 ## Arquitectura
 
@@ -170,7 +172,7 @@ lib/
 |--------|-------|-------------|
 | `Vehicle` | `vehicles` | name, type (car/motorcycle/bike/scooter/truck/other), brand, plate, vin, currentMileage, soatExpiresAt/rtmExpiresAt (legado), isDefault |
 | `Maintenance` | `maintenances` | vehicleId, date, mileage, maintenanceCost, totalPartsCost, workshopId, notes |
-| `MaintenanceItem` | `maintenance_items` | maintenanceId, category, partsCost, notes, componentId (nullable) |
+| `MaintenanceItem` | `maintenance_items` | maintenanceId, category, partsCost, notes, componentId (nullable); componentName/Type/Position se derivan por JOIN para mostrar la pieza |
 | `Workshop` | `workshops` | name, location |
 | `MileageReading` | `mileage_readings` | vehicleId, date, mileage, source |
 | `VehicleDocument` | `documents` | vehicleId (nullable), type, number, issuedAt, expiresAt, filePath |

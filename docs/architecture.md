@@ -181,8 +181,13 @@ Recordatorios · salud · historial · PDF
   `component_id`; no hay una segunda cuenta ni un costo duplicado.
 - El historial del componente se deriva de esos ítems, así que borrar el
   mantenimiento recalcula el ciclo.
+- El listado y el detalle muestran el nombre de la pieza reemplazada junto con
+  su categoría; un servicio muestra solo la categoría.
 - La acción “Reemplazar componente” abre el mantenimiento con el ítem
   precargado.
+- En el formulario, un solo selector “¿Qué se hizo?” con pestañas
+  **Servicios** (por defecto) y **Piezas**. Elegir una pieza asigna su
+  categoría automáticamente.
 - Las categorías cubiertas por un componente activo (llantas, frenos, batería,
   cadena) no generan un aviso propio: el componente es el dueño del desgaste.
 - Las plantillas por tipo crean componentes protegidos (`is_system`), editables

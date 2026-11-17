@@ -14,7 +14,7 @@ import '../../../shared/widgets/date_field.dart';
 import '../../../shared/widgets/form_section.dart';
 import '../../../shared/widgets/sticky_bottom_bar.dart';
 import '../../../shared/widgets/vehicle_selector_sheet.dart';
-import '../../components/models/vehicle_component.dart';
+import '../../components/models/component_status.dart';
 import '../../components/providers.dart';
 import '../../vehicles/providers.dart';
 import '../../finance/budget_alert_service.dart';
@@ -327,7 +327,7 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
         (draft) => draft.key == missingCategoryKey,
       );
       _revealItem(missingCategoryKey);
-      AppSnackBar.error('Elige la categoría del ítem ${position + 1}');
+      AppSnackBar.error('Elige qué se hizo en el ítem ${position + 1}');
       return;
     }
 
@@ -336,6 +336,11 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
     final validItems = _items.map((draft) => draft.item).toList();
     final vehicleId = _vehicle?.id ?? widget.vehicleId;
     if (vehicleId == null) return;
+
+    if (validItems.any((item) => item.category.isEmpty)) {
+      AppSnackBar.error('Elige qué se hizo en cada ítem');
+      return;
+    }
 
     final replacedComponents = validItems
         .map((item) => item.componentId)
@@ -636,18 +641,21 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
         .where((c) => c.vehicleType == vehicleType)
         .toList();
     final currentVehicleId = _vehicle?.id ?? widget.vehicleId;
-    final allComponents = currentVehicleId == null
-        ? const <VehicleComponent>[]
-        : ref.watch(vehicleComponentsProvider(currentVehicleId)).valueOrNull ??
-              const <VehicleComponent>[];
-    List<VehicleComponent> eligibleComponents(_ItemDraft draft) {
+    final allStatuses = currentVehicleId == null
+        ? const <ComponentStatus>[]
+        : ref
+                  .watch(vehicleComponentStatusesProvider(currentVehicleId))
+                  .valueOrNull ??
+              const <ComponentStatus>[];
+    List<ComponentStatus> eligibleComponents(_ItemDraft draft) {
       final used = _items
           .map((row) => row.item.componentId)
           .whereType<int>()
           .toSet();
-      return allComponents.where((component) {
+      return allStatuses.where((status) {
+        final component = status.component;
         if (component.id == draft.item.componentId) return true;
-        if (component.categoryKey != draft.item.category) return false;
+        if (!component.active) return false;
         return component.id != null && !used.contains(component.id);
       }).toList();
     }
@@ -832,6 +840,9 @@ class _MaintenanceFormScreenState extends ConsumerState<MaintenanceFormScreen> {
                                   canRemove: true,
                                   categories: vehicleCategories,
                                   components: eligibleComponents(draft),
+                                  fallbackCategoryKey: _defaultCategory(
+                                    vehicleCategories,
+                                  ),
                                   expanded: _expandedItemKey == draft.key,
                                   isNew: _highlightItemKey == draft.key,
                                   onToggle: () => _toggleItem(draft.key),

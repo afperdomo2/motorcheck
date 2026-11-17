@@ -107,6 +107,8 @@ void main() {
           maintenanceCategoriesProvider.overrideWith((ref) async => categories),
           vehicleComponentsProvider(1).overrideWith((ref) async => []),
           vehicleComponentsProvider(2).overrideWith((ref) async => []),
+          vehicleComponentStatusesProvider(1).overrideWith((ref) async => []),
+          vehicleComponentStatusesProvider(2).overrideWith((ref) async => []),
         ],
         child: MaterialApp(
           home: MaintenanceFormScreen(
@@ -215,9 +217,9 @@ void main() {
 
     expect(find.text('1 ítem'), findsOneWidget);
     expect(find.text('Ítem 1'), findsOneWidget);
-    expect(find.text('Categoría *'), findsOneWidget);
+    expect(find.text('¿Qué se hizo? *'), findsOneWidget);
     expect(find.text('General'), findsWidgets);
-    expect(find.text('Elige una categoría'), findsNothing);
+    expect(find.text('Elige qué se hizo'), findsNothing);
 
     await settleHighlight(tester);
   });
@@ -237,7 +239,7 @@ void main() {
     await tester.tap(find.text('Registrar'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Elige una categoría'), findsOneWidget);
+    expect(find.text('Elige qué se hizo'), findsOneWidget);
     verifyNever(() => maintenanceRepo.insert(any(), any()));
 
     await settleHighlight(tester);
@@ -257,7 +259,7 @@ void main() {
     expect(find.text('Ítem 4'), findsOneWidget);
 
     // Solo la fila nueva muestra sus campos; las anteriores quedan colapsadas.
-    expect(find.text('Categoría *'), findsOneWidget);
+    expect(find.text('¿Qué se hizo? *'), findsOneWidget);
 
     final viewport =
         tester.view.physicalSize.height / tester.view.devicePixelRatio;
@@ -298,15 +300,15 @@ void main() {
     // Colapsado: se ve el resumen y avisa que falta categoría.
     expect(find.text('Ítem 1'), findsOneWidget);
     expect(find.textContaining('Sin categoría'), findsOneWidget);
-    expect(find.text('Categoría *'), findsNothing);
+    expect(find.text('¿Qué se hizo? *'), findsNothing);
 
     await tester.ensureVisible(find.text('Guardar'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Categoría *'), findsOneWidget);
-    expect(find.text('Elige una categoría'), findsOneWidget);
+    expect(find.text('¿Qué se hizo? *'), findsOneWidget);
+    expect(find.text('Elige qué se hizo'), findsOneWidget);
     verifyNever(() => maintenanceRepo.update(any(), any()));
   });
 }

@@ -170,6 +170,12 @@ void main() {
   derivado del mantenimiento y liberación al cambiar de tipo.
 - `components_screen_test.dart`: lista, estado vacío y formulario a 360 px con
   text scale 2.0.
+- `item_form_row_test.dart`: selector “¿Qué se hizo?” con pestañas Servicios y
+  Piezas, y layout a 360 px con texto al 200 %.
+- `maintenance_card_test.dart`: la línea de una pieza reemplazada muestra su
+  nombre y su categoría.
+- `maintenance_repository_test.dart`: `getItems` deriva nombre, tipo y posición
+  de la pieza con LEFT JOIN.
 
 ---
 

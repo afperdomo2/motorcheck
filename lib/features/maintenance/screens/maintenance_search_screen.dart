@@ -307,7 +307,13 @@ class _MaintenanceSearchScreenState
       final vehicle = vehicleMap[m.vehicleId];
       final items = itemsByMaintenance[m.id] ?? const <MaintenanceItem>[];
       final categoryText = items
-          .map((i) => categoryMap[i.category]?.name ?? i.category)
+          .map(
+            (i) => [
+              categoryMap[i.category]?.name ?? i.category,
+              if (i.componentName != null) i.componentName!,
+              if (i.componentPosition != null) i.componentPosition!,
+            ].join(' '),
+          )
           .join(' ');
       final haystack = normalizeForSearch(
         [
@@ -354,7 +360,14 @@ class _MaintenanceSearchScreenState
             .where((w) => w.id == maintenance.workshopId)
             .firstOrNull;
         final vehicle = vehicleMap[maintenance.vehicleId];
-        final categoryKeys = items.map((i) => i.category).toSet().toList();
+        final itemLabels = items
+            .map(
+              (i) =>
+                  i.componentName ??
+                  (categoryMap[i.category]?.name ?? i.category),
+            )
+            .toSet()
+            .toList();
 
         return Padding(
           padding: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -399,11 +412,9 @@ class _MaintenanceSearchScreenState
                         formatShortDate(maintenance.date),
                         style: Theme.of(context).textTheme.labelSmall,
                       ),
-                      if (categoryKeys.isNotEmpty)
+                      if (itemLabels.isNotEmpty)
                         Text(
-                          categoryKeys
-                              .map((k) => categoryMap[k]?.name ?? k)
-                              .join(', '),
+                          itemLabels.join(', '),
                           style: Theme.of(context).textTheme.labelSmall,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

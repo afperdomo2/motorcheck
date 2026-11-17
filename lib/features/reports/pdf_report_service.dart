@@ -584,6 +584,8 @@ class PdfReportService {
 
   pw.Widget _itemChip(VehicleReportData data, MaintenanceItem item) {
     final category = data.categories[item.category]?.name ?? item.category;
+    final isPiece = item.componentName?.isNotEmpty == true;
+    final label = isPiece ? '${item.componentName} · $category' : category;
     final cost = item.partsCost > 0
         ? ' · ${formatCurrency(item.partsCost)}'
         : '';
@@ -594,7 +596,7 @@ class PdfReportService {
         borderRadius: pw.BorderRadius.circular(3),
       ),
       child: pw.Text(
-        '$category$cost',
+        '$label$cost',
         style: const pw.TextStyle(color: _graphite, fontSize: 7.5),
       ),
     );

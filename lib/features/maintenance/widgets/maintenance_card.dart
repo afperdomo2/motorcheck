@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/formatters.dart';
+import '../../components/models/vehicle_component.dart';
 import '../categories.dart';
 import '../models/maintenance.dart';
 import '../models/maintenance_item.dart';
@@ -137,8 +138,15 @@ class MaintenanceCard extends StatelessWidget {
   Widget _buildItemLine(BuildContext context, MaintenanceItem item) {
     final cat = categoryMap[item.category];
     final catName = cat?.name ?? item.category;
+    final isPiece = item.componentName?.isNotEmpty == true;
+    final title = isPiece ? item.componentName! : catName;
     final hasNotes = item.notes != null && item.notes!.isNotEmpty;
     final theme = Theme.of(context);
+    final icon = isPiece
+        ? componentTypeFor(item.componentType ?? 'other').icon
+        : cat != null
+        ? MaintenanceCategories.iconByName(cat.iconName)
+        : Icons.build_outlined;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
@@ -146,18 +154,31 @@ class MaintenanceCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            cat != null
-                ? MaintenanceCategories.iconByName(cat.iconName)
-                : Icons.build_outlined,
+            icon,
             size: 15,
-            color: theme.colorScheme.onSurfaceVariant,
+            color: isPiece
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text.rich(
               TextSpan(
                 children: [
-                  TextSpan(text: catName),
+                  TextSpan(
+                    text: title,
+                    style: isPiece
+                        ? const TextStyle(fontWeight: FontWeight.w600)
+                        : null,
+                  ),
+                  if (isPiece)
+                    TextSpan(
+                      text: ' · $catName',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
                   if (hasNotes)
                     TextSpan(
                       text: ' · ${item.notes}',

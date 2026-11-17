@@ -20,6 +20,7 @@ import '../../../shared/widgets/vehicle_avatar.dart';
 import '../../settings/models/maintenance_category.dart';
 import '../../settings/providers.dart';
 import '../../vehicles/models/vehicle.dart';
+import '../../components/models/vehicle_component.dart';
 import '../categories.dart';
 import '../models/maintenance.dart';
 import '../models/maintenance_attachment.dart';
@@ -454,7 +455,19 @@ class _ItemTile extends StatelessWidget {
     final theme = Theme.of(context);
     final hasNote = item.notes != null && item.notes!.isNotEmpty;
     final cat = categoryMap[item.category];
-    final icon = cat != null
+    final catName = cat?.name ?? item.category;
+    final isPiece = item.componentName?.isNotEmpty == true;
+    final title = isPiece ? item.componentName! : catName;
+    final subtitle = isPiece
+        ? [
+            if (item.componentPosition?.isNotEmpty == true)
+              item.componentPosition!,
+            catName,
+          ].join(' · ')
+        : null;
+    final icon = isPiece
+        ? componentTypeFor(item.componentType ?? 'other').icon
+        : cat != null
         ? MaintenanceCategories.iconByName(cat.iconName)
         : Icons.build;
 
@@ -470,16 +483,33 @@ class _ItemTile extends StatelessWidget {
                 ? CrossAxisAlignment.start
                 : CrossAxisAlignment.center,
             children: [
-              Icon(icon, size: 22, color: theme.colorScheme.onSurfaceVariant),
+              Icon(
+                icon,
+                size: 22,
+                color: isPiece
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      cat?.name ?? item.category,
-                      style: theme.textTheme.bodyMedium,
+                      title,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: isPiece ? FontWeight.w600 : null,
+                      ),
                     ),
+                    if (subtitle != null)
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     if (hasNote)
                       Text(
                         item.notes!,

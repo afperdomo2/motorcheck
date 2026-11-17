@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:motorcheck/features/components/models/vehicle_component.dart';
+import 'package:motorcheck/features/components/repository.dart';
 import 'package:motorcheck/features/maintenance/models/maintenance.dart';
 import 'package:motorcheck/features/maintenance/models/maintenance_item.dart';
 import 'package:motorcheck/features/maintenance/repository.dart';
@@ -203,5 +205,61 @@ void main() {
       [],
     );
     expect((await vehicleRepo.getById(vehicleId))!.currentMileage, 95000);
+  });
+
+  test('getItems incluye el nombre de la pieza reemplazada', () async {
+    final now = DateTime(2024, 5, 1);
+    final vehicleId = await vehicleRepo.insert(
+      Vehicle(
+        name: 'test-components-join',
+        type: 'car',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    addTearDown(() => vehicleRepo.delete(vehicleId));
+
+    final componentId = await ComponentsRepository().insert(
+      VehicleComponent(
+        vehicleId: vehicleId,
+        name: 'Llanta delantera izquierda',
+        type: 'tire',
+        categoryKey: 'car_tires',
+        position: 'Delantera izquierda',
+        positionCode: 'front_left',
+        installedAt: now,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    final maintenanceId = await maintRepo.insert(
+      Maintenance(
+        vehicleId: vehicleId,
+        date: now,
+        mileage: 20000,
+        createdAt: now,
+        updatedAt: now,
+      ),
+      [
+        MaintenanceItem(
+          maintenanceId: 0,
+          category: 'car_tires',
+          partsCost: 250000,
+          componentId: componentId,
+          createdAt: now,
+        ),
+      ],
+    );
+
+    final items = await maintRepo.getItems(maintenanceId);
+    expect(items, hasLength(1));
+    expect(items.single.componentId, componentId);
+    expect(items.single.componentName, 'Llanta delantera izquierda');
+    expect(items.single.componentType, 'tire');
+    expect(items.single.componentPosition, 'Delantera izquierda');
+
+    final byIds = await maintRepo.getItemsByMaintenanceIds([maintenanceId]);
+    expect(byIds.single.componentName, 'Llanta delantera izquierda');
   });
 }
